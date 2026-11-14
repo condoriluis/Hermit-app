@@ -317,6 +317,15 @@ export function piezasDe(card: Card, sessions: Sessions): Pieza[] {
   return (card.produce && LISTAS[card.produce]?.(card, sessions)) || []
 }
 
+/**
+ * La imagen terminada con esa ruta, si sigue en la galería: lo único del disco que se puede adjuntar a un hilo desde
+ * «Mis imágenes» (`POST /api/piezas/adjuntar`). Al ser pieza, su carpeta ya pasó el mismo candado que `/archivo`.
+ */
+export function imagenPieza(cards: Card[], sessions: Sessions, ruta: string): ImagenHecha | undefined {
+  const p = cards.flatMap((c) => piezasDe(c, sessions)).find((x) => x.tipo === 'imagen' && x.ruta === ruta)
+  return p?.tipo === 'imagen' ? p : undefined
+}
+
 /** Si el archivo está dentro de las carpetas de una card que produce piezas: lo único que se sirve y se borra. */
 function enPiezas(cards: Card[], file: string): boolean {
   return cards.some((c) => !!c.produce && carpetasDe(c).some((f) => file.startsWith(f + sep)))

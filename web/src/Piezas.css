@@ -73,3 +73,38 @@
 .mis-formas button.on { color: var(--accent); background: var(--accent-soft); }
 /* «Todas» lleva texto, no icono: ancho al contenido. */
 .mis-formas button.todas { width: auto; padding: 0 10px; font-size: 12px; font-weight: 600; }
+
+/* La ficha de una imagen («Mis imágenes»), como la de un modelo 3D: la imagen en grande a la izquierda y sus datos a
+   la derecha — el estilo que la hizo, su archivo, su tamaño, su fecha y su ruta, que es lo que se copia para
+   pedírsela al agente. En pantallas angostas se apilan. */
+.pieza-velo { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 28px; background: var(--scrim); backdrop-filter: blur(6px); animation: piezas-aparece 0.18s ease-out; }
+@keyframes piezas-aparece { from { opacity: 0; } }
+.pieza-dialogo { position: relative; width: min(960px, 100%); max-height: 100%; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); overflow: hidden; border-radius: 14px; border: 1px solid var(--line); background: var(--panel); box-shadow: 0 30px 80px var(--shadow-fuerte); }
+.pieza-dialogo:focus { outline: none; }
+.pieza-dialogo-img { position: relative; display: grid; place-items: center; min-height: 380px; padding: 22px; background: var(--bg); border-right: 1px solid var(--line); }
+.pieza-dialogo-img img { max-width: 100%; max-height: calc(100vh - 180px); object-fit: contain; border-radius: 10px; border: 1px solid var(--line); }
+.pieza-paso { position: absolute; top: 50%; transform: translateY(-50%); width: 38px; height: 38px; display: grid; place-items: center; border-radius: 10px; border: 1px solid var(--line); background: var(--scrim-control); color: var(--text); transition: border-color 0.15s, color 0.15s; }
+.pieza-paso:hover { border-color: var(--accent); color: var(--accent); }
+.pieza-paso .ico { width: 16px; height: 16px; }
+.pieza-paso.izq { left: 12px; }
+.pieza-paso.der { right: 12px; }
+.pieza-cerrar { position: absolute; top: 12px; right: 12px; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 10px; border: 1px solid var(--line); background: var(--scrim-control); color: var(--text); transition: border-color 0.15s, color 0.15s; }
+.pieza-cerrar:hover { border-color: var(--accent); color: var(--accent); }
+.pieza-cerrar .ico { width: 15px; height: 15px; }
+.pieza-dialogo-texto { padding: 26px 28px 22px; display: flex; flex-direction: column; gap: 14px; min-width: 0; overflow-y: auto; }
+.pieza-dialogo-texto h2 { margin: 0; padding-right: 40px; font-size: 19px; font-weight: 700; letter-spacing: -0.01em; }
+.pieza-datos { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px 16px; margin: 0; font-size: 12.5px; }
+.pieza-datos dt { color: var(--muted); white-space: nowrap; }
+.pieza-datos dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.pieza-datos code { font-family: var(--mono); font-size: 11px; }
+.pieza-dialogo-acciones { display: flex; flex-wrap: wrap; gap: 10px; margin-top: auto; padding-top: 6px; }
+.pieza-accion { display: inline-flex; align-items: center; gap: 7px; padding: 8px 15px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel-2); color: var(--text); font-size: 13px; font-weight: 600; transition: border-color 0.15s, color 0.15s, background 0.15s; }
+.pieza-accion .ico { width: 14px; height: 14px; }
+.pieza-accion:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.pieza-accion.principal { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+@media (max-width: 860px) {
+  .pieza-velo { padding: 12px; }
+  .pieza-dialogo { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); }
+  .pieza-dialogo-img { min-height: 0; max-height: 44vh; border-right: 0; border-bottom: 1px solid var(--line); }
+  .pieza-dialogo-img img { max-height: 38vh; }
+}

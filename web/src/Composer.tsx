@@ -2,6 +2,7 @@ import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from 're
 import type { GastoFlow, Model } from '../../shared/types'
 import { proveedorDe, type Proveedor } from '../../shared/providers'
 import { imageUrl, Thumbs, type Attached } from './Images'
+import { ElegirImagen } from './ElegirImagen'
 import { esIcono, Icono } from './Iconos'
 import { FlowEnUso, LimitesContexto } from './LimitesContexto'
 import { invocacion, LINK, LINK_ICON, linkParts, QUOTE_EVENT, QUOTE_ICON, quoteRef, THREAD, THREAD_ICON, threadIconOf } from './etiquetas'
@@ -177,6 +178,11 @@ function etiquetarInvocacion(el: HTMLElement) {
 
 /** La etiqueta de una imagen dentro del texto, como en T3 Code: miniatura, nombre y peso. Se borra como una letra. */
 function chip(file: File, src: string): HTMLElement {
+  return chipImagen(file.name || 'imagen.png', size(file.size), src)
+}
+
+/** La misma etiqueta con nombre y detalle ya dados: la usa también una imagen que viene de «Mis imágenes». */
+function chipImagen(nombre: string, detalle: string, src: string): HTMLElement {
   const el = document.createElement('span')
   el.className = 'chip'
   el.contentEditable = 'false'
@@ -184,8 +190,8 @@ function chip(file: File, src: string): HTMLElement {
   const img = document.createElement('img')
   img.src = src
   const small = document.createElement('small')
-  small.textContent = size(file.size)
-  el.append(img, file.name || 'imagen.png', small)
+  small.textContent = detalle
+  el.append(img, nombre, small)
   return el
 }
 
@@ -494,6 +500,7 @@ export function Composer(props: {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [dragging, setDragging] = useState(false)
+  const [elegir, setElegir] = useState(false)
   const box = useRef<HTMLDivElement>(null)
   const picker = useRef<HTMLInputElement>(null)
 
@@ -666,6 +673,14 @@ export function Composer(props: {
     }
   }
 
+  /** Una imagen que ya está en el servidor (la copió «De Mis imágenes» a `data/attachments`): entra como las demás. */
+  function adjuntarServidor(p: { path: string; nombre: string; bytes: number }) {
+    const src = imageUrl(p.path)
+    const chipped = !!read(box.current!).trim()
+    if (chipped) insert(chipImagen(p.nombre, size(p.bytes), src), document.createTextNode(' '))
+    setImages((list) => [...list, { path: p.path, src, chip: chipped }])
+  }
+
   return (
     <div
       className={`composer ${dragging ? 'dragging' : ''}`}
@@ -722,6 +737,9 @@ export function Composer(props: {
             <path d="m21.4 11.6-9.2 9.2a6 6 0 0 1-8.5-8.5l9.2-9.2a4 4 0 0 1 5.7 5.7l-9.2 9.2a2 2 0 0 1-2.8-2.8l8.5-8.5" />
           </svg>
         </button>
+        <button className="attach" title="De Mis imágenes" onClick={() => setElegir(true)}>
+          <Icono de="imagen" />
+        </button>
         <input
           ref={picker}
           type="file"
@@ -776,6 +794,7 @@ export function Composer(props: {
           </button>
         )}
       </div>
+      {elegir && <ElegirImagen onCerrar={() => setElegir(false)} onAdjuntar={(p) => (setElegir(false), adjuntarServidor(p))} />}
     </div>
   )
 }

@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process'
-import { createReadStream, createWriteStream, existsSync, mkdirSync, readFileSync, readdirSync, statSync, watch } from 'node:fs'
+import { copyFileSync, createReadStream, createWriteStream, existsSync, mkdirSync, readFileSync, readdirSync, statSync, watch } from 'node:fs'
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http'
 import { createServer as servidorTcp } from 'node:net'
 import { basename, dirname, extname, join, resolve } from 'node:path'
@@ -24,7 +24,7 @@ import { conectando, conectarClaude, cuentaClaude, limitesClaude } from './cuent
 import { cancelarOpenCode, conectandoOpenCode, conectarOpenCode, cuentaOpenCode, limitesOpenCode, quitarCuentaOpenCode, usarCuentaOpenCode } from './cuenta-opencode.ts'
 import { articulos } from './articulos.ts' // dónde publica la card de artículos
 import { enlacesApi } from './enlaces.ts' // tarjeta de los enlaces
-import { cerrarVigilantesOciosos, esperaDe, etapasApi, folderOf, mismaCwd, piezasApi, queFalta, videosDe } from './etapas.ts' // panel de etapas; `videosDe`, de comunidad
+import { cerrarVigilantesOciosos, esperaDe, etapasApi, folderOf, imagenPieza, mismaCwd, piezasApi, queFalta, videosDe } from './etapas.ts' // panel de etapas; `videosDe`, de comunidad
 import { cerrarMotoresOciosos } from './motor.ts'
 import { modelos3d } from './modelos3d.ts' // modelos 3D
 import { modelos3dAcciones } from './modelos3d-acciones.ts' // modelos 3D
@@ -720,6 +720,19 @@ async function api(req: IncomingMessage, res: ServerResponse, url: URL): Promise
       catch (error) { return send(res, 400, { error: error instanceof Error ? error.message : String(error) }), true }
       send(res, 200, { ok: true })
     } else return false
+    return true
+  }
+
+  // Una imagen de «Mis imágenes» como adjunto: se copia a `data/attachments` y vuelve con su `path`, igual que una
+  // subida. Solo entra lo que la galería lista como imagen terminada; ninguna otra ruta del disco se acepta.
+  if (path === '/api/piezas/adjuntar' && method === 'POST') {
+    const { ruta } = await body<{ ruta?: string }>(req)
+    const pieza = imagenPieza(cards(), sessions, String(ruta ?? ''))
+    if (!pieza) return send(res, 404, { error: 'Esa imagen ya no está.' })
+    mkdirSync(ATTACHMENTS, { recursive: true })
+    const file = join(ATTACHMENTS, `${Date.now()}-${nombreAdjunto((pieza.archivo.split(/[\\/]/).pop() ?? 'imagen.png'))}`)
+    copyFileSync(pieza.ruta, file)
+    send(res, 200, { path: file, size: statSync(file).size })
     return true
   }
 

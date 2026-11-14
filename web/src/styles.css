@@ -293,6 +293,26 @@ a.link-chip:hover { border-color: var(--accent); }
 @keyframes drop { from { opacity: 0; transform: translateY(-4px); } }
 .attach { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; color: var(--muted); border: 1px solid var(--line); }
 .attach:hover:not(:disabled) { color: var(--text); border-color: var(--line-fuerte); }
+.attach .ico { width: 15px; height: 15px; }
+
+/* «De Mis imágenes»: el selector del compositor. Rejilla de miniaturas sobre el velo de siempre. */
+.elegir-img { width: min(720px, 100%); max-height: min(560px, calc(100vh - 48px)); display: flex; flex-direction: column; overflow: hidden; border-radius: 14px; border: 1px solid var(--line); background: var(--panel); box-shadow: 0 30px 80px var(--shadow-fuerte); }
+.elegir-img-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 18px 20px 12px; }
+.elegir-img-head h2 { margin: 0 0 3px; font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }
+.elegir-img-head p { margin: 0; }
+.elegir-cerrar { flex-shrink: 0; width: 32px; height: 32px; display: grid; place-items: center; border-radius: 10px; border: 1px solid var(--line); background: var(--panel-2); color: var(--text); transition: border-color 0.15s, color 0.15s; }
+.elegir-cerrar:hover { border-color: var(--accent); color: var(--accent); }
+.elegir-cerrar .ico { width: 14px; height: 14px; }
+.elegir-img-error { margin: 0 20px 10px; }
+.elegir-img-rejilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; padding: 4px 20px 20px; overflow-y: auto; }
+.elegir-img-tile { display: flex; flex-direction: column; gap: 6px; text-align: left; border-radius: 10px; }
+.elegir-img-tile.esqueleto { height: 120px; background: var(--panel-2); border-radius: 10px; }
+.elegir-img-marco { display: block; width: 100%; aspect-ratio: 1; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); overflow: hidden; transition: border-color 0.15s; }
+.elegir-img-tile:hover .elegir-img-marco { border-color: var(--accent); }
+.elegir-img-marco img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.elegir-img-tile.yendo { opacity: 0.5; }
+.elegir-img-nombre { font-size: 12px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.elegir-img-vacio { margin: 0; padding: 28px 20px 32px; color: var(--muted); font-size: 13.5px; text-align: center; }
 .send { width: 34px; height: 34px; border-radius: 50%; background: var(--accent); color: var(--on-solid); font-weight: 800; font-size: 17px; }
 .send:hover:not(:disabled) { background: var(--accent-hover); }
 .send.stop { background: var(--accent); font-size: 12px; }

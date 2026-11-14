@@ -1,1 +1,1 @@
-Hermit 0.5.2: tus imágenes de la galería entran a los videos, las portadas llevan título de verdad y la web estrena su nueva cara
+Hermit 0.5.3: Novedades estrena su guía animada, con lo nuevo de la 0.5.2

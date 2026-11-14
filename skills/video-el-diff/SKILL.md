@@ -139,6 +139,8 @@ algo nuevo encima (así entra un rótulo en su palabra, sobre la misma captura).
   encabezado a la cita, y la cifra de un rótulo en banda, que cuenta hasta su número (`"corre": false` la deja quieta).
 - **`gancho`** (vertical): el rótulo fijo de arriba, dos renglones separados por `/`, seis palabras como mucho, con
   el dato que para el dedo. No repite la primera frase: la contradice o la adelanta.
+- **`portada_titulo`** (vertical): el título de la portada, escrito para la miniatura — de 2 a 5 palabras, la promesa
+  o la pregunta del gancho, en su caso normal (sin el ALL CAPS del rótulo). Sin él, la portada usa el `gancho` limpio.
 - `quieto: true` en el momento donde la voz lee un documento entero o explica un mecanismo (más de 10 s).
 
 **La imagen es la segunda voz**: enseña la prueba de lo que se dice y pone la otra mitad del humor. Lo que

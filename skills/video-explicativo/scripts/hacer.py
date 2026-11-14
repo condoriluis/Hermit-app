@@ -41,7 +41,7 @@ BASE = SKILL.parent / "video-base" / "scripts"
 MODELOS = SKILL.parent / "modelos-3d"
 RAIZ = Path.cwd()
 sys.path.insert(0, str(BASE))
-from momentos import errores_mojibake, roto  # noqa: E402
+from momentos import errores_mojibake, roto, titulo_portada  # noqa: E402
 PY = [sys.executable, "-B", "-X", "utf8"]
 INICIO = time.time()
 TIPOS = {"cifra", "prueba", "iconos", "boton", "post", "logos", "versus", "imagen", "pieza"}
@@ -147,6 +147,16 @@ def sin_titular(m: dict) -> list[str]:
             "a diez palabras o menos."]
 
 
+def portada_titulo_mal(m: dict) -> list[str]:
+    """`portada_titulo` está pero no cabe en la miniatura (2 a 5 palabras)."""
+    t = titulo_portada(m.get("portada_titulo") or "")
+    n = len(palabras_de(t))
+    if t and not 2 <= n <= 5:
+        return [f"portada_titulo («{t}») tiene {n} palabras: la portada lleva de 2 a 5, la promesa del gancho "
+                "(«Tu laptop ya no minó»), no el tema del video."]
+    return []
+
+
 def titulo() -> str:
     for l in (RAIZ / "guion.md").read_text(encoding="utf-8").splitlines():
         if l.startswith("# "):
@@ -164,6 +174,19 @@ def marca() -> dict:
     return {}
 
 
+def texto_portada(m: dict) -> str:
+    """
+    El título de la portada: el `portada_titulo` que el agente escribe para la miniatura (2 a 5 palabras, la promesa
+    del gancho); si no cabe o no está, el `titular` si cabe; si no, el título del guion. Siempre limpio.
+    """
+    texto = titulo_portada(m.get("portada_titulo") or "")
+    if 2 <= len(palabras_de(texto)) <= 5:
+        return texto
+    titular = m.get("titular") or ""
+    texto = titular if 2 <= len(palabras_de(titular)) <= 5 or not titulo() else titulo()
+    return titulo_portada(texto)
+
+
 def lanzar_portada(m: dict, horizontal: bool) -> subprocess.Popen | None:
     """
     La portada con IA, de fondo desde ya (portada_ia.py de video-base), si el usuario eligió con qué en «Imágenes»
@@ -177,10 +200,7 @@ def lanzar_portada(m: dict, horizontal: bool) -> subprocess.Popen | None:
     con = json.loads(eleccion.read_text(encoding="utf-8")).get("con") or ""
     if not con:
         return None
-    # De 2 a 5 palabras: el titular si cabe; si no, el título del guion.
-    titular = m.get("titular") or ""
-    texto = titular if 2 <= len(palabras_de(titular)) <= 5 or not titulo() else titulo()
-    texto = re.sub(r"[.,;:]+$", "", texto.strip())
+    texto = texto_portada(m)
     p = m.get("paleta") or {}
     refs, partes = [], []
     for a in sorted((RAIZ / "fuentes" / "adjuntas").glob("*"))[:2]:
@@ -663,7 +683,8 @@ def main() -> None:
         m = json.loads((RAIZ / "momentos.json").read_text(encoding="utf-8"))
     except json.JSONDecodeError as e:
         sys.exit(f"✗ momentos.json no es JSON: {e}")
-    if errores := comprobar(m, palabras_de(texto_del_guion()), "el guion") + sin_titular(m):
+    if errores := (comprobar(m, palabras_de(texto_del_guion()), "el guion") + sin_titular(m)
+                   + portada_titulo_mal(m)):
         sys.exit("✗ momentos.json:\n  " + "\n  ".join(errores))
     # El titular sale del guion, no de dónde haga la pausa la voz (sin_titular).
     m["titular"] = (m.get("titular") or "").strip() or gancho()
@@ -743,7 +764,7 @@ def main() -> None:
     else:
         # El fondo, cuando el titular ya se fue: a medias salía una palabra entrando encima de otra.
         fondo = palabras[min(n, len(palabras)) - 1]["e"] + 0.7 if hay_titular else 0.6
-        subprocess.run(["node", str(BASE / "portada_sin_ia.mjs"), str(video), str(portada), "--titulo", titulo() or RAIZ.name, "--t", f"{fondo:.2f}",
+        subprocess.run(["node", str(BASE / "portada_sin_ia.mjs"), str(video), str(portada), "--titulo", texto_portada(m) or RAIZ.name, "--t", f"{fondo:.2f}",
                         *(["--horizontal"] if horizontal else [])], cwd=RAIZ, check=True, capture_output=True)
     if not horizontal:
         subprocess.run(["node", str(BASE / "portada.mjs"), str(video), str(portada)], cwd=RAIZ, check=True, capture_output=True)

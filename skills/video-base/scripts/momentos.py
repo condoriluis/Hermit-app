@@ -30,6 +30,16 @@ def palabras_de(texto: str) -> list[str]:
     return [w for w in (normal(p) for p in texto.split()) if w]
 
 
+def titulo_portada(texto) -> str:
+    """
+    El título de la portada en una línea: sin saltos, sin comillas de más y sin punto o coma final («Tu idea.» es
+    «Tu idea»). Lo escribe el agente en `portada_titulo` de momentos.json (2 a 5 palabras, la promesa del gancho);
+    el titular, el gancho de El Diff y el título del guion pasan por aquí igual.
+    """
+    t = " ".join(str(texto or "").split())
+    return re.sub(r"[.,;:]+$", "", t.strip("«»\"'“”‘’ ")).strip()
+
+
 # Un texto bien escrito en UTF-8 jamás trae estas parejas: son bytes UTF-8 leídos como si fueran cp1252/latin-1
 # («reuniÃ³n», «Â¿», «â€™»). La primera mitad es un byte guía (C2–F4) que en español no existe como letra —se
 # excluyen á é í ó ú ñ ü y las mayúsculas Á É Í Ó Ú Ñ Ü— y la segunda, lo que ese byte siguiente se vuelve al

@@ -41,7 +41,7 @@ sys.path.insert(0, str(BASE))
 sys.path.insert(0, str(SKILL / "scripts"))
 import director  # noqa: E402
 import memes  # noqa: E402
-from momentos import Reloj, guardar, hoja, palabras_de, parar  # noqa: E402
+from momentos import Reloj, guardar, hoja, palabras_de, parar, titulo_portada  # noqa: E402
 
 RAIZ = Path.cwd()
 PY = [sys.executable, "-B", "-X", "utf8"]
@@ -448,7 +448,10 @@ def portada(m: dict, guion: dict, vertical: bool) -> str | None:
     cuadro = RAIZ / "revision" / f"{elegido}_95.jpg"
     if r.returncode or not cuadro.exists():
         return "la portada: no salió el cuadro de fondo: " + cola(r, 400)
-    titulo = " ".join(x.strip() for x in str(m.get("gancho") or guion.get("gancho") or RAIZ.name).replace("\n", "/").split("/") if x.strip())
+    # El título de la portada: el `portada_titulo` escrito para la miniatura; si no, el gancho en una línea, limpio.
+    titulo = titulo_portada(m.get("portada_titulo") or "") or titulo_portada(
+        " ".join(x.strip() for x in str(m.get("gancho") or guion.get("gancho") or RAIZ.name)
+                 .replace("\n", "/").split("/") if x.strip()))
     r = correr(["node", str(BASE / "portada_sin_ia.mjs"), str(cuadro), str(destino), "--titulo", titulo])
     return None if destino.exists() else "la portada: " + cola(r, 400)
 

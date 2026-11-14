@@ -1,1 +1,1 @@
-Hermit 0.5.1: la vista en vivo del documental ya funciona, y Novedades estrena un escenario más limpio
+Hermit 0.5.2: tus imágenes de la galería entran a los videos, las portadas llevan título de verdad y la web estrena su nueva cara

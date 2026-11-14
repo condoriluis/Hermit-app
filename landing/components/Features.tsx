@@ -12,33 +12,33 @@ import { Animar } from './Animar'
 const beneficios = [
   {
     icon: HardDrive,
-    title: 'Tus Archivos se Quedan en tu PC',
-    desc: 'Los videos en MP4, las imágenes y los artículos se guardan directamente en las carpetas de tu computadora. Nada se queda en servidores externos.',
+    title: 'Tus archivos se quedan en tu PC',
+    desc: 'Los videos, imágenes y artículos se guardan en tus carpetas, no en servidores externos.',
   },
   {
     icon: KeyRound,
-    title: 'Sin Cuotas Mensuales Obligatorias',
-    desc: 'Muchas plataformas cobran $30 o $50 dólares cada mes. Hermit es una aplicación libre: la descargas gratis y pagas centavos solo por lo que uses en tu cuenta de IA.',
+    title: 'Sin cuotas mensuales',
+    desc: 'App libre: la descargas gratis y pagas centavos solo por lo que uses en tu cuenta de IA.',
   },
   {
     icon: ShieldCheck,
-    title: 'Privacidad y Tranquilidad',
-    desc: 'Tus borradores, ideas y proyectos son completamente tuyos y privados. Nadie tiene acceso a lo que creas dentro de la aplicación.',
+    title: 'Privacidad total',
+    desc: 'Tus ideas y proyectos son completamente tuyos. Nadie más los ve.',
   },
   {
     icon: Zap,
-    title: 'Rápido y Fácil de Entender',
-    desc: 'No necesitas saber de programación ni configurar cosas complicadas. La interfaz es limpia, intuitiva y te guía paso a paso.',
+    title: 'Fácil de verdad',
+    desc: 'Sin programación ni configuraciones: la interfaz te guía paso a paso.',
   },
   {
     icon: Users,
-    title: 'Apoyo Directo y Comunidad',
-    desc: 'Hermit es un proyecto desarrollado con dedicación por luchodev. Puedes unirte a la comunidad para dar sugerencias, pedir mejoras o resolver dudas.',
+    title: 'Apoyo directo',
+    desc: 'Proyecto de luchodev con comunidad: sugerencias, mejoras y dudas.',
   },
   {
     icon: Download,
-    title: 'Descarga Directa en 1 Minuto',
-    desc: 'Descargas el archivo ejecutable para Windows o Mac y lo abres de inmediato. Sin procesos de registro obligatorios para empezar.',
+    title: 'Descarga en 1 minuto',
+    desc: 'Bajas el ejecutable, lo abres y empiezas. Sin registros obligatorios.',
   },
 ]
 
@@ -54,8 +54,7 @@ export default function Features() {
             La forma más honesta y cómoda de usar IA
           </h2>
           <p className="mt-4 text-base sm:text-lg text-muted">
-            Diseñado para que cualquier persona —desde creadores de contenido y emprendedores hasta
-            desarrolladores— pueda crear contenido de calidad sin complicaciones.
+            Para creadores, emprendedores y desarrolladores: calidad sin complicaciones.
           </p>
         </Animar>
 

@@ -1,14 +1,40 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
-import { Download, Play, HardDrive, Zap, Sparkles, Monitor, Eye } from 'lucide-react'
-import { AppleLogo } from '@/components/Icons'
+import React, { useState, useEffect, useRef } from 'react'
+import { Download, Play } from 'lucide-react'
 import { enlaceDescarga } from '@/lib/descargas'
+import Flotantes from '@/components/Flotantes'
 
 type So = 'windows' | 'mac' | 'linux'
 
+/** Los estilos de video, en la cinta bajo el hero (va duplicada para que el ciclo no se note). */
+const ESTILOS = [
+  'Video El Diff',
+  'Explicativo',
+  'Documental',
+  'Top',
+  'Reddit',
+  'Crimen',
+  'Motivacional',
+  'Política',
+  'Animalnovela',
+  'Devnovela',
+  'Frutinovela',
+  'Reel Collage',
+  'Minidrama',
+]
+
 export default function Hero() {
   const [os, setOs] = useState<{ name: string; ext: string; so: So }>({ name: 'Windows', ext: '.exe', so: 'windows' })
+  const brillo = useRef<HTMLDivElement>(null)
+
+  // El brillo que sigue al mouse, sin re-renderizar: se escribe el gradiente directo en el nodo.
+  const moverBrillo = (e: React.PointerEvent<HTMLElement>) => {
+    const el = brillo.current
+    if (!el || e.pointerType === 'touch') return
+    const r = e.currentTarget.getBoundingClientRect()
+    el.style.background = `radial-gradient(560px circle at ${e.clientX - r.left}px ${e.clientY - r.top}px, rgba(79, 140, 255, 0.10), transparent 55%)`
+  }
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -24,7 +50,9 @@ export default function Hero() {
   }, [])
 
   return (
-    <section className="relative pt-32 pb-20 md:pt-40 md:pb-28 overflow-hidden">
+    <section className="relative pt-32 pb-20 md:pt-40 md:pb-28 overflow-hidden" onPointerMove={moverBrillo}>
+      {/* Brillo que sigue al mouse */}
+      <div ref={brillo} className="absolute inset-0 pointer-events-none -z-10" />
       {/* Background radial gradient */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[550px] bg-gradient-to-b from-accent/15 via-accent/5 to-transparent blur-3xl pointer-events-none -z-10 animate-brillo" />
 
@@ -32,23 +60,17 @@ export default function Hero() {
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#26324415_1px,transparent_1px),linear-gradient(to_bottom,#26324415_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none -z-10" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        {/* Main Title - Accessible & Clear for Everyone */}
-        <h1 className="entrada text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight font-heading text-text max-w-5xl mx-auto leading-[1.14]">
-          Crea videos, artículos, imágenes y presentaciones con Inteligencia Artificial{' '}
-          <span className="bg-gradient-to-r from-accent via-accent-hover to-[#8db8ff] bg-clip-text text-transparent">
-            directo en tu computadora
-          </span>
+        {/* Titular corto: la prueba visual la pone la mesa, no las palabras */}
+        <h1 className="entrada text-5xl sm:text-7xl lg:text-8xl font-extrabold tracking-tight font-heading text-text max-w-4xl mx-auto leading-[1.05]">
+          Tu <span className="bg-gradient-to-r from-accent via-accent-hover to-[#8db8ff] bg-clip-text text-transparent">fábrica de contenido</span> con IA
         </h1>
 
-        {/* Subtitle - Easy to understand */}
-        <p className="entrada mt-6 text-lg sm:text-xl text-muted max-w-3xl mx-auto leading-relaxed font-normal" style={{ animationDelay: '120ms' }}>
-          Elige qué quieres crear en una tarjeta visual —13 estilos de video, artículos para tu blog,
-          imágenes y presentaciones—, escribe el tema y mira cómo el asistente lo produce paso a paso
-          frente a ti.
+        <p className="entrada mt-5 text-base sm:text-lg text-muted max-w-xl mx-auto" style={{ animationDelay: '120ms' }}>
+          Videos, artículos, imágenes y presentaciones — los hace paso a paso en tu computadora.
         </p>
 
         {/* Action CTAs */}
-        <div className="entrada mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto sm:max-w-none" style={{ animationDelay: '240ms' }}>
+        <div className="entrada mt-8 flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto sm:max-w-none" style={{ animationDelay: '200ms' }}>
           <a
             href={enlaceDescarga(os.so)}
             target="_blank"
@@ -68,61 +90,23 @@ export default function Hero() {
           </a>
         </div>
 
-        {/* Systems compatibility note */}
-        <div className="entrada mt-4 flex items-center justify-center gap-4 text-xs text-muted" style={{ animationDelay: '340ms' }}>
-          <span>Disponible para:</span>
-          <span className="flex items-center gap-1 text-text-2 font-mono">
-            <Monitor className="w-3.5 h-3.5 text-accent" /> Windows
-          </span>
-          <span className="text-line">|</span>
-          <span className="flex items-center gap-1 text-text-2 font-mono">
-            <AppleLogo className="w-3.5 h-3.5 text-accent inline-block" /> Mac
-          </span>
-          <span className="text-line">|</span>
-          <span className="flex items-center gap-1 text-text-2 font-mono">Linux</span>
-        </div>
+        <p className="entrada mt-4 text-xs font-mono text-muted/80" style={{ animationDelay: '280ms' }}>
+          Gratis · Windows · Mac · Linux
+        </p>
 
-        {/* Real practical badges */}
-        <div className="entrada mt-14 pt-10 border-t border-line/60 grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto text-left" style={{ animationDelay: '460ms' }}>
-          <div className="flex items-start gap-3">
-            <div className="p-2 rounded-lg bg-panel-2 border border-line text-accent">
-              <HardDrive className="w-5 h-5" />
-            </div>
-            <div>
-              <h4 className="text-sm font-bold text-text font-heading">En tu computadora</h4>
-              <p className="text-xs text-muted mt-0.5">Tus videos y textos se guardan en tus carpetas.</p>
-            </div>
-          </div>
+        {/* La mesa de trabajo: las salidas reales de Hermit, protagonistas del hero */}
+        <Flotantes />
+      </div>
 
-          <div className="flex items-start gap-3">
-            <div className="p-2 rounded-lg bg-panel-2 border border-line text-accent">
-              <Eye className="w-5 h-5" />
-            </div>
-            <div>
-              <h4 className="text-sm font-bold text-text font-heading">Paso a paso a la vista</h4>
-              <p className="text-xs text-muted mt-0.5">Ves cada fase: idea, guion, voz y archivo listo.</p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-3">
-            <div className="p-2 rounded-lg bg-panel-2 border border-line text-accent">
-              <Sparkles className="w-5 h-5" />
-            </div>
-            <div>
-              <h4 className="text-sm font-bold text-text font-heading">Sin cobros sorpresa</h4>
-              <p className="text-xs text-muted mt-0.5">La app es libre y usas tu propia cuenta de IA.</p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-3">
-            <div className="p-2 rounded-lg bg-panel-2 border border-line text-accent">
-              <Zap className="w-5 h-5" />
-            </div>
-            <div>
-              <h4 className="text-sm font-bold text-text font-heading">Rápido y sencillo</h4>
-              <p className="text-xs text-muted mt-0.5">Sin registros raros ni configuraciones difíciles.</p>
-            </div>
-          </div>
+      {/* La cinta de estilos: lo que se puede crear, en movimiento lento */}
+      <div className="mt-16 border-t border-line/60 overflow-hidden" aria-hidden="true">
+        <div className="cinta flex w-max items-center gap-8 py-4">
+          {[...ESTILOS, ...ESTILOS].map((e, i) => (
+            <span key={i} className="flex items-center gap-8 text-xs font-mono text-muted/70 whitespace-nowrap">
+              {e}
+              <span className="w-1 h-1 rounded-full bg-accent/50" />
+            </span>
+          ))}
         </div>
       </div>
     </section>

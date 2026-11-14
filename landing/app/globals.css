@@ -89,9 +89,52 @@ body {
   animation: brillo 7s ease-in-out infinite;
 }
 
+/* Las tarjetas de la mesa del hero suben y bajan despacio, cada una a su ritmo. */
+@keyframes flotar {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+.flotar {
+  animation: flotar 7s ease-in-out infinite;
+}
+
+/* La cinta de estilos bajo el hero: se repite sola, así que va el doble de larga. */
+@keyframes cinta {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.cinta {
+  animation: cinta 38s linear infinite;
+}
+
+/* Los pósters de la mesa respiran: un zoom muy lento, como una foto que se acerca. */
+@keyframes kenburns {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.07);
+  }
+}
+.kenburns {
+  animation: kenburns 16s ease-in-out infinite alternate;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .entrada,
-  .animate-brillo {
+  .animate-brillo,
+  .flotar,
+  .cinta,
+  .kenburns {
     animation: none !important;
   }
 }

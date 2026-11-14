@@ -98,8 +98,7 @@ export default function AppMockup() {
             Tres pasos. El primero toma un minuto.
           </h2>
           <p className="mt-4 text-base sm:text-lg text-muted">
-            Descargas la app, conectas tu cuenta y escribes de qué va. Hermit investiga, redacta y
-            arma el archivo en tu computadora.
+            Descargas, conectas tu cuenta de IA y escribes el tema: Hermit hace el resto.
           </p>
         </Animar>
 
@@ -162,8 +161,7 @@ export default function AppMockup() {
               </span>
             </div>
             <p className="mt-2 text-sm text-muted leading-relaxed">
-              Entras con la cuenta del agente que ya uses —él hace el trabajo pesado con tu
-              propia cuenta, sin intermediarios.
+              Con la cuenta del agente que ya uses —él trabaja con tu propia cuenta.
             </p>
             <div className="mt-4 flex flex-wrap gap-1.5">
               {AGENTES.map((a) => (
@@ -190,8 +188,7 @@ export default function AppMockup() {
             </div>
             <h3 className="mt-4 text-lg font-bold font-heading text-text">Escribe el tema</h3>
             <p className="mt-2 text-sm text-muted leading-relaxed">
-              Eliges uno de los 13 estilos de video, un artículo para tu blog, una imagen o una
-              presentación, y Hermit hace el trabajo.
+              Eliges video, artículo, imagen o presentación — y Hermit hace el trabajo.
             </p>
             <div className="mt-4 flex flex-wrap gap-1.5">
               {['El Diff', 'Explicativo', 'Documental', 'Animalnovela', 'Artículo', 'Imágenes', 'Presentación'].map((e) => (

@@ -15,65 +15,65 @@ const herramientas = [
   {
     icon: Video,
     tag: 'Videos Cortos y Largos',
-    title: 'Videos en 13 estilos, verticales u horizontales',
-    desc: 'Videos para TikTok, Reels, Shorts y YouTube: la IA investiga, escribe el guion, produce las escenas y exporta el MP4 listo para publicar.',
-    pasos: ['Idea y guion', 'Voz y escenas', 'Subtítulos', 'Video final MP4'],
+    title: '13 estilos de video',
+    desc: 'TikTok, Reels, Shorts y YouTube: la IA investiga, escribe el guion y exporta el MP4.',
+    pasos: ['Idea y guion', 'Voz y escenas', 'Video final'],
     badge: 'Popular',
   },
   {
     icon: FileText,
     tag: 'Textos y Web',
-    title: 'Artículos para tu Blog o Sitio Web',
-    desc: 'Escribe artículos completos y bien estructurados. Investiga el tema en profundidad, genera una imagen de portada llamativa y te entrega el texto listo para copiar.',
-    pasos: ['Tema investigado', 'Texto completo', 'Portada generada', 'Vista previa'],
+    title: 'Artículos para tu blog',
+    desc: 'Investigación a fondo, texto completo y portada generada, listos para copiar.',
+    pasos: ['Tema investigado', 'Texto completo', 'Portada'],
     badge: 'Para Leer',
   },
   {
     icon: ImageIcon,
     tag: 'Imágenes con IA',
-    title: 'Genera imágenes con un clic',
-    desc: 'Describe lo que quieres y la IA genera la imagen. Queda en tu galería «Mis imágenes», lista para ver o descargar.',
-    pasos: ['Describe la imagen', 'Generación con IA', 'Tu galería', 'Descarga libre'],
+    title: 'Imágenes con un clic',
+    desc: 'Describe lo que quieres y queda en tu galería, lista para descargar.',
+    pasos: ['Describe', 'Generación IA', 'Tu galería'],
     badge: 'Creativo',
   },
   {
     icon: Presentation,
     tag: 'Para Trabajo y Clases',
-    title: 'Presentaciones en PowerPoint y PDF',
-    desc: 'Dale un tema y la IA arma la presentación completa —portada, secciones y contenido— y te la entrega lista para abrir en PowerPoint o PDF.',
-    pasos: ['Tema y enfoque', 'Diapositivas', 'Diseño y portada', 'PPTX y PDF'],
+    title: 'Presentaciones listas',
+    desc: 'PowerPoint y PDF completos, del tema al archivo final.',
+    pasos: ['Diapositivas', 'Diseño', 'PPTX y PDF'],
     badge: 'Trabajo',
   },
   {
     icon: Share2,
     tag: 'Ahorra Tiempo',
-    title: 'Publicación Automática en Redes',
-    desc: 'Deja tus videos listos para que se publiquen solos en TikTok, Instagram y YouTube en los horarios que tú elijas.',
-    pasos: ['Videos en cola', 'Horario elegido', 'Envío automático', 'Historial'],
+    title: 'Publicación automática',
+    desc: 'Tus videos se publican solos en TikTok, Instagram y YouTube, en tus horarios.',
+    pasos: ['Videos en cola', 'Horario elegido', 'Envío solo'],
     badge: 'Práctico',
   },
   {
     icon: Box,
     tag: 'Biblioteca 3D',
     title: 'Modelos 3D con visor',
-    desc: 'Cada modelo que creas se guarda en tu biblioteca: lo giras en el visor y lo reusas como protagonista en tus videos.',
-    pasos: ['Biblioteca de modelos', 'Visor 3D', 'Reúso en videos', 'Listo para la escena'],
+    desc: 'Tus modelos se guardan, se giran en el visor y se reusan en los videos.',
+    pasos: ['Biblioteca', 'Visor 3D', 'Reúso en videos'],
     badge: 'Nuevo',
   },
   {
     icon: FolderPlus,
     tag: 'A tu Medida',
-    title: 'Crea tu propio estilo de video',
-    desc: 'Le describes el video que quieres —o le pasas ejemplos— y Hermit arma tu estilo con su card, listo para usarlo como los demás.',
-    pasos: ['Describe el estilo', 'Hermit lo arma', 'Su card lista', 'Úsalo igual'],
+    title: 'Crea tu estilo de video',
+    desc: 'Descríbele el video que quieres y Hermit arma su card, lista para usar.',
+    pasos: ['Describe el estilo', 'Hermit lo arma', 'Úsalo igual'],
     badge: 'Tuyo',
   },
   {
     icon: Cpu,
     tag: 'Tú Eliges',
-    title: 'Compatible con tu IA Favorita',
-    desc: 'Funciona con el agente de IA que ya tengas o prefieras: Claude, ChatGPT (Codex), Gemini, Devin, Grok, Cursor, Muse, Pi, DeepSeek, OpenCode y Antigravity, con tu propia cuenta.',
-    pasos: ['Claude', 'ChatGPT / Codex', 'Gemini', 'Devin y más'],
+    title: 'Tu agente de IA favorito',
+    desc: 'Claude, ChatGPT, Gemini, Devin y más — con tu propia cuenta, sin ataduras.',
+    pasos: ['Claude', 'ChatGPT / Codex', 'Devin y más'],
     badge: 'Sin Ataduras',
   },
 ]
@@ -87,11 +87,10 @@ export default function SkillsShowcase() {
             Lo que puedes hacer
           </span>
           <h2 className="text-3xl sm:text-5xl font-extrabold text-text font-heading tracking-tight mt-2">
-            Herramientas listas para crear con un clic
+            Todo lo que Hermit crea por ti
           </h2>
           <p className="mt-4 text-base sm:text-lg text-muted">
-            No necesitas ser un experto ni aprender comandos complicados. Eliges la tarjeta de lo que
-            quieres hacer y la inteligencia artificial hace el trabajo a la vista.
+            Eliges la tarjeta y la IA hace el trabajo a la vista, en tu computadora.
           </p>
         </Animar>
 

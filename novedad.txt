@@ -1,1 +1,1 @@
-Hermit 0.5.3: Novedades estrena su guía animada, con lo nuevo de la 0.5.2
+Hermit 0.5.5: imágenes dentro de los videos, portadas con título propio y una web renovada

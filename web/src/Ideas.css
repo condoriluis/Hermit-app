@@ -1,8 +1,9 @@
-/* La sección Ideas: el ancho de las galerías, con el contenido contenido a una columna legible. */
-.ideas { width: 100%; max-width: 1560px; margin: 0 auto; padding: 32px 48px 64px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
-.main:has(.ideas) { overflow-y: auto; }
+/* La sección Ideas: scrollea a todo lo ancho —su barra queda en el borde de la ventana— y `.ideas-dentro` centra el
+   contenido con el ancho de las galerías, en una columna legible. */
+.ideas { width: 100%; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; }
+.ideas-dentro { width: 100%; max-width: 1560px; margin: 0 auto; padding: 32px 48px 64px; display: flex; flex-direction: column; gap: 16px; }
 /* La cabeza va a todo lo ancho, como en «Mis videos»; lo demás (canales y contenido) se lee en una columna. */
-.ideas > *:not(.galeria-head):not(.ideas-canales) { width: 100%; max-width: 1040px; margin-inline: auto; }
+.ideas-dentro > *:not(.galeria-head):not(.ideas-canales) { width: 100%; max-width: 1040px; margin-inline: auto; }
 .ideas-head p { margin: 0; max-width: 720px; }
 
 .ideas-canales { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -225,7 +226,7 @@
 .feed-grid.vertical .feed-thumb { width: 100%; aspect-ratio: 9 / 16; }
 
 @media (max-width: 900px) {
-  .ideas { padding: 28px 22px 48px; }
+  .ideas-dentro { padding: 28px 22px 48px; }
   .ideas-pasos, .idea-cols { grid-template-columns: 1fr 1fr; }
   .feed-grid { grid-template-columns: 1fr 1fr; }
   .feed-grid.vertical { grid-template-columns: repeat(3, 1fr); }

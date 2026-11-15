@@ -185,59 +185,62 @@ export function Ideas(props: {
 
   return (
     <div className="ideas">
-      <header className="galeria-head ideas-head">
-        <div>
-          <h1>Ideas</h1>
-          {!nuevo && esVertical(actual) ? (
-            <p className="muted">
-              Qué video vertical hacer, con evidencia. Hermit busca tu nicho en TikTok y en Instagram, mide cada video contra su cuenta y lee qué piden sus comentarios, y Claude
-              propone ideas con señales de demanda, empaque de nichos vecinos, gancho de 4 P en 3 segundos y el riesgo dicho claro.
-            </p>
-          ) : (
-            <p className="muted">
-              Qué video largo hacer, con evidencia. Hermit lee tu nicho en YouTube, mide cada video contra su canal y Claude propone ideas con
-              señales de demanda, empaque de nichos vecinos, gancho de 4 P y el riesgo dicho claro.
-            </p>
-          )}
-        </div>
-      </header>
-      {canales && (
-        <nav className="ideas-canales">
-          {canales.map((c) => (
-            <button key={c.id} className={`ideas-canal ${!nuevo && actual?.id === c.id ? 'on' : ''}`} onClick={() => (setNuevo(false), props.onCanal(c.id))}>
-              {c.nombre}
-              {esVertical(c) && (
-                <span className="logos" title="TikTok e Instagram">
-                  <Logo de="tiktok" chico />
-                  <Logo de="instagram" chico />
-                </span>
-              )}
-              {trabajando.includes(c.id) && <span className="dot running" title="Investigando" />}
+      {/* La página scrollea a todo lo ancho (la barra en el borde); el contenido va centrado con tope. */}
+      <div className="ideas-dentro">
+          <header className="galeria-head ideas-head">
+          <div>
+            <h1>Ideas</h1>
+            {!nuevo && esVertical(actual) ? (
+              <p className="muted">
+                Qué video vertical hacer, con evidencia. Hermit busca tu nicho en TikTok y en Instagram, mide cada video contra su cuenta y lee qué piden sus comentarios, y Claude
+                propone ideas con señales de demanda, empaque de nichos vecinos, gancho de 4 P en 3 segundos y el riesgo dicho claro.
+              </p>
+            ) : (
+              <p className="muted">
+                Qué video largo hacer, con evidencia. Hermit lee tu nicho en YouTube, mide cada video contra su canal y Claude propone ideas con
+                señales de demanda, empaque de nichos vecinos, gancho de 4 P y el riesgo dicho claro.
+              </p>
+            )}
+          </div>
+        </header>
+        {canales && (
+          <nav className="ideas-canales">
+            {canales.map((c) => (
+              <button key={c.id} className={`ideas-canal ${!nuevo && actual?.id === c.id ? 'on' : ''}`} onClick={() => (setNuevo(false), props.onCanal(c.id))}>
+                {c.nombre}
+                {esVertical(c) && (
+                  <span className="logos" title="TikTok e Instagram">
+                    <Logo de="tiktok" chico />
+                    <Logo de="instagram" chico />
+                  </span>
+                )}
+                {trabajando.includes(c.id) && <span className="dot running" title="Investigando" />}
+              </button>
+            ))}
+            <button className={`ideas-canal mas ${nuevo || !canales.length ? 'on' : ''}`} onClick={() => setNuevo(true)}>
+              + Canal
             </button>
-          ))}
-          <button className={`ideas-canal mas ${nuevo || !canales.length ? 'on' : ''}`} onClick={() => setNuevo(true)}>
-            + Canal
-          </button>
-        </nav>
-      )}
-      {error && <p className="bad small">{error}</p>}
-      {canales && (nuevo || !canales.length) ? (
-        <CanalForm
-          primero={!canales.length}
-          canales={canales}
-          onCancel={canales.length ? () => setNuevo(false) : undefined}
-          onGuardado={(c) => {
-            setNuevo(false)
-            leerLista()
-            props.onCanal(c.id)
-          }}
-          onEntrevista={entrevistar}
-        />
-      ) : actual ? (
-        <CanalVista key={actual.id} id={actual.id} {...props} onCambio={leerLista} onBorrado={() => (leerLista(), props.onCanal(undefined))} onEntrevista={entrevistar} />
-      ) : (
-        canales && <p className="muted">No existe ese canal.</p>
-      )}
+          </nav>
+        )}
+        {error && <p className="bad small">{error}</p>}
+        {canales && (nuevo || !canales.length) ? (
+          <CanalForm
+            primero={!canales.length}
+            canales={canales}
+            onCancel={canales.length ? () => setNuevo(false) : undefined}
+            onGuardado={(c) => {
+              setNuevo(false)
+              leerLista()
+              props.onCanal(c.id)
+            }}
+            onEntrevista={entrevistar}
+          />
+        ) : actual ? (
+          <CanalVista key={actual.id} id={actual.id} {...props} onCambio={leerLista} onBorrado={() => (leerLista(), props.onCanal(undefined))} onEntrevista={entrevistar} />
+        ) : (
+          canales && <p className="muted">No existe ese canal.</p>
+        )}
+      </div>
     </div>
   )
 }

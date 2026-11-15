@@ -3,11 +3,13 @@
  * debajo (que a veces se abre o despliega) y, a la derecha, su estado y lo que se puede hacer con ella.
  */
 
-.opciones { padding: 28px 32px 56px; max-width: 1060px; width: 100%; margin: 0 auto; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
+/* Scrollea a todo lo ancho —su barra queda en el borde de la ventana— y `.opciones-dentro` centra el contenido con tope. */
+.opciones { width: 100%; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; }
+.opciones-dentro { width: 100%; max-width: 1060px; margin: 0 auto; padding: 28px 32px 56px; display: flex; flex-direction: column; gap: 20px; }
 /* El título, con la misma medida y el mismo peso que el del inicio: una sola escala en toda la app. */
 .opciones h1 { margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -0.02em; }
 .opciones-titulo { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-.opciones > .ghost { align-self: flex-start; margin-bottom: -12px; }
+.opciones-dentro > .ghost { align-self: flex-start; margin-bottom: -12px; }
 
 /* Dos columnas, como los ajustes de un IDE: el menú a la izquierda y solo la sección elegida a la derecha. */
 .opciones-cuerpo { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 36px; align-items: start; }
@@ -19,7 +21,7 @@
 .opciones-nav-item:focus-visible { outline: 1px solid var(--accent); outline-offset: -1px; }
 .opciones-pantalla { display: flex; flex-direction: column; gap: 26px; min-width: 0; }
 @media (max-width: 760px) {
-  .opciones { padding: 20px 16px 48px; }
+  .opciones-dentro { padding: 20px 16px 48px; }
   .opciones-cuerpo { grid-template-columns: 1fr; gap: 20px; }
   .opciones-nav { position: static; flex-direction: row; overflow-x: auto; padding-bottom: 4px; }
   .opciones-nav-item { width: auto; white-space: nowrap; }

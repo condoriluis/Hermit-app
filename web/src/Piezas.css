@@ -3,7 +3,9 @@
  * cada una; debajo, la rejilla de tarjetas. Como en Opciones o en el estilo del chat, scrollea la página entera:
  * el encabezado y los filtros quedan a la vista y las tarjetas cargan por tandas según se acercan al viewport.
  */
-.galeria { height: 100%; width: 100%; max-width: 1560px; margin: 0 auto; padding: 32px 48px 24px; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; }
+/* Scrollea a todo lo ancho —su barra queda en el borde de la ventana— y `.galeria-dentro` centra el contenido con tope. */
+.galeria { height: 100%; width: 100%; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; }
+.galeria-dentro { width: 100%; max-width: 1560px; margin: 0 auto; padding: 32px 48px 24px; display: flex; flex-direction: column; gap: 14px; }
 .galeria-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
 .galeria-head h1 { margin: 0 0 4px; font-size: 26px; font-weight: 700; letter-spacing: -0.02em; }
 .galeria-head p { margin: 0; font-size: 13.5px; }

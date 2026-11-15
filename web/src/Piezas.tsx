@@ -58,14 +58,17 @@ export function usePiezas(cards: Card[], sessions: SessionMeta[]) {
 export function Galeria({ titulo, cuenta, acciones, children }: { titulo: string; cuenta: ReactNode; acciones?: ReactNode; children: ReactNode }) {
   return (
     <div className="galeria">
-      <header className="galeria-head">
-        <div>
-          <h1>{titulo}</h1>
-          <p className="muted">{cuenta}</p>
-        </div>
-        {acciones && <div className="galeria-acciones">{acciones}</div>}
-      </header>
-      {children}
+      {/* La página scrollea a todo lo ancho (la barra en el borde); el contenido va centrado con tope. */}
+      <div className="galeria-dentro">
+        <header className="galeria-head">
+          <div>
+            <h1>{titulo}</h1>
+            <p className="muted">{cuenta}</p>
+          </div>
+          {acciones && <div className="galeria-acciones">{acciones}</div>}
+        </header>
+        {children}
+      </div>
     </div>
   )
 }

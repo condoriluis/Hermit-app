@@ -74,7 +74,10 @@ input, textarea, select { font: inherit; color: inherit; }
 /* La zona de arriba scrollea la página entera —cabecera «Nuevo chat», pestañas y cards, o la página del
    estilo— como las galerías: un solo scroll, y el compositor abajo no se mueve. overflow-x:hidden recibe
    el margen negativo de .cards (sangrado de 6px), que si no saldría como barra horizontal. */
-.new-top { flex: 1; min-height: 0; width: 100%; max-width: 1560px; margin: 0 auto; display: flex; flex-direction: column; justify-content: flex-start; overflow-y: auto; overflow-x: hidden; padding: 0 32px; }
+/* Scrollea a todo lo ancho —su barra queda en el borde de la ventana, como en las demás páginas— y `> *` lleva el
+   tope y el aire lateral que antes tenía la caja: el contenido se ve igual. */
+.new-top { flex: 1; min-height: 0; width: 100%; display: flex; flex-direction: column; justify-content: flex-start; overflow-y: auto; overflow-x: hidden; }
+.new-top > * { width: 100%; max-width: 1560px; margin-left: auto; margin-right: auto; padding-left: 32px; padding-right: 32px; }
 /* El compositor del inicio, ancho de lectura (~900px) y centrado; la descripción del formato, encima y sobria.
    Tope del 55%: en pantallas bajas el estante de estilos siempre conserva su mitad. */
 /* El bloque de abajo (estilo elegido + composer) va enmarcado como un dialog: borde fino, línea de acento arriba y

@@ -1,8 +1,9 @@
 import type { McpStdioServerConfig } from '@anthropic-ai/claude-agent-sdk'
 import { closeSync, existsSync, openSync, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
-import { dirname, join, resolve } from 'node:path'
+import { basename, dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { chromiumDelSistema, navegadorBajado } from './chromium.ts'
 
 /**
  * El navegador del agente: Playwright MCP en todos los hilos, para abrir, leer y fotografiar páginas que no se dejan leer
@@ -13,7 +14,8 @@ import { fileURLToPath } from 'node:url'
  * abre el agente se ve en el hilo, sin otra ventana. Playwright se conecta a ella por CDP, a la dirección que la ventana
  * anota en `data/navegador-integrado.json`.
  *
- * Sin la ventana (Hermit en Edge), usa el Chrome del sistema o, sin él, el Edge que trae Windows: no baja navegadores. Un
+ * Sin la ventana (Hermit en Edge), usa el navegador del sistema —Chrome, Edge u otro Chromium, lo que encuentre
+ * `chromium.ts`— o, si no hay ninguno, el Chrome for Testing que baja la pieza `navegador` de Herramientas. Un
  * hilo normal lo abre con ventana y con el perfil de Hermit (`data/navegador`, no el tuyo), donde siguen iniciadas las
  * cuentas que abras en él. Solo un proceso puede tener abierto un perfil: si otro hilo lo tiene, Playwright le contesta al
  * agente «Browser is already in use for …\data\navegador». Por eso se cierra tras `OCIOSO` sin usarse, y el siguiente
@@ -42,19 +44,18 @@ const A_DEMANDA = join(APP, 'server', 'navegador-mcp.mjs')
  */
 export const USA_EL_NAVEGADOR = 'Para abrir o leer una página web usa siempre las herramientas browser_ del servidor MCP navegador de Hermit (browser_navigate para abrirla, browser_snapshot para leerla): lo que abres ahí se ve en el hilo y carga como en un navegador de verdad. No uses curl ni otro navegador para eso, ni contestes de memoria lo que hay en una página.'
 
-/** Donde se instalan Chrome y Edge en cada sistema: donde los busca Playwright. */
-const programas = [process.env.LOCALAPPDATA, process.env.PROGRAMFILES, process.env['PROGRAMFILES(X86)']].filter((p): p is string => !!p)
-const [CHROME, EDGE] =
-  process.platform === 'win32'
-    ? [programas.map((p) => join(p, 'Google', 'Chrome', 'Application', 'chrome.exe')), programas.map((p) => join(p, 'Microsoft', 'Edge', 'Application', 'msedge.exe'))]
-    : process.platform === 'darwin'
-      ? [['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'], ['/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge']]
-      : [['/opt/google/chrome/chrome'], ['/opt/microsoft/msedge/msedge']]
-
-/** El canal del navegador del sistema: Chrome si está, si no Edge. `null` si no hay ninguno. */
-function delSistema(): 'chrome' | 'msedge' | null {
-  if (CHROME.some((p) => existsSync(p))) return 'chrome'
-  return EDGE.some((p) => existsSync(p)) ? 'msedge' : null
+/**
+ * El navegador de los hilos sin ventana: el del sistema y, si no hay, el Chrome for Testing de Herramientas. Se pasa por
+ * `--executable-path` (no por canal) para que valga cualquier Chromium —el `chromium` de Linux, Brave, el bajado—; el canal
+ * solo se conserva para Chrome y Edge del sistema, como siempre.
+ */
+function sinVentana(): { canal: string; exe: string } | null {
+  const sistema = chromiumDelSistema(true)
+  const exe = sistema ?? navegadorBajado()
+  if (!exe) return null
+  const n = basename(exe).toLowerCase()
+  const canal = sistema && n.includes('chrome') ? 'chrome' : sistema && n.includes('edge') ? 'msedge' : 'chromium'
+  return { canal, exe }
 }
 
 /** El CLI de Playwright MCP y su versión. El paquete solo exporta su package.json: el CLI está a su lado. `null` si no está instalado. */
@@ -101,9 +102,9 @@ export function navegadorAgente(lote?: boolean, hilo?: string): Record<string, M
     const cdp = `ws://127.0.0.1:${ventana.puerto}/${ventana.secreto}/${encodeURIComponent(hilo!)}`
     return mcp(['--cdp-endpoint', cdp, ...salida], OCIOSO)
   }
-  const canal = delSistema()
-  if (!canal) return {}
-  const args = ['--browser', canal, ...salida]
+  const sin = sinVentana()
+  if (!sin) return {}
+  const args = ['--browser', sin.canal, '--executable-path', sin.exe, ...salida]
   if (lote) args.push('--isolated', '--headless')
   // Si otro hilo ya tiene abierto el perfil, este arranca con uno limpio, con ventana: con el de Hermit, Playwright le
   // contestaría «Browser is already in use» en cuanto lo usara.

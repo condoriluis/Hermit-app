@@ -56,7 +56,7 @@
 .esc-elegir-lista button:hover { background: var(--panel-2); }
 .esc-elegir-lista img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 7px; background: var(--panel-2); }
 .esc-elegir-lista button.vertical img { aspect-ratio: 9 / 16; }
-.esc-elegir-lista span { font-size: 11.5px; line-height: 1.3; color: var(--text); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.esc-elegir-lista span { font-size: 11.5px; line-height: 1.3; color: var(--text); display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 @keyframes esc-entra { from { opacity: 0; transform: translateY(6px); } }
 
 /* «Ayúdame a decirlo»: mientras Claude piensa, su símbolo gira. */

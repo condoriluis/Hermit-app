@@ -84,7 +84,9 @@ export function Rejilla<T>({ items, children, clase }: { items: T[]; children(it
   // Se vuelve a mirar tras cada tanda: si el final sigue cerca (una pantalla alta), entra otra.
   useEffect(() => {
     if (!quedan || !fin.current) return
-    const io = new IntersectionObserver(([e]) => e.isIntersecting && setHasta((n) => n + TANDA), { root: rejilla.current, rootMargin: '0px 0px 600px' })
+    // root null = el viewport: la tanda entra aunque quien scrollea sea la página (el estilo en «Nuevo chat»)
+    // y no la propia rejilla (las galerías).
+    const io = new IntersectionObserver(([e]) => e.isIntersecting && setHasta((n) => n + TANDA), { root: null, rootMargin: '0px 0px 600px' })
     io.observe(fin.current)
     return () => io.disconnect()
   }, [quedan, hasta])

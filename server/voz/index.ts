@@ -11,7 +11,7 @@ import { conectarCDP } from '../playwright.ts'
 import { type EstadoVoz, NAVEGADOR_VOZ, type ProveedorVoz, type TrabajoVoz, type VozApi, type VozStudio } from '../../shared/types.ts'
 import { VENTA } from '../../shared/venta.ts'
 import { juntarVoces, MOTORES, motorDe, segundosWav, textoParaVoz, vocesDeLista, vocesDelPanel } from '../../shared/voz.ts'
-import { chromiumDelSistema, lanzarChromium, nombreDe, paginaNueva, SIN_CHROMIUM, SIN_VENTANA } from '../chromium.ts'
+import { chromiumParaGoogle, lanzarChromium, nombreDe, paginaNueva, SIN_CHROMIUM, SIN_VENTANA } from '../chromium.ts'
 import { guardar } from '../disco.ts'
 import { bytes, cuerpo } from '../http.ts'
 import { integrado } from '../navegador-agente.ts'
@@ -56,7 +56,7 @@ const PUERTO = 9336
  * Donde se entra con Google, el primero que haya: en Windows Edge, que viene con el sistema; en Mac Chrome, que es el que
  * suele haber (allí la comunidad no podía entrar en Edge). Safari no sirve (`server/chromium.ts`).
  */
-const navegadorDeGoogle = () => chromiumDelSistema(process.platform === 'darwin')
+const navegadorDeGoogle = () => chromiumParaGoogle(process.platform === 'darwin')
 /** Su nombre, para decirte dónde entrar. */
 const nombreEdge = () => nombreDe(navegadorDeGoogle() ?? (process.platform === 'win32' ? 'msedge' : undefined))
 /** Lo más que espera una petición a que acabe su voz: el MCP repite, y Codex corta una herramienta a los 60 s. */

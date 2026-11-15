@@ -8,6 +8,7 @@ import { pipeline } from 'node:stream/promises'
 import type { MotorVoz as Motor, Requisito } from '../shared/types.ts'
 import { llaveEnUso } from './acceso.ts'
 import { rutas } from './almacenamiento.ts'
+import { CFT_VERSION, chromiumDelSistema, cft, nombreDe, navegadorBajado } from './chromium.ts'
 import { correr } from './version.ts'
 
 /**
@@ -51,6 +52,8 @@ interface Pieza {
   opcional?: boolean
   /** `null` si falta; si no, lo que se encontró (la versión). */
   mirar(app: string): Promise<string | null>
+  /** Se vuelve a mirar en cada consulta aunque la lista esté guardada: su `mirar` es barato (un `existsSync`). */
+  siempre?: true
   /** Lo que falta, cuando no basta con decir que falta. */
   falta?(app: string): Promise<string | undefined>
   /** El comando que la instala. Sin él, se consigue a mano (`aMano`). */
@@ -356,6 +359,41 @@ async function instalarFfmpeg(app: string) {
   return 'listo'
 }
 
+/**
+ * Chrome for Testing, el Chrome de Google para automatización, en `piezas/navegador`: sin admin y para Windows, Mac
+ * (Intel y ARM) y Linux x64. Es el respaldo de `chromium.ts` donde no hay Chrome ni Edge, y el navegador que usan los
+ * agentes cuando Hermit corre sin ventana. La versión es la que espera Playwright (`CFT_VERSION`).
+ */
+async function instalarNavegador(app: string) {
+  const c = cft()!
+  const aparte = join(tmpdir(), `hermit-chrome-${Date.now()}`)
+  mkdirSync(aparte, { recursive: true })
+  try {
+    const zip = join(aparte, 'chrome.zip')
+    paso = 'Bajando Chrome'
+    await bajar(c.url, zip)
+    paso = 'Instalando Chrome'
+    mkdirSync(c.destino, { recursive: true })
+    if (WINDOWS) {
+      // El `tar` de Windows abre zips; el de Git, si va antes en el PATH, no.
+      const tar = join(process.env.SystemRoot ?? 'C:\\Windows', 'System32', 'tar.exe')
+      await ejecutar(tar, ['-xf', zip, '-C', c.destino], app)
+    } else {
+      try {
+        await ejecutar('unzip', ['-o', zip, '-d', c.destino], app)
+      } catch {
+        // Sin unzip (un Linux pelado), el zipfile del Python del sistema lo abre igual.
+        await ejecutar('python3', ['-m', 'zipfile', '-e', zip, c.destino], app)
+      }
+    }
+    if (!existsSync(c.exe)) throw new Error('Se bajó, pero no apareció el ejecutable de Chrome')
+    if (!WINDOWS) chmodSync(c.exe, 0o755)
+  } finally {
+    rmSync(aparte, { recursive: true, force: true, ...REINTENTOS })
+  }
+  return 'listo'
+}
+
 /** Para borrar lo que el antivirus de Windows tiene abierto un momento. */
 const REINTENTOS = { maxRetries: 10, retryDelay: 500 }
 
@@ -424,6 +462,21 @@ const PIEZAS: Pieza[] = [
     instalar: instalarPython
   },
   paquetes(Object.keys(PAQUETES)),
+  {
+    id: 'navegador',
+    nombre: 'Navegador',
+    para: 'Un Chrome propio para que el agente abra páginas y para entrar con Google (Flow, la voz y las redes) en un equipo sin Chrome ni Edge. Si ya tienes uno, no hace falta.',
+    opcional: true,
+    aMano: 'Instala Google Chrome o Chromium desde el centro de software o google.com/chrome.',
+    // Con Chrome, Edge o cualquier Chromium del sistema ya está: el propio solo hace falta donde no hay ninguno.
+    siempre: true,
+    mirar: async () => {
+      const sistema = chromiumDelSistema(true)
+      if (sistema) return nombreDe(sistema)
+      return navegadorBajado() ? `Chrome for Testing ${CFT_VERSION}` : null
+    },
+    instalar: cft() ? instalarNavegador : undefined
+  },
   {
     id: 'python-hermit',
     nombre: 'Python de Hermit',
@@ -514,7 +567,17 @@ const listos = new Map<string, Requisito[]>()
 
 export async function requisitos(app: string, fresco = false, skill?: string): Promise<Requisito[]> {
   const ya = listos.get(skill ?? '')
-  if (ya && !fresco) return ya
+  if (ya && !fresco) {
+    // Las piezas `siempre` se miran de nuevo aunque la lista esté guardada: un Chrome recién instalado se nota al momento.
+    const de = piezas(app, skill).filter((p) => p.siempre)
+    if (!de.length) return ya
+    let lista = ya
+    for (const p of de) {
+      const i = lista.findIndex((r) => r.id === p.id)
+      if (i >= 0) lista = [...lista.slice(0, i), await mirarUna(p, app), ...lista.slice(i + 1)]
+    }
+    return lista
+  }
   const lista = await mirar(app, piezas(app, skill))
   // Lo que no se puede bajar desde aquí (el Python de Hermit) no se arregla volviendo a mirar.
   if (lista.every((r) => (r.listo || !r.instalable) && !r.estado && !r.error)) listos.set(skill ?? '', lista)
@@ -523,24 +586,26 @@ export async function requisitos(app: string, fresco = false, skill?: string): P
 }
 
 function mirar(app: string, de: Pieza[]): Promise<Requisito[]> {
-  return Promise.all(
-    de.map(async (p): Promise<Requisito> => {
-      const hallado = await p.mirar(app)
-      return {
-        id: p.id,
-        nombre: p.nombre,
-        para: p.para,
-        listo: hallado !== null,
-        // Mientras se instala, en qué va; si no, lo que se encontró o lo que falta.
-        detalle: instalando?.id === p.id ? paso : hallado !== null ? hallado || undefined : await p.falta?.(app),
-        instalable: !!p.instalar,
-        aMano: p.aMano,
-        opcional: p.opcional,
-        estado: instalando?.id === p.id ? 'instalando' : cola.some((c) => c.id === p.id) ? 'esperando' : undefined,
-        error: fallos[p.id]
-      }
-    })
-  )
+  return Promise.all(de.map((p) => mirarUna(p, app)))
+}
+
+function mirarUna(p: Pieza, app: string): Promise<Requisito> {
+  return (async (): Promise<Requisito> => {
+    const hallado = await p.mirar(app)
+    return {
+      id: p.id,
+      nombre: p.nombre,
+      para: p.para,
+      listo: hallado !== null,
+      // Mientras se instala, en qué va; si no, lo que se encontró o lo que falta.
+      detalle: instalando?.id === p.id ? paso : hallado !== null ? hallado || undefined : await p.falta?.(app),
+      instalable: !!p.instalar,
+      aMano: p.aMano,
+      opcional: p.opcional,
+      estado: instalando?.id === p.id ? 'instalando' : cola.some((c) => c.id === p.id) ? 'esperando' : undefined,
+      error: fallos[p.id]
+    }
+  })()
 }
 
 /** Pone en la cola las que faltan de `ids` (o todas) de lo que pide `skill`, y responde sin esperar. */

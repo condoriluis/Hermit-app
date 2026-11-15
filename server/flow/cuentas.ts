@@ -6,7 +6,7 @@ import { join } from 'node:path'
 import type { Browser } from 'playwright-core'
 import { WebSocket } from 'ws'
 import { MAX_CUENTAS } from '../../shared/flow.ts'
-import { chromiumDelSistema, lanzarChromium, nombreDe, paginaNueva, SIN_CHROMIUM, SIN_VENTANA } from '../chromium.ts'
+import { chromiumParaGoogle, lanzarChromium, nombreDe, paginaNueva, SIN_CHROMIUM, SIN_VENTANA } from '../chromium.ts'
 import { guardar } from '../disco.ts'
 import { conectarCDP } from '../playwright.ts'
 import { URL_FLOW } from './pagina.ts'
@@ -47,7 +47,7 @@ const puertoLibre = () =>
       s.close(() => ok(port))
     })
   })
-const navegador = () => chromiumDelSistema(process.platform === 'darwin')
+const navegador = () => chromiumParaGoogle(process.platform === 'darwin')
 export const nombreNavegador = () => nombreDe(navegador() ?? (process.platform === 'win32' ? 'msedge' : undefined))
 
 /** El Edge de un perfil: lo abre, lo usa con Playwright y lo cierra. */

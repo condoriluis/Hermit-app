@@ -1,13 +1,14 @@
 /*
- * Las galerías («Mis videos», «Mis imágenes», «Mis artículos»): arriba el título y lo propio de cada una; debajo, la
- * rejilla de tarjetas (`.videos` y `.video-tile`, en styles.css), que hace scroll sola.
+ * Las galerías («Mis videos», «Mis imágenes», «Mis artículos», «Mis presentaciones»): arriba el título y lo propio de
+ * cada una; debajo, la rejilla de tarjetas. Como en Opciones o en el estilo del chat, scrollea la página entera:
+ * el encabezado y los filtros quedan a la vista y las tarjetas cargan por tandas según se acercan al viewport.
  */
-.galeria { height: 100%; width: 100%; max-width: 1560px; margin: 0 auto; padding: 32px 48px 0; display: flex; flex-direction: column; gap: 14px; }
+.galeria { height: 100%; width: 100%; max-width: 1560px; margin: 0 auto; padding: 32px 48px 24px; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; }
 .galeria-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
 .galeria-head h1 { margin: 0 0 4px; font-size: 26px; font-weight: 700; letter-spacing: -0.02em; }
 .galeria-head p { margin: 0; font-size: 13.5px; }
 .galeria-acciones { display: flex; align-items: center; gap: 10px; }
-.galeria .videos, .galeria .presentaciones { flex: 1; padding-bottom: 24px; }
+.galeria .videos, .galeria .presentaciones { flex: none; overflow: visible; }
 /* Al final de lo dibujado: cuando se acerca a la vista, entra otra tanda. */
 .galeria-fin { width: 100%; height: 1px; }
 

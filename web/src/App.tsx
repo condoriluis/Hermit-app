@@ -1066,18 +1066,18 @@ function NewSession(props: {
   return (
     <div className="new-session" {...soltar.props}>
       {soltar.aviso}
-      <header className="new-session-head">
-        <div>
-          <h1>Nuevo chat</h1>
-          <p className="muted">Elige un formato para empezar a crear o escribe directamente en el compositor.</p>
-        </div>
-        <div className="new-session-acciones">
-          <AvisoEquipo />
-        </div>
-      </header>
-      {/* Arriba las skills (o, con un estilo elegido, sus videos), que hacen scroll solas; abajo la skill elegida y el
-          compositor, que no se mueven de su sitio. */}
+      {/* Arriba las skills (o, con un estilo elegido, sus videos), que hacen scroll solas con la cabecera;
+          abajo la skill elegida y el compositor, que no se mueven de su sitio. */}
       <div className="new-top">
+        <header className="new-session-head">
+          <div>
+            <h1>Nuevo chat</h1>
+            <p className="muted">Elige un formato para empezar a crear o escribe directamente en el compositor.</p>
+          </div>
+          <div className="new-session-acciones">
+            <AvisoEquipo />
+          </div>
+        </header>
         {enEstilo && esDeVideo(card) ? (
           <div className="estilo">
             <button className="estilo-volver" onClick={() => setEnEstilo(false)}>
@@ -1106,16 +1106,21 @@ function NewSession(props: {
         )}
       </div>
       <div className="new-bottom">
-        <div className="new-head">
-          <span className="card-icon big"><Icon icon={card.icon ?? '✦'} /></span>
-          <h1>{card.title}</h1>
-          <p>{card.description}</p>
-          <TusCambios card={card} clave={hilos.map((s) => s.id + s.updatedAt).join()} />
+        {/* En ventanas bajas (una laptop pequeña) esto hace scroll interno: el compositor nunca se va con él. */}
+        <div className="new-antes">
+          <div className="new-head">
+            <div className="new-head-titulo">
+              <span className="card-icon big"><Icon icon={card.icon ?? '✦'} /></span>
+              <h1>{card.title}</h1>
+            </div>
+            <p>{card.description}</p>
+            <TusCambios card={card} clave={hilos.map((s) => s.id + s.updatedAt).join()} />
+          </div>
+          {/* Hasta saber qué cuentas hay no sale: el aviso de Claude no se asoma a quien solo tiene ChatGPT u OpenCode. */}
+          {sinClaude !== undefined && <CuentaClaude model={choice?.model} onFalta={setSinCuenta} />}
+          {/* Las herramientas de video (FFmpeg, Python, yt-dlp) solo hacen falta en los estilos de video, y de los paquetes, los de su skill. */}
+          {esDeVideo(card) && <Requisitos skill={card.skill} />}
         </div>
-        {/* Hasta saber qué cuentas hay no sale: el aviso de Claude no se asoma a quien solo tiene ChatGPT u OpenCode. */}
-        {sinClaude !== undefined && <CuentaClaude model={choice?.model} onFalta={setSinCuenta} />}
-        {/* Las herramientas de video (FFmpeg, Python, yt-dlp) solo hacen falta en los estilos de video, y de los paquetes, los de su skill. */}
-        {esDeVideo(card) && <Requisitos skill={card.skill} />}
         {composer}
         <TarjetasEnlaces enlaces={enlaces} />
       </div>
@@ -1151,8 +1156,6 @@ type AccionesCartel = { elegir(c: Card): void; duplicar(c: Card): void; borrar(c
  * que no producen nada (herramientas). Cada cartel lleva su último video si lo tiene y, si no, su icono y qué hace; abajo,
  * cuánto se usa. Memorizado: escribir en el compositor de abajo no las vuelve a dibujar (ni a sus videos de fondo).
  */
-const GASTAN_FLOW = new Set(['animalnovela', 'devnovela', 'frutinovela', 'minidrama', 'nuevo-estilo'])
-
 /** Los grupos del estante, en orden: lo que produce cada card y, al final, las que no producen nada (herramientas). */
 const GRUPOS: { titulo: string; produce?: Produce }[] = [
   { titulo: 'Videos', produce: 'video' },
@@ -1212,14 +1215,6 @@ function Cartel({ c, activa, previa, hilos, acciones }: { c: Card; activa: boole
       onMouseEnter={(e) => e.currentTarget.querySelector('video')?.play().catch(() => {})}
       onMouseLeave={(e) => e.currentTarget.querySelector('video')?.load()}
     >
-      {!GASTAN_FLOW.has(c.id) && (
-        <span
-          className="card-badge-gratis"
-          title="Voz, imágenes y montaje 100% gratuitos y locales. No consume créditos de Google Flow."
-        >
-          Gratis
-        </span>
-      )}
       {/* previas de las cards: el cuadro quieto hasta que pasas por encima; en las de imágenes, la última imagen. Al salir,
           `load()` vuelve a él y suelta el video. */}
       {previa ? (

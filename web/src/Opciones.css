@@ -51,6 +51,10 @@
 .fila-extra p { margin: 0; }
 /* Con qué paga cada agente: la suscripción o la llave de API. */
 .fila-extra.pago { flex-direction: row; flex-wrap: wrap; align-items: center; }
+/* Un campo con sus botones en línea (la carpeta de trabajo): el input toma todo el ancho que deja. */
+.fila-campos { flex-direction: row; align-items: center; }
+.fila-campos .input { flex: 1; min-width: 0; padding: 8px 11px; border-radius: var(--radio); background: var(--panel); border: 1px solid var(--line); outline: none; color: var(--text); font: inherit; }
+.fila-campos .input:focus { border-color: var(--accent); }
 .requisito-error { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 120px; overflow-y: auto; }
 
 /* El logo de cada cosa (`Logos.tsx`), en su cuadrito. Los chicos van apilados en la fila de las herramientas plegadas. */

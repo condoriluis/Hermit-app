@@ -140,7 +140,11 @@ export function CarpetaDelHilo({ sessionId, carpeta }: { sessionId: string; carp
     <div className="etapas-carpeta">
       <span className="muted small">Carpeta</span>
       <Picker
-        label={datos.actual || 'la de la card'}
+        label={
+          <span className="carpeta-nombre" title={datos.actual || 'la de la card'}>
+            {datos.actual || 'la de la card'}
+          </span>
+        }
         value={datos.actual}
         groups={[{ label: 'Leer el avance de otra', options: opcionesDeCarpetas(datos.carpetas) }]}
         onChange={cambiar}

@@ -112,8 +112,8 @@
 .com-post-cuerpo { display: flex; gap: 16px; margin-top: 12px; }
 .com-post-textos { flex: 1; min-width: 0; }
 .com-post-textos h3 { margin: 0 0 4px; font-size: 18px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.3; overflow-wrap: anywhere; }
-.com-post-textos p { margin: 0; color: var(--text); opacity: 0.86; font-size: 14.5px; line-height: 1.55; white-space: pre-line; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.com-post-textos p.solo { opacity: 1; font-size: 15px; -webkit-line-clamp: 4; }
+.com-post-textos p { margin: 0; color: var(--text); opacity: 0.86; font-size: 14.5px; line-height: 1.55; white-space: pre-line; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.com-post-textos p.solo { opacity: 1; font-size: 15px; -webkit-line-clamp: 4; line-clamp: 4; }
 .com-post-portada { position: relative; width: 132px; height: 96px; flex: none; overflow: hidden; border-radius: 10px; border: 1px solid var(--line); background: var(--panel-2); }
 .com-post-portada.vertical { width: 76px; height: 116px; }
 .com-post-portada img, .com-post-portada video { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -136,6 +136,9 @@
 .com-mas:hover:not(:disabled) { background: var(--panel-2); border-color: var(--line-fuerte); }
 
 /* La tarjeta de la comunidad, a la derecha: portada, qué es, sus números, caras y tu perfil. */
+/* min-width:0 en las dos columnas: sin él, un hijo ancho (una publicación, el compositor) impide que la columna
+   encoja y el grid se desborda a la derecha, comiéndose el aside o pidiendo scroll horizontal. */
+.com-centro, .com-lado { min-width: 0; }
 .com-lado { position: sticky; top: 36px; }
 .com-comunidad { overflow: hidden; border-radius: 16px; border: 1px solid var(--line); background: var(--panel); }
 .com-comunidad-portada { position: relative; height: 140px; display: grid; place-items: center; background: radial-gradient(60% 80% at 50% 60%, var(--accent-soft), transparent 70%), linear-gradient(180deg, var(--panel-2), var(--panel)); border-bottom: 1px solid var(--line); }

@@ -732,14 +732,16 @@ export function Composer(props: {
         />
       </div>
       <div className="composer-bar">
-        <button className="attach" title="Adjuntar archivos" onClick={() => picker.current?.click()}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="m21.4 11.6-9.2 9.2a6 6 0 0 1-8.5-8.5l9.2-9.2a4 4 0 0 1 5.7 5.7l-9.2 9.2a2 2 0 0 1-2.8-2.8l8.5-8.5" />
-          </svg>
-        </button>
-        <button className="attach" title="De Mis imágenes" onClick={() => setElegir(true)}>
-          <Icono de="imagen" />
-        </button>
+        <span className="adjuntos">
+          <button className="attach" title="Adjuntar archivos" onClick={() => picker.current?.click()}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="m21.4 11.6-9.2 9.2a6 6 0 0 1-8.5-8.5l9.2-9.2a4 4 0 0 1 5.7 5.7l-9.2 9.2a2 2 0 0 1-2.8-2.8l8.5-8.5" />
+            </svg>
+          </button>
+          <button className="attach" title="De Mis imágenes" onClick={() => setElegir(true)}>
+            <Icono de="imagen" />
+          </button>
+        </span>
         <input
           ref={picker}
           type="file"

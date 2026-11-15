@@ -55,7 +55,8 @@ input, textarea, select { font: inherit; color: inherit; }
    de CPU cada animación, todo el rato que trabaja un agente); por pasos, unos diez, y casi no gasta. */
 @keyframes pulse { 50% { opacity: 0.4; } }
 
-.main { position: relative; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+/* overflow:hidden: lo que una página dibuje de más se corta aquí, nunca se monta sobre la barra de estado. */
+.main { position: relative; min-width: 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
 /* Acciones y avisos del encabezado del nuevo chat */
 .new-session-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; width: 100%; max-width: 1560px; margin: 0 auto; flex: none; }
 .new-session-head h1 { margin: 0 0 4px; font-size: 26px; font-weight: 700; letter-spacing: -0.02em; }
@@ -67,13 +68,36 @@ input, textarea, select { font: inherit; color: inherit; }
 
 /* Inicio: arriba las skills, a lo ancho; abajo, centradas, la elegida y el compositor, que no se mueven de su sitio. Si
    sobran skills, hacen scroll ellas solas y el compositor sigue a la vista. */
-.new-session { height: 100%; display: flex; flex-direction: column; gap: 16px; padding: 24px 32px 20px; }
-.new-top { flex: 1; min-height: 0; width: 100%; max-width: 1560px; margin: 0 auto; display: flex; flex-direction: column; justify-content: flex-start; }
-/* El compositor del inicio, ancho de lectura (~900px) y centrado; la descripción del formato, encima y sobria. */
-.new-bottom { flex: none; width: 100%; max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+/* El aire de los lados lo ponen .new-top y .new-bottom, no esta caja: así la barra de scroll de .new-top
+   queda pegada al borde derecho, como en las galerías. */
+.new-session { height: 100%; display: flex; flex-direction: column; padding: 24px 0 20px; }
+/* La zona de arriba scrollea la página entera —cabecera «Nuevo chat», pestañas y cards, o la página del
+   estilo— como las galerías: un solo scroll, y el compositor abajo no se mueve. overflow-x:hidden recibe
+   el margen negativo de .cards (sangrado de 6px), que si no saldría como barra horizontal. */
+.new-top { flex: 1; min-height: 0; width: 100%; max-width: 1560px; margin: 0 auto; display: flex; flex-direction: column; justify-content: flex-start; overflow-y: auto; overflow-x: hidden; padding: 0 32px; }
+/* El compositor del inicio, ancho de lectura (~900px) y centrado; la descripción del formato, encima y sobria.
+   Tope del 55%: en pantallas bajas el estante de estilos siempre conserva su mitad. */
+/* El bloque de abajo (estilo elegido + composer) va enmarcado como un dialog: borde fino, línea de acento arriba y
+   esquinas redondeadas, para distinguirlo del fondo de la página. El composer de adentro no cambia. */
+.new-bottom { flex: 0 1 auto; min-height: 0; max-height: 55%; width: 100%; max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; padding: 4px 24px 20px; border: 1px solid var(--line); border-top: 2px solid var(--accent); border-radius: 14px; }
+/* En ventanas bajas encoge y hace scroll interno: el compositor queda siempre a la vista. */
+.new-antes { flex: 0 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+/* Si ni así alcanza (pantalla muy baja), la tarjeta del compositor también encoge y scrollea por dentro:
+   nunca se monta encima del estante ni del pie. */
+.new-bottom .composer { min-height: 0; overflow-y: auto; }
+/* Pantalla baja (una laptop pequeña): menos aire alrededor y la cabecera sin su frase, para que el estante
+   y el compositor quepan. */
+@media (max-height: 760px) {
+  .new-session { padding: 14px 0 10px; }
+  .new-top { padding: 0 24px; }
+  .new-bottom { padding: 4px 16px 14px; }
+  .new-session-head h1 { font-size: 20px; }
+  .new-session-head p { display: none; }
+}
 .new-head { text-align: center; }
-.new-head .card-icon.big { font-size: 30px; }
-.new-head h1 { margin: 2px 0; font-size: 19px; font-weight: 650; letter-spacing: -0.01em; }
+.new-head-titulo { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.new-head .card-icon.big { font-size: 24px; }
+.new-head h1 { margin: 0; font-size: 19px; font-weight: 650; letter-spacing: -0.01em; }
 .new-head p { margin: 0; font-size: 12.5px; color: var(--muted); }
 /* «Con tus cambios (N)» (TusCambios.tsx): ámbar, que avisa sin alarmar. */
 .tus-cambios { margin-top: 8px; padding: 3px 11px; border-radius: 999px; border: 1px solid var(--warn); color: var(--warn); font-size: 12.5px; font-weight: 600; transition: background 0.15s; }
@@ -90,7 +114,8 @@ input, textarea, select { font: inherit; color: inherit; }
 
 /* El estante: cada skill es un cartel, agrupado por lo que produce. Con previa, su último video (quieto hasta pasar el
    ratón) o su última imagen; sin ella, su icono y qué hace. Abajo, sobre una sombra, el nombre y cuánto se usa. */
-.estante { min-height: 0; display: flex; flex-direction: column; gap: 10px; }
+/* Crece con sus cards: quien scrollea es .new-top. */
+.estante { flex: none; display: flex; flex-direction: column; gap: 10px; }
 /* Un grupo a la vez: la pestaña activa lleva una línea fina, sin fondos ni más cajas. */
 .cards-tabs { flex: none; display: flex; align-items: baseline; gap: 18px; margin: 0 6px; border-bottom: 1px solid var(--line); }
 .cards-tab { position: relative; padding-bottom: 7px; color: var(--muted); font-size: 12.5px; font-weight: 600; white-space: nowrap; transition: color 0.15s; }
@@ -118,29 +143,11 @@ input, textarea, select { font: inherit; color: inherit; }
 .card-actions span { width: 24px; height: 24px; display: grid; place-items: center; border-radius: 6px; background: var(--scrim-control); color: var(--text); font-size: 12px; }
 .card-actions span:hover { background: var(--panel); }
 .card-actions span.danger:hover { color: var(--bad); }
-/* «Gratis»: una etiqueta discreta en la esquina, sin cinta. No tapa el icono; se va al pasar el ratón, que ahí salen
-   duplicar y borrar. */
-.card-badge-gratis {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 1;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: var(--scrim-control);
-  border: 1px solid var(--ok-border);
-  color: var(--ok);
-  font-size: 9.5px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  line-height: 1.5;
-  pointer-events: none;
-  text-transform: uppercase;
-  transition: opacity 0.15s;
-}
-.card:hover .card-badge-gratis, .card:focus-visible .card-badge-gratis { opacity: 0; }
 /* Un estilo elegido: sus videos en el sitio de las cards. */
-.estilo { min-height: 0; display: flex; flex-direction: column; gap: 10px; }
+/* La página del estilo crece con su contenido: quien scrollea es .new-top (arriba, con la cabecera).
+   La rejilla de videos no scrollea por dentro; carga por tandas según se acerca al viewport. */
+.estilo { flex: none; display: flex; flex-direction: column; gap: 10px; }
+.estilo .videos { flex: none; overflow: visible; }
 .estilo-volver { align-self: flex-start; color: var(--muted); font-size: 12.5px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); transition: color 0.15s, border-color 0.15s; }
 .estilo-volver:hover { color: var(--accent); border-color: var(--accent); }
 .estilo-vacio { color: var(--muted); text-align: center; margin: 24px 0; }
@@ -291,6 +298,10 @@ a.link-chip:hover { border-color: var(--accent); }
 .modelos-nota { margin: 0; max-width: 400px; white-space: normal; }
 @keyframes rise { from { opacity: 0; transform: translateY(4px); } }
 @keyframes drop { from { opacity: 0; transform: translateY(-4px); } }
+/* Adjuntar y Mis imágenes van juntos en una cápsula, como el Segmento del formato: un solo contorno, no dos círculos. */
+.adjuntos { display: flex; align-items: center; gap: 2px; height: 28px; padding: 2px; border: 1px solid var(--line); border-radius: 999px; }
+.adjuntos .attach { width: 24px; height: 24px; border: 0; }
+.adjuntos .attach:hover:not(:disabled) { background: var(--panel-2); color: var(--text); }
 .attach { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; color: var(--muted); border: 1px solid var(--line); }
 .attach:hover:not(:disabled) { color: var(--text); border-color: var(--line-fuerte); }
 .attach .ico { width: 15px; height: 15px; }

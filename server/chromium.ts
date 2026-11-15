@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { join, win32 } from 'node:path'
 import type { Browser, Page } from 'playwright-core'
+import { rutas } from './almacenamiento.ts'
 
 /**
  * Chrome, Edge u otro Chromium del sistema, con un perfil de Hermit y CDP, donde se entra con Google (la voz y Flow,
@@ -26,13 +27,13 @@ const CHROME =
       ]
     : process.platform === 'darwin'
       ? enMac('Google Chrome', 'Google Chrome')
-      : ['/opt/google/chrome/chrome', '/usr/bin/google-chrome', '/usr/bin/chromium']
+      : ['/opt/google/chrome/chrome', '/usr/bin/google-chrome', '/usr/bin/google-chrome-stable', '/usr/bin/chromium', '/usr/bin/chromium-browser', '/snap/bin/chromium']
 const EDGE =
   process.platform === 'win32'
     ? ['C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe', ...enWindows('Microsoft', 'Edge').map((d) => join(d, 'msedge.exe'))]
     : process.platform === 'darwin'
       ? enMac('Microsoft Edge', 'Microsoft Edge')
-      : ['/opt/microsoft/msedge/msedge']
+      : ['/opt/microsoft/msedge/msedge', '/usr/bin/microsoft-edge', '/usr/bin/microsoft-edge-stable', '/snap/bin/microsoft-edge']
 
 /**
  * El primero que haya, Chrome antes que Edge si `chromePrimero`. En Windows, Edge sigue primero (ahí está la sesión de
@@ -42,6 +43,53 @@ const EDGE =
 export function chromiumDelSistema(chromePrimero: boolean): string | undefined {
   const otros = [...(process.platform === 'win32' ? [predeterminado()].filter((e): e is string => !!e) : []), ...CHROME]
   return (chromePrimero ? [...otros, ...EDGE] : [...EDGE, ...otros]).find((e) => existsSync(e))
+}
+
+/**
+ * El Chrome for Testing que baja la pieza `navegador` de Herramientas, en `piezas/navegador`: el Chrome de Google para
+ * automatización, sin admin, para el equipo sin Chrome ni Edge (un Linux pelado, una Mac nueva). La versión es la que
+ * espera Playwright (`browserVersion` de su browsers.json), para que las herramientas `browser_*` lo manejen sin avisos.
+ * Google no publica paquete para Linux ARM: ahí `cft` da `null` y la pieza se consigue a mano.
+ */
+export const CFT_VERSION = '156.0.8078.4'
+const CFT_PLATAFORMA =
+  process.platform === 'win32'
+    ? 'win64'
+    : process.platform === 'darwin'
+      ? process.arch === 'arm64'
+        ? 'mac-arm64'
+        : 'mac-x64'
+      : process.platform === 'linux' && process.arch === 'x64'
+        ? 'linux64'
+        : null
+/** El ejecutable dentro del zip, relativo a `chrome-<plataforma>/`. */
+const CFT_EXE =
+  process.platform === 'darwin'
+    ? join('Google Chrome for Testing.app', 'Contents', 'MacOS', 'Google Chrome for Testing')
+    : process.platform === 'win32'
+      ? join('chrome-win64', 'chrome.exe')
+      : join('chrome-linux64', 'chrome')
+
+/** Lo que hace falta para bajar el Chrome for Testing; `null` si el sistema no tiene paquete (Linux ARM). */
+export function cft(): { url: string; destino: string; exe: string } | null {
+  if (!CFT_PLATAFORMA) return null
+  const destino = join(rutas().piezas, 'navegador', CFT_VERSION)
+  return {
+    url: `https://storage.googleapis.com/chrome-for-testing-public/${CFT_VERSION}/${CFT_PLATAFORMA}/chrome-${CFT_PLATAFORMA}.zip`,
+    destino,
+    exe: join(destino, `chrome-${CFT_PLATAFORMA}`, CFT_EXE)
+  }
+}
+
+/** El Chrome for Testing ya bajado por Herramientas, si está entero. */
+export function navegadorBajado(): string | undefined {
+  const exe = cft()?.exe
+  return exe && existsSync(exe) ? exe : undefined
+}
+
+/** El mejor Chromium para entrar con Google: el del sistema y, si no hay, el que bajó la pieza `navegador`. */
+export function chromiumParaGoogle(chromePrimero: boolean): string | undefined {
+  return chromiumDelSistema(chromePrimero) ?? navegadorBajado()
 }
 
 /** El navegador predeterminado de Windows si es un Chromium, leído una vez del registro. */
@@ -78,10 +126,10 @@ export function nombreDe(exe: string | undefined) {
 /** Lo que se dice si no hay ninguno: en Mac casi siempre es que solo hay Safari, y en Windows, Firefox. */
 export const SIN_CHROMIUM =
   process.platform === 'win32'
-    ? 'Para entrar con Google hace falta Chrome, Edge o Brave: Firefox no deja pasar la sesión a Hermit. Instala Chrome desde google.com/chrome y vuelve a intentarlo.'
+    ? 'Para entrar con Google hace falta Chrome, Edge o Brave: Firefox no deja pasar la sesión a Hermit. Instala Chrome desde google.com/chrome o bájalo desde Herramientas de Hermit, y vuelve a intentarlo.'
     : process.platform === 'darwin'
-      ? 'Para entrar con Google hace falta Google Chrome (o Microsoft Edge): Safari no deja pasar la sesión a Hermit. Instálalo desde google.com/chrome y vuelve a intentarlo.'
-      : 'No encontré Google Chrome ni Microsoft Edge: instala uno para entrar con Google.'
+      ? 'Para entrar con Google hace falta Google Chrome (o Microsoft Edge): Safari no deja pasar la sesión a Hermit. Instálalo desde google.com/chrome o bájalo desde Herramientas de Hermit, y vuelve a intentarlo.'
+      : 'No encontré Google Chrome ni Microsoft Edge: instala uno para entrar con Google, o bájalo desde Herramientas de Hermit.'
 
 /**
  * Lo abre con `args`. Con `ventana`:

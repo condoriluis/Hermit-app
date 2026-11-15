@@ -1,1 +1,1 @@
-Hermit 0.5.5: imágenes dentro de los videos, portadas con título propio y una web renovada
+Hermit 0.5.6: navegador propio si el equipo no tiene, barra lateral más limpia y páginas que ya no se montan en pantallas chicas

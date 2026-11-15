@@ -58,7 +58,7 @@
 .tus-videos-tabla .num.bien { color: var(--ok); font-weight: 650; }
 .tus-videos-tabla .num.mal { color: var(--bad); }
 .tus-videos-tabla tr.privado td { opacity: 0.55; }
-.tus-videos-tabla .titulo-video { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.tus-videos-tabla .titulo-video { display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .tus-videos-tabla .llegaron { font-size: 12.5px; white-space: nowrap; }
 .audiencia { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; margin: 0; font-size: 13px; }
 .audiencia dt { color: var(--muted); }
@@ -126,9 +126,9 @@
 .ideas .portada img { display: block; width: 100%; height: 100%; aspect-ratio: auto; object-fit: cover; border-radius: 0; }
 .portada .logo { position: absolute; left: 3px; bottom: 3px; }
 .titulo-video { font-weight: 600; }
-.texto-vertical { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.texto-vertical { display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 /* Lo que dice un video al principio: en YouTube son unos 30 s, cortados a dos líneas (entero en su `title`). */
-.dice { margin-top: 2px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.dice { margin-top: 2px; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .destacados summary { cursor: pointer; width: fit-content; }
 .destacados ul { margin: 4px 0 0; padding-left: 16px; display: flex; flex-direction: column; gap: 3px; }
 /* Las cuentas de investigación: una línea por red. */
@@ -216,7 +216,7 @@
 .modal.feed { width: min(900px, calc(100vw - 40px)); max-height: calc(100vh - 60px); overflow-y: auto; }
 .feed-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 14px; }
 .feed-tile { display: flex; flex-direction: column; gap: 4px; color: var(--text); text-decoration: none; font-size: 12.5px; min-width: 0; }
-.feed-tile strong { font-size: 13px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.feed-tile strong { font-size: 13px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .feed-thumb { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 9px; background: var(--panel-2); }
 .feed-tile.tuyo .feed-thumb { outline: 2px solid var(--accent); outline-offset: 2px; }
 .feed-thumb.concepto { display: grid; place-items: center; padding: 10px; text-align: center; font-size: 11.5px; color: var(--muted); background: var(--panel-2); border: 1px dashed var(--accent); overflow: hidden; }

@@ -146,6 +146,7 @@ else {
 async function iniciar() {
   permisos()
   Menu.setApplicationMenu(menu())
+  fichaDelMenu()
   iniciarNavegador(APP)
   abrir()
   if (SOLO_VENTANA) return
@@ -160,6 +161,40 @@ async function iniciar() {
   }
   arrancar()
   actualizaciones()
+}
+
+/**
+ * En Linux el AppImage no se instala: sin ficha en el menú solo aparece por su nombre y sin icono. Se escribe una en
+ * `~/.local/share/applications` apuntando al AppImage y a su icono copiado a `DATOS` (la ruta del montaje cambia en cada
+ * apertura). Se repite en cada arranque: si mueves el AppImage, la ficha lo sigue encontrando. Fuera del AppImage no hace nada.
+ */
+function fichaDelMenu() {
+  if (process.platform !== 'linux' || !process.env.APPIMAGE) return
+  try {
+    const icono = join(DATOS, 'icono.png')
+    const original = join(process.resourcesPath, 'icon.png')
+    if (existsSync(original) && (!existsSync(icono) || statSync(original).mtimeMs > statSync(icono).mtimeMs)) cpSync(original, icono)
+    const dir = join(process.env.XDG_DATA_HOME || join(homedir(), '.local', 'share'), 'applications')
+    mkdirSync(dir, { recursive: true })
+    writeFileSync(
+      join(dir, 'hermit.desktop'),
+      [
+        '[Desktop Entry]',
+        'Type=Application',
+        'Name=Hermit',
+        'Comment=Tu estudio local de inteligencia artificial',
+        `Exec="${process.env.APPIMAGE}" %U`,
+        `Icon=${icono}`,
+        'Terminal=false',
+        'Categories=AudioVideo;Audio;',
+        'StartupWMClass=Hermit',
+        ''
+      ].join('\n')
+    )
+    spawnSync('update-desktop-database', [dir], { stdio: 'ignore' })
+  } catch {
+    // Sin ficha el AppImage sigue funcionando igual.
+  }
 }
 
 /** La ventana, o al frente si ya está. Se enseña en cuanto se pide y carga la interfaz cuando el servidor contesta. */

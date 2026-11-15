@@ -6,6 +6,8 @@ import { Icono } from './Iconos'
 const gb = (b: number) => (b >= 1e9 ? `${(b / 1e9).toFixed(1)} GB` : b >= 1e6 ? `${Math.round(b / 1e6)} MB` : b > 0 ? '<1 MB' : '0 MB')
 /** Lo que no vale un botón: menos de esto no se enseña. */
 const MINIMO = 20e6
+/** El ejemplo de ruta según el sistema: `D:\…` en Windows, `~/…` en Mac y Linux (el servidor expande `~`). */
+const EJEMPLO_CARPETA = /Windows/.test(navigator.userAgent) ? 'Ej. D:\\HermitVideos' : 'Ej. ~/HermitVideos'
 
 /**
  * Opciones → Espacio en disco (`server/espacio.ts`): cuánto queda libre y lo que Hermit y sus videos dejaron y ya no
@@ -98,8 +100,7 @@ export function EspacioDisco() {
           </div>
           {editandoTrabajo && (
             <form
-              className="fila fila-extra"
-              style={{ gap: 8 }}
+              className="fila-extra fila-campos"
               onSubmit={(ev) => {
                 ev.preventDefault()
                 void guardarRutaTrabajo(rutaInput.trim() || null)
@@ -108,8 +109,7 @@ export function EspacioDisco() {
               <input
                 type="text"
                 className="input"
-                style={{ flex: 1 }}
-                placeholder="Ej. D:\HermitVideos (deja vacío para la carpeta por defecto)"
+                placeholder={`${EJEMPLO_CARPETA} (deja vacío para la carpeta por defecto)`}
                 value={rutaInput}
                 onChange={(ev) => setRutaInput(ev.target.value)}
                 disabled={guardandoTrabajo}

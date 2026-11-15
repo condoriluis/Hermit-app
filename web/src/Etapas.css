@@ -1,8 +1,11 @@
 /* Lo de cada etapa en el estudio de video (Estudio.css): su carpeta, su título, lo que espera y lo que dejó. */
 
-/* La carpeta de donde se lee el avance, en la cabecera del hilo, para cambiarla. */
-.etapas-carpeta { display: flex; align-items: center; gap: 6px; }
-.etapas-carpeta .picker-trigger { height: 24px; padding: 0 6px; font-family: var(--mono); font-size: 12px; }
+/* La carpeta de donde se lee el avance, en la cabecera del hilo, para cambiarla. El nombre largo se corta
+   con puntos suspensivos en una línea (el completo sale en el title y en el menú): la cabecera es una fila. */
+.etapas-carpeta { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.etapas-carpeta .picker { min-width: 0; }
+.etapas-carpeta .picker-trigger { height: 24px; padding: 0 6px; font-family: var(--mono); font-size: 12px; min-width: 0; max-width: 100%; }
+.carpeta-nombre { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .etapa-titulo { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-weight: 650; font-size: 15px; }
 .etapa-viva { color: var(--accent-hover); }
 .etapa-hecha { color: var(--ok); }

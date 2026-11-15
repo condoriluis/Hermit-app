@@ -1,7 +1,7 @@
 import { mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import type { Browser, BrowserContext, Page } from 'playwright-core'
-import { chromiumDelSistema, lanzarChromium, SIN_CHROMIUM } from '../chromium.ts'
+import { chromiumParaGoogle, lanzarChromium, SIN_CHROMIUM } from '../chromium.ts'
 import { conectarCDP } from '../playwright.ts'
 import { NAVEGADOR_REDES } from '../../shared/types.ts'
 import { integrado } from '../navegador-agente.ts'
@@ -60,8 +60,8 @@ export async function navegador(app: string, url = 'about:blank'): Promise<Brows
 async function abrirEdge(app: string, url: string): Promise<Browser> {
   if (!(await responde())) {
     // Edge si está y, si no (lo normal en Mac y Linux), Chrome: Google deja entrar en los dos.
-    const edge = chromiumDelSistema(false)
-    if (!edge) throw new Error(process.platform === 'win32' ? 'No encontré Microsoft Edge, que es el navegador con el que Hermit publica.' : SIN_CHROMIUM)
+    const edge = chromiumParaGoogle(false)
+    if (!edge) throw new Error(process.platform === 'win32' ? 'No encontré Microsoft Edge ni Chrome: son los navegadores con los que Hermit publica. Instala uno o bájalo desde Herramientas de Hermit.' : SIN_CHROMIUM)
     const perfil = join(app, 'data', 'redes', 'perfil')
     mkdirSync(perfil, { recursive: true })
     // `--disable-sync` evita el diálogo «Se están sincronizando los datos» de Edge, que bloquea la ventana visible.

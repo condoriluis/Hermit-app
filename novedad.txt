@@ -1,1 +1,1 @@
-Hermit 0.5.6: navegador propio si el equipo no tiene, barra lateral más limpia y páginas que ya no se montan en pantallas chicas
+Hermit 0.5.7: la 0.5.6 se caía al abrir; esta ya arranca bien

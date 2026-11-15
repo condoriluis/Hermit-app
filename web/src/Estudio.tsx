@@ -1,6 +1,6 @@
 import { Fragment, type ReactNode, useLayoutEffect, useRef, useState, useEffect, useCallback } from 'react'
 import { esDeEstudio } from '../../shared/etapas'
-import { FASES, type AgentEvent, type Card, type Fase, type SessionMeta } from '../../shared/types'
+import { esDeVideo, FASES, type AgentEvent, type Card, type Fase, type SessionMeta } from '../../shared/types'
 import { Editor } from './Editor'
 import { useEscritos, useEventos } from './eventos'
 import { CarpetaDelHilo, EtapaCuerpo, useAvance, usePasos, type Pasos } from './Etapas'
@@ -78,7 +78,10 @@ export function Estudio({ session, card, head, chat }: { session: SessionMeta; c
     setElegida(f === porDefecto ? null : f)
   }
 
-  const props: PropsDeVideo | undefined = avance
+  // La línea de tiempo (monitor, escenas, audio) es cosa de los videos: una imagen, un artículo o una presentación no
+  // tienen video en vivo, así que su fila inferior no existe (`sin-linea` en el grid).
+  const esVideo = esDeVideo(card)
+  const props: PropsDeVideo | undefined = esVideo && avance
     ? { sessionId: session.id, card, avance, p, deVideo, visible: vista === 'video' && !navegador, onVer: () => elegir('video') }
     : undefined
 
@@ -149,7 +152,7 @@ export function Estudio({ session, card, head, chat }: { session: SessionMeta; c
 
   return (
     <div
-      className={`session estudio ${chatColapsado ? 'chat-colapsado' : ''}`}
+      className={`session estudio ${chatColapsado ? 'chat-colapsado' : ''} ${esVideo ? '' : 'sin-linea'}`}
       style={{ gridTemplateColumns: columnasGrid }}
     >
       {head(
@@ -188,7 +191,7 @@ export function Estudio({ session, card, head, chat }: { session: SessionMeta; c
           />
         )
       )}
-      {!props ? <div className="linea" /> : <Editor {...props} />}
+      {esVideo && (!props ? <div className="linea" /> : <Editor {...props} />)}
       {!chatColapsado && <div className="estudio-separador-resizer" onPointerDown={empezarArrastre} title="Arrastra para cambiar el ancho del chat" />}
       <div className="estudio-chat" style={{ display: chatColapsado ? 'none' : undefined }}>
         {chat(bloqueo)}

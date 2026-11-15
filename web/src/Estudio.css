@@ -9,6 +9,14 @@
 .session.estudio.chat-colapsado {
   grid-template-areas: 'head head' 'fases fases' 'centro centro' 'linea linea';
 }
+/* Lo que no es video (imagen, artículo, presentación) no tiene línea de tiempo: su grid son tres filas. */
+.session.estudio.sin-linea {
+  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-areas: 'head head' 'fases chat' 'centro chat';
+}
+.session.estudio.sin-linea.chat-colapsado {
+  grid-template-areas: 'head head' 'fases fases' 'centro centro';
+}
 .estudio > .session-head { grid-area: head; }
 .estudio > .session-head .picker-menu { left: auto; right: 0; }
 .estudio-fases { grid-area: fases; }

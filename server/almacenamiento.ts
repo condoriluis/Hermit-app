@@ -20,7 +20,9 @@ import { guardar } from './disco.ts'
  * solo cuando el cambio quedó guardado. Nada de esto toca los videos, los hilos ni las cuentas.
  */
 
-const APP = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+// La carpeta de la app, resuelta al usarla: este módulo también entra al bundle de la ventana (electron/main.ts →
+// chromium.ts → aquí), que es CJS y no tiene `import.meta`; calculado arriba, `fileURLToPath` recibía `undefined`.
+const appDir = () => resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const WINDOWS = process.platform === 'win32'
 /** En Mac y Linux lo pone scripts/start.mjs; sin él, la misma carpeta que elige él. */
 const APPDATA =
@@ -157,7 +159,7 @@ function prepararDestino(d: string) {
 function comprobarCambio(nueva: Rutas) {
   if (nueva.raiz) {
     if (parse(nueva.raiz).root === nueva.raiz) throw new Error('Elige una carpeta, no la raíz del disco.')
-    if (dentro(APP, nueva.raiz)) throw new Error('Esa carpeta está dentro de Hermit. Elige otra.')
+    if (dentro(appDir(), nueva.raiz)) throw new Error('Esa carpeta está dentro de Hermit. Elige otra.')
     for (const p of [actual.piezas, actual.pythonHermit, actual.modelos]) {
       if (existsSync(p) && dentro(p, nueva.raiz)) throw new Error('Esa carpeta está dentro de lo que se va a mover. Elige otra.')
     }

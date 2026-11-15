@@ -954,6 +954,7 @@ function NewSession(props: {
           <>
             {series.length > 0 && (
               <Picker
+                flotante
                 label={laSerie ? laSerie.nombre : 'Sin serie'}
                 value={serie}
                 groups={[
@@ -965,6 +966,7 @@ function NewSession(props: {
             )}
             {conMarcas && (
               <Picker
+                flotante
                 label={`Marca: ${laMarca || (marcas.base !== undefined ? 'la de siempre' : 'sin elegir')}`}
                 value={laMarca}
                 groups={[
@@ -992,6 +994,7 @@ function NewSession(props: {
             )}
             {conFormato && (
               <Picker
+                flotante
                 label={duracion ? `Duración: ${duracion}` : 'Duración: la que pida el mensaje'}
                 value={duracion}
                 groups={[

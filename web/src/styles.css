@@ -86,8 +86,11 @@ input, textarea, select { font: inherit; color: inherit; }
 /* En ventanas bajas encoge y hace scroll interno: el compositor queda siempre a la vista. */
 .new-antes { flex: 0 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
 /* Si ni así alcanza (pantalla muy baja), la tarjeta del compositor también encoge y scrollea por dentro:
-   nunca se monta encima del estante ni del pie. */
-.new-bottom .composer { min-height: 0; overflow-y: auto; }
+   nunca se monta encima del estante ni del pie. Solo ahí: su overflow recortaría los menús de los
+   selectores (modelo, voz, clips…), que tienen que verse por encima de la tarjeta, no dentro. */
+@media (max-height: 640px) {
+  .new-bottom .composer { min-height: 0; overflow-y: auto; }
+}
 /* Pantalla baja (una laptop pequeña): menos aire alrededor y la cabecera sin su frase, para que el estante
    y el compositor quepan. */
 @media (max-height: 760px) {

@@ -161,6 +161,7 @@ export function SelectorImagenes({ valor, hayChatGPT, voz, flow, onCambio }: { v
   return (
     <>
       <Picker
+        flotante
         label={label}
         value={valor}
         menuWidth={300}
@@ -201,6 +202,7 @@ export function SelectorClips({ valor, onCambio }: { valor: string; onCambio(cli
   const opcion = OPCIONES_CLIPS[valor]
   return (
     <Picker
+      flotante
       label={opcion ? `Clips: ${opcion.modelo}${opcion.resolucion ? ` · ${opcion.resolucion}` : ''}` : 'Clips: los del estilo'}
       value={opcion ? valor : ''}
       menuWidth={320}

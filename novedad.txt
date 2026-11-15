@@ -1,1 +1,1 @@
-Hermit 0.6.0: nueva versión con mejoras varias
+Hermit 0.6.0: responsive en laptops, Devin sin navegador de más y más

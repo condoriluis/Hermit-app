@@ -1,6 +1,7 @@
-import { type ReactNode, useEffect, useState } from 'react'
+import { type ReactNode, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { api } from './api'
+import { ElegirImagen } from './ElegirImagen'
 import { Icono } from './Iconos'
 import './Modelos3DAcciones.css'
 
@@ -134,20 +135,27 @@ function Importar({ tipos, onCerrar, onHecho }: { tipos: string[]; onCerrar(): v
 
 function Nuevo({ onCerrar }: { onCerrar(): void }) {
   const [descripcion, setDescripcion] = useState('')
-  const [imagen, setImagen] = useState<File | null>(null)
+  // La referencia: un archivo del disco (se sube al crear) o una de «Mis imágenes» (ya quedó en attachments).
+  const [referencia, setReferencia] = useState<{ archivo?: File; path?: string; nombre: string } | null>(null)
+  const [elegir, setElegir] = useState(false)
+  const archivoRef = useRef<HTMLInputElement>(null)
   const [error, setError] = useState('')
   const [enviando, setEnviando] = useState(false)
+  const quitar = () => {
+    setReferencia(null)
+    if (archivoRef.current) archivoRef.current.value = ''
+  }
   async function crear() {
     setEnviando(true)
     setError('')
     try {
-      let referencia: string | undefined
-      if (imagen) {
-        const subida = await fetch(`/api/upload?name=${encodeURIComponent(imagen.name || 'referencia.png')}`, { method: 'POST', body: imagen })
+      let ruta: string | undefined = referencia?.path
+      if (referencia?.archivo) {
+        const subida = await fetch(`/api/upload?name=${encodeURIComponent(referencia.nombre || 'referencia.png')}`, { method: 'POST', body: referencia.archivo })
         if (!subida.ok) throw new Error('No se pudo subir la imagen.')
-        referencia = ((await subida.json()) as { path: string }).path
+        ruta = ((await subida.json()) as { path: string }).path
       }
-      const meta = await api<{ id: string }>('/api/modelos3d/nuevo', { descripcion, referencia, ...eleccion() })
+      const meta = await api<{ id: string }>('/api/modelos3d/nuevo', { descripcion, referencia: ruta, ...eleccion() })
       location.hash = `/s/${meta.id}`
     } catch (e) {
       setError(mensaje(e))
@@ -166,10 +174,34 @@ function Nuevo({ onCerrar }: { onCerrar(): void }) {
           onChange={(e) => setDescripcion(e.target.value)}
         />
       </label>
-      <label className="m3d-campo">
+      <div className="m3d-campo">
         <span>Imagen de referencia (opcional)</span>
-        <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={(e) => setImagen(e.target.files?.[0] ?? null)} />
-      </label>
+        {referencia ? (
+          <p className="muted small m3d-ref-elegida">
+            {referencia.nombre}
+            <button type="button" className="m3d-accion" disabled={enviando} onClick={quitar}>
+              Quitar
+            </button>
+          </p>
+        ) : (
+          <div className="m3d-ref">
+            <input
+              ref={archivoRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/gif"
+              onChange={(e) => {
+                const f = e.target.files?.[0] ?? null
+                setReferencia(f ? { archivo: f, nombre: f.name } : null)
+              }}
+            />
+            <button type="button" className="m3d-accion" onClick={() => setElegir(true)}>
+              <Icono de="imagen" />
+              De Mis imágenes
+            </button>
+          </div>
+        )}
+      </div>
+      {elegir && <ElegirImagen onCerrar={() => setElegir(false)} onAdjuntar={(p) => (setElegir(false), setReferencia({ path: p.path, nombre: p.nombre }))} />}
       {error && <p className="bad small">{error}</p>}
       <div className="m3d-modal-pie">
         <button className="m3d-accion" disabled={enviando} onClick={onCerrar}>

@@ -248,7 +248,8 @@ function FaseCentro({ sessionId, p, fase, siguiendo, arriba }: { sessionId: stri
   return (
     <div className="estudio-centro estudio-fase" ref={caja}>
       <div className="estudio-columna">
-        {arriba}
+        {/* La entrega (el card de «Descargar…» y los cambios) se compacta según este ancho (`Final.css`). */}
+        <div className="estudio-arriba">{arriba}</div>
         {fase.etapas.map((i) => (
           <section key={p.etapas[i].nombre} ref={(el) => void (bloques.current[i] = el)} className="estudio-etapa">
             <EtapaCuerpo sessionId={sessionId} p={p} i={i} />

@@ -83,6 +83,8 @@ body.arrastrando-panel * {
 
 /* Una fase que no es Video: sus etapas una tras otra, en una columna centrada cómoda de leer. */
 .estudio-fase { position: relative; overflow-y: auto; }
+/* La entrega de arriba (la tarjeta de «Descargar…» y los cambios) es el contenedor de sus propias consultas de ancho. */
+.estudio-arriba { container-type: inline-size; }
 .estudio-columna { max-width: 760px; margin: 0 auto; padding: 22px 28px 40px; display: flex; flex-direction: column; }
 .estudio-etapa { display: flex; flex-direction: column; gap: 12px; padding-bottom: 28px; }
 .estudio-etapa + .estudio-etapa { padding-top: 24px; border-top: 1px solid var(--line); }

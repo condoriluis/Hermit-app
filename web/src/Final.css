@@ -13,3 +13,15 @@
 .final-cambios button:hover:not(:disabled) { color: var(--text); border-color: var(--muted); }
 .final-cambios button.on { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); opacity: 1; }
 
+/* En columnas angostas (una laptop con el chat abierto) la tarjeta se compacta: menos aire y cada fila en una sola
+   tira con scroll, como la barra de fases, en vez de apilarse y empujar lo entregado fuera de la pantalla. */
+@container (max-width: 680px) {
+  .final { gap: 8px; margin-bottom: 18px; padding: 12px 14px; }
+  .final-titulo { font-size: 14px; }
+  .final-fila { flex-wrap: nowrap; overflow-x: auto; gap: 6px; }
+  .final-boton { flex: none; gap: 6px; padding: 5px 10px; font-size: 12.5px; }
+  .final-cambios { flex-wrap: nowrap; overflow-x: auto; gap: 5px; padding-top: 10px; }
+  .final-cambios > span:first-child { flex: none; }
+  .final-cambios button { flex: none; padding: 3px 9px; font-size: 12px; white-space: nowrap; }
+}
+

@@ -1,1 +1,1 @@
-Hermit 0.6.0: responsive en laptops, Devin sin navegador de más y más
+Hermit 0.6.1: responsive en laptops, Devin sin navegador de más y los menús del composer sin recortes

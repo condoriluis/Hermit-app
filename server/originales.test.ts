@@ -93,6 +93,27 @@ test('ver qué cambió no detiene el servidor, y ve lo que cambia después aunqu
   assert.deepEqual((await ver()).cambios, [{ skill: 'skill', archivo: '7.md', borrado: true }])
 })
 
+test('lo que la skill regenera sola no cuenta como cambio: el visor de modelos-3d', async (t) => {
+  const raiz = mkdtempSync(join(tmpdir(), 'hermit-regen-'))
+  t.after(() => rmSync(raiz, { recursive: true, force: true }))
+  for (const base of ['original', 'actual']) {
+    escribir(join(raiz, base, 'visor', 'js', 'visor.js'), 'visor\n')
+    escribir(join(raiz, base, 'visor', 'js', 'chunk-A.js'), 'a\n')
+    escribir(join(raiz, base, 'visor', 'lista.json'), '[]\n')
+    escribir(join(raiz, base, 'visor.tsx'), 'visor\n')
+  }
+  // El visor se reconstruyó con otros modelos: chunks con otro hash, lista nueva. La fuente, no.
+  rmSync(join(raiz, 'actual', 'visor', 'js', 'chunk-A.js'))
+  escribir(join(raiz, 'actual', 'visor', 'js', 'chunk-B.js'), 'b\n')
+  writeFileSync(join(raiz, 'actual', 'visor', 'lista.json'), '["mío"]\n')
+  writeFileSync(join(raiz, 'actual', 'visor', 'js', 'visor.js'), 'visor nuevo\n')
+  writeFileSync(join(raiz, 'actual', 'visor.tsx'), 'visor cambiado\n')
+
+  assert.deepEqual(await cambiosDe(join(raiz, 'original'), join(raiz, 'actual'), 'modelos-3d'), [
+    { skill: 'modelos-3d', archivo: 'visor.tsx' }
+  ])
+})
+
 test('al estrenar una versión se va lo que ya no trae, pero no lo que cambiaste ni lo tuyo', (t) => {
   const raiz = mkdtempSync(join(tmpdir(), 'hermit-viejos-'))
   t.after(() => rmSync(raiz, { recursive: true, force: true }))

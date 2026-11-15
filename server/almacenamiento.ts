@@ -3,7 +3,6 @@ import { accessSync, constants, existsSync, mkdirSync, readFileSync, readdirSync
 import { cp, lstat, readdir } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { delimiter, dirname, isAbsolute, join, parse, relative, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { guardar } from './disco.ts'
 
 /**
@@ -20,9 +19,11 @@ import { guardar } from './disco.ts'
  * solo cuando el cambio quedó guardado. Nada de esto toca los videos, los hilos ni las cuentas.
  */
 
-// La carpeta de la app, resuelta al usarla: este módulo también entra al bundle de la ventana (electron/main.ts →
-// chromium.ts → aquí), que es CJS y no tiene `import.meta`; calculado arriba, `fileURLToPath` recibía `undefined`.
-const appDir = () => resolve(dirname(fileURLToPath(import.meta.url)), '..')
+// La carpeta de la app: el servidor corre con cwd = la app (scripts/start.mjs hace `spawn(..., { cwd: APP })`, y en el
+// repo `npm start` también), igual que la ventana de desarrollo (electron/main.ts). Este módulo entra al bundle CJS de
+// la ventana (main.ts → google.ts → chromium.ts → aquí), que no tiene `import.meta`; resolverlo del archivo rompía la
+// app al abrir (fileURLToPath recibía undefined) y con `import.meta` a lo vivo el empaquetador avisaba en cada build.
+const appDir = () => resolve(process.env.HERMIT_APP ?? process.cwd())
 const WINDOWS = process.platform === 'win32'
 /** En Mac y Linux lo pone scripts/start.mjs; sin él, la misma carpeta que elige él. */
 const APPDATA =

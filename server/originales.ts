@@ -12,8 +12,13 @@ import type { CambioSkill } from '../shared/types.ts'
  * guarda una copia en `data/skills-tuyas/<fecha> <motivo>/`, al volver a la original y al estrenar una versión
  * (`prepararSkills`, electron/main.ts).
  * Solo cuentan los archivos que trae la original: lo que la skill guarda de tus videos (huellas, banco, modelos 3D) es
- * aparte y no se toca.
+ * aparte y no se toca, y tampoco lo que la skill regenera sola al usarse (`REGAMEN`).
  */
+
+/** Carpetas que la skill vuelve a armar en cada uso, por skill: lo que hay dentro no es un cambio tuyo. El visor 3D de
+ *  modelos-3d se genera entero en `modelos.py visor` (esbuild, un trozo con hash por modelo), así que sus archivos
+ *  cambian y se borran solos cada vez que se reconstruye con tus modelos. */
+const REGAMEN: Record<string, string> = { 'modelos-3d': 'visor/' }
 
 /** Lo que instalan los scripts de una skill dentro de su carpeta, que no es de ella. */
 const BASURA = new Set(['__pycache__', 'node_modules', '.git', '.cache'])
@@ -59,8 +64,9 @@ export function huellas(raiz: string): Record<string, string> {
 
 /** Lo de la skill `original` que ya no es igual en `actual` o que ya no está. */
 export async function cambiosDe(original: string, actual: string, skill: string): Promise<CambioSkill[]> {
+  const regen = REGAMEN[skill]
   const entradas = await readdir(original, { recursive: true, withFileTypes: true }).catch(() => [])
-  const cambios = await Promise.all(deLaCarpeta(original, entradas).map(async (archivo): Promise<CambioSkill[]> => {
+  const cambios = await Promise.all(deLaCarpeta(original, entradas).filter((a) => !regen || !a.startsWith(regen)).map(async (archivo): Promise<CambioSkill[]> => {
     const [tuya, suya] = await Promise.all([huellaDe(join(actual, archivo)), huellaDe(join(original, archivo))])
     if (tuya === undefined) return [{ skill, archivo, borrado: true }]
     return tuya === suya ? [] : [{ skill, archivo }]

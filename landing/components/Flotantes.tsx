@@ -20,10 +20,8 @@ const EL_DIFF = 'v1794420660/files/el-diff-final%20%281%29'
 const FRUTINOVELA = 'v1794276221/files/frutinovela-todos-santos-2-noviembre'
 const CRIMEN = 'v1794273538/files/crimen-muneco-chuky'
 
-/** Una tarjeta de la mesa: posición en %, giro, profundidad del parallax y ritmo de flotación. */
+/** Una tarjeta de la mesa: posición y tamaño por clases responsive, giro, profundidad y ritmo. */
 function Tarjeta({
-  x,
-  y,
   z,
   giro,
   fondo,
@@ -31,8 +29,6 @@ function Tarjeta({
   clase = '',
   children,
 }: {
-  x: string
-  y: string
   z: number
   giro: number
   fondo: number
@@ -41,7 +37,7 @@ function Tarjeta({
   children: ReactNode
 }) {
   return (
-    <div className={`absolute ${clase}`} style={{ left: x, top: y, zIndex: z }} data-flota={fondo}>
+    <div className={`absolute ${clase}`} style={{ zIndex: z }} data-flota={fondo}>
       <div className="flotar" style={{ rotate: `${giro}deg`, animationDuration: `${ritmo}s`, animationDelay: `-${ritmo / 3}s` }}>
         <div className="rounded-2xl border border-line bg-panel shadow-card overflow-hidden">{children}</div>
       </div>
@@ -123,27 +119,30 @@ export default function Flotantes() {
   }, [])
 
   return (
-    <div ref={ref} className="relative h-[390px] sm:h-[490px] mt-12 sm:mt-16 [perspective:1400px]">
+    // En el celular se ven la principal y el par de adelante, más pequeñas y a los lados; el par
+    // de atrás entra desde `sm` y todo junto desde `lg`, con los tamaños de siempre.
+    <div ref={ref} className="relative h-[390px] sm:h-[470px] lg:h-[490px] mt-12 sm:mt-16 [perspective:1400px]">
       {/* El video principal, de frente y el más grande */}
-      <Tarjeta x="50%" y="0%" z={30} giro={0} fondo={12} ritmo={7} clase="w-[158px] sm:w-[185px] -ml-[79px] sm:-ml-[92px]">
+      <Tarjeta z={30} giro={0} fondo={12} ritmo={7} clase="left-1/2 top-0 w-[158px] sm:w-[185px] -ml-[79px] sm:-ml-[92px]">
         <PortadaVideo id={ANIMALNOVELA} estilo="Animalnovela" pie="La inspección del bosque" />
       </Tarjeta>
 
       {/* Par de atrás: Devnovela a la izquierda, El Diff a la derecha — espejo */}
-      <Tarjeta x="10%" y="8%" z={20} giro={-7} fondo={26} ritmo={8.5} clase="hidden lg:block w-[150px]">
+      <Tarjeta z={20} giro={-7} fondo={26} ritmo={8.5} clase="left-[10%] top-[8%] w-[110px] sm:w-[135px] lg:w-[150px] hidden sm:block">
         <PortadaVideo id={DEVNOVELA} estilo="Devnovela" pie="Git vs GitHub" />
       </Tarjeta>
 
-      <Tarjeta x="77%" y="8%" z={20} giro={7} fondo={22} ritmo={8} clase="hidden lg:block w-[150px]">
+      <Tarjeta z={20} giro={7} fondo={22} ritmo={8} clase="left-[77%] top-[8%] w-[110px] sm:w-[135px] lg:w-[150px] hidden sm:block">
         <PortadaVideo id={EL_DIFF} estilo="El Diff" pie="Qué es Hermit y para quién" />
       </Tarjeta>
 
-      {/* Par de adelante: Frutinovela a la izquierda, Crimen a la derecha — espejo */}
-      <Tarjeta x="25%" y="48%" z={10} giro={-5} fondo={34} ritmo={8} clase="hidden lg:block w-[128px]">
+      {/* Par de adelante: Frutinovela a la izquierda, Crimen a la derecha — espejo. En el celular
+          se corren a las orillas para que asomen junto a la principal. */}
+      <Tarjeta z={10} giro={-5} fondo={34} ritmo={8} clase="left-[25%] top-[48%] w-[96px] sm:w-[115px] lg:w-[128px] max-sm:left-[4%] max-sm:top-[44%] max-sm:w-[84px]">
         <PortadaVideo id={FRUTINOVELA} estilo="Frutinovela" pie="Todos Santos" />
       </Tarjeta>
 
-      <Tarjeta x="64%" y="50%" z={10} giro={6} fondo={38} ritmo={9.5} clase="hidden lg:block w-[128px]">
+      <Tarjeta z={10} giro={6} fondo={38} ritmo={9.5} clase="left-[64%] top-[50%] w-[96px] sm:w-[115px] lg:w-[128px] max-sm:left-[71%] max-sm:top-[46%] max-sm:w-[84px]">
         <PortadaVideo id={CRIMEN} estilo="Crimen" pie="El muñeco Chucky" />
       </Tarjeta>
     </div>

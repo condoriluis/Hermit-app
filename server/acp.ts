@@ -28,8 +28,11 @@ export interface SaborAcp {
   clientInfo?: { name: string; version: string }
   /** Lee él mismo los archivos que le piden (Antigravity). */
   leeArchivos?: boolean
-  /** Inicia sesión antes de abrirla, cada vez (Antigravity). */
-  autenticar?: string
+  /**
+   * Inicia sesión antes de abrirla, cada vez (Antigravity). Una función decide al lanzar cada proceso: `undefined`
+   * deja al agente usar sus credenciales guardadas (Devin: sin `authenticate` las lee él mismo).
+   */
+  autenticar?: string | (() => string | undefined)
   /** Datos extra del `authenticate` (`_meta`), como la `api_key` de Devin: se piden al autenticar, cada vez. */
   authMeta?(): Record<string, unknown> | undefined
   /** El modo que se elige al abrir la sesión, como opción o con `session/set_mode` (`yolo`: sin preguntar). */
@@ -126,9 +129,10 @@ export function conectar(sabor: SaborAcp, opts: AgentOptions): Conexion {
       clientCapabilities: { fs: { readTextFile: !!sabor.leeArchivos, writeTextFile: false }, terminal: false },
       clientInfo: sabor.clientInfo ?? { name: 'hermit', version: '1' }
     }, sabor.esperaInicio?.() ?? 180_000)
-    if (sabor.autenticar) {
+    const metodo = typeof sabor.autenticar === 'function' ? sabor.autenticar() : sabor.autenticar
+    if (metodo) {
       const meta = sabor.authMeta?.()
-      await c.rpc.request('authenticate', { methodId: sabor.autenticar, ...(meta ? { _meta: meta } : {}) }, 300_000)
+      await c.rpc.request('authenticate', { methodId: metodo, ...(meta ? { _meta: meta } : {}) }, 300_000)
     }
     c.lista = true
     return ini

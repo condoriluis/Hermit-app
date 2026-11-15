@@ -395,3 +395,62 @@ test('ACP: sin cuenta, el turno acaba pidiendo conectarla', async () => {
   const fin = events.find((e) => e.t === 'turn_end')
   assert.deepEqual(fin && fin.t === 'turn_end' && { ok: fin.ok, error: fin.error }, { ok: false, error: 'Conecta tu cuenta de Grok en Opciones.' })
 })
+
+/** Uno que anota los métodos que le piden y los devuelve en su primer texto, para ver si mandó `authenticate`. */
+const METODOS = `
+let resto = '', pedidos = []
+const decir = (m) => process.stdout.write(JSON.stringify({ jsonrpc: '2.0', ...m }) + '\\n')
+process.stdin.on('data', (d) => {
+  resto += d
+  let i
+  while ((i = resto.indexOf('\\n')) >= 0) {
+    const m = JSON.parse(resto.slice(0, i))
+    resto = resto.slice(i + 1)
+    if (m.id === undefined) continue
+    pedidos.push(m.method)
+    if (m.method === 'initialize') decir({ id: m.id, result: { protocolVersion: 1 } })
+    else if (m.method === 'session/new') decir({ id: m.id, result: { sessionId: 's1' } })
+    else if (m.method === 'session/prompt') {
+      decir({ method: 'session/update', params: { sessionId: 's1', update: { sessionUpdate: 'agent_message_chunk', content: { type: 'text', text: pedidos.join(',') } } } })
+      decir({ id: m.id, result: { stopReason: 'end_turn' } })
+    } else decir({ id: m.id, result: {} })
+  }
+})
+`
+const SCRIPT_METODOS = join(dirname(SCRIPT), 'metodos.mjs')
+writeFileSync(SCRIPT_METODOS, METODOS)
+
+/** Un turno con `autenticar` de cada forma: el texto que contesta el agente lista los métodos que recibió. */
+async function metodosDe(autenticar: SaborAcp['autenticar']) {
+  const events: AgentEvent[] = []
+  let fin!: () => void
+  const listo = new Promise<void>((ok) => (fin = ok))
+  const run = startAcp({
+    nombre: 'Prueba',
+    prefijo: 'prueba',
+    lanzar: () => ({ command: process.execPath, args: [SCRIPT_METODOS], env: process.env }),
+    autenticar,
+    sinCuenta: 'Conecta tu cuenta.'
+  }, {
+    cwd: tmpdir(),
+    model: 'prueba:x',
+    onEvent(e) {
+      events.push(e)
+      if (e.t === 'turn_end') fin()
+    },
+    onProviderSession() {}
+  })
+  run.send('hola')
+  await listo
+  run.close()
+  return events.flatMap((e) => (e.t === 'text' ? [e.delta] : [])).join('')
+}
+
+test('ACP: `autenticar` en función decide por proceso; `undefined` no manda `authenticate`', async () => {
+  // Como Antigravity: el método fijo, siempre.
+  assert.match(await metodosDe('metodo'), /^initialize,authenticate,session\/new/)
+  // Como Devin con credenciales: el agente se autentica solo, sin `authenticate` ni navegador.
+  assert.doesNotMatch(await metodosDe(() => undefined), /authenticate/)
+  // Y cuando toca (conectar la cuenta), sí lo manda.
+  assert.match(await metodosDe(() => 'devin-browser'), /^initialize,authenticate,session\/new/)
+})

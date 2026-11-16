@@ -1,6 +1,6 @@
 # Hermit — Landing Page Oficial
 
-Landing page moderna, rápida y de alto impacto construida con **Next.js (App Router)**, **TypeScript** y **Tailwind CSS**, utilizando la paleta de colores nativa de Hermit (`#0a0e14`, `#111722`, `#4f8cff`).
+Landing page moderna, rápida y de alto impacto construida con **Next.js (App Router)**, **TypeScript** y **Tailwind CSS**, utilizando la paleta de colores nativa de Hermit (`#0b0e11`, `#12161b`, `#2dd4bf`).
 
 ## 🚀 Características
 - **100% Responsive & Dark Theme**: Diseñada para máxima conversión tanto en móviles como en monitores grandes.

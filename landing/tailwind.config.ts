@@ -10,20 +10,21 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        bg: '#0a0e14',
-        panel: '#111722',
-        'panel-2': '#18212f',
-        line: '#263244',
-        'line-strong': '#3a4a63',
-        text: '#e6edf7',
-        'text-2': '#c5d0df',
-        muted: '#94a3b8',
-        placeholder: '#64748b',
+        bg: '#0b0e11',
+        panel: '#12161b',
+        'panel-2': '#181d24',
+        line: '#232a33',
+        'line-strong': '#323c49',
+        text: '#e8edf2',
+        'text-2': '#c4ccd6',
+        muted: '#8b97a5',
+        placeholder: '#667281',
+        'on-solid': '#04201c',
         accent: {
-          DEFAULT: '#4f8cff',
-          hover: '#6ea8fe',
-          soft: 'rgba(79, 140, 255, 0.12)',
-          border: 'rgba(79, 140, 255, 0.4)',
+          DEFAULT: '#2dd4bf',
+          hover: '#5eead4',
+          soft: 'rgba(45, 212, 191, 0.12)',
+          border: 'rgba(45, 212, 191, 0.4)',
         },
         ok: '#4ade80',
         warn: '#fbbf24',
@@ -35,7 +36,7 @@ const config: Config = {
         mono: ['var(--font-mono)', 'monospace'],
       },
       boxShadow: {
-        glow: '0 0 35px -5px rgba(79, 140, 255, 0.35)',
+        glow: '0 0 35px -5px rgba(45, 212, 191, 0.35)',
         card: '0 8px 30px rgba(0, 0, 0, 0.5)',
       },
       letterSpacing: {

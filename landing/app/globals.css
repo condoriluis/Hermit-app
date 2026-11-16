@@ -7,17 +7,17 @@
 }
 
 body {
-  background-color: #0a0e14;
-  color: #e6edf7;
+  background-color: #0b0e11;
+  color: #e8edf2;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   overflow-x: hidden;
-  selection-background-color: #4f8cff;
-  selection-color: #07101f;
+  selection-background-color: #2dd4bf;
+  selection-color: #04201c;
 }
 
 ::selection {
-  background: #4f8cff;
-  color: #07101f;
+  background: #2dd4bf;
+  color: #04201c;
 }
 
 /* Scrollbar custom */
@@ -26,37 +26,37 @@ body {
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #0a0e14;
+  background: #0b0e11;
 }
 ::-webkit-scrollbar-thumb {
-  background: #18212f;
+  background: #181d24;
   border-radius: 999px;
-  border: 2px solid #0a0e14;
+  border: 2px solid #0b0e11;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #263244;
+  background: #232a33;
 }
 
 /* Glassmorphism gradient utilities */
 .glass-panel {
-  background: rgba(17, 23, 34, 0.75);
+  background: rgba(18, 22, 27, 0.75);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  border: 1px solid #263244;
+  border: 1px solid #232a33;
 }
 
 .glass-panel-hover:hover {
-  border-color: #3a4a63;
+  border-color: #323c49;
   transform: translateY(-2px);
   transition: all 0.25s ease-out;
 }
 
 .gradient-radial {
-  background: radial-gradient(circle at 50% 0%, rgba(79, 140, 255, 0.15) 0%, rgba(10, 14, 20, 0) 70%);
+  background: radial-gradient(circle at 50% 0%, rgba(45, 212, 191, 0.15) 0%, rgba(11, 14, 17, 0) 70%);
 }
 
 .gradient-glow {
-  background: radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(79, 140, 255, 0.08), transparent 40%);
+  background: radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(45, 212, 191, 0.08), transparent 40%);
 }
 
 

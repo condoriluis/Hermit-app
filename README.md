@@ -4,7 +4,7 @@
 
 <p align="center">
   <img alt="Windows, Mac y Linux" src="https://img.shields.io/badge/Windows%20%C2%B7%20Mac%20%C2%B7%20Linux-171512?logo=electron&logoColor=ede6d6">
-  <img alt="Con IA" src="https://img.shields.io/badge/con-11%20agentes%20de%20IA-4f8cff?labelColor=171512">
+  <img alt="Con IA" src="https://img.shields.io/badge/con-11%20agentes%20de%20IA-2dd4bf?labelColor=171512">
   <a href="LICENSE"><img alt="Licencia" src="https://img.shields.io/badge/licencia-Apache%202.0-ede6d6?labelColor=171512"></a>
 </p>
 

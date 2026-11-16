@@ -44,13 +44,13 @@ export default function VolverArriba() {
       }`}
     >
       <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 40 40" aria-hidden>
-        <circle cx="20" cy="20" r="15.5" fill="none" stroke="#263244" strokeWidth="2.5" />
+        <circle cx="20" cy="20" r="15.5" fill="none" stroke="#232a33" strokeWidth="2.5" />
         <circle
           cx="20"
           cy="20"
           r="15.5"
           fill="none"
-          stroke="#4f8cff"
+          stroke="#2dd4bf"
           strokeWidth="2.5"
           strokeLinecap="round"
           strokeDasharray={CIRCUNFERENCIA}

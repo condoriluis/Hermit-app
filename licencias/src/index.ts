@@ -1453,15 +1453,15 @@ function correoAviso(para: string): string {
 function pagina(titulo: string, cuerpo: string, recargar?: number): Response {
   return new Response(
     `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">${recargar ? `<meta http-equiv="refresh" content="${recargar}">` : ''}<title>${titulo} · Hermit</title>
-<style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0a0e14;color:#e6edf7;font:16px/1.55 system-ui,sans-serif}
-main{max-width:460px;padding:32px}h1{font-size:22px;margin:0 0 10px}p,li{color:#94a3b8}p{margin:0 0 16px}b{color:#e6edf7}a{color:#6ea8fe}ol{margin:20px 0 0;padding-left:20px}li{margin:6px 0}
-.clave{display:flex;gap:10px;align-items:center;margin:0 0 16px;padding:12px 14px;border:1px solid #263244;border-radius:10px;background:#111722}
+<style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0b0e11;color:#e8edf2;font:16px/1.55 system-ui,sans-serif}
+main{max-width:460px;padding:32px}h1{font-size:22px;margin:0 0 10px}p,li{color:#8b97a5}p{margin:0 0 16px}b{color:#e8edf2}a{color:#5eead4}ol{margin:20px 0 0;padding-left:20px}li{margin:6px 0}
+.clave{display:flex;gap:10px;align-items:center;margin:0 0 16px;padding:12px 14px;border:1px solid #232a33;border-radius:10px;background:#12161b}
 .clave code{flex:1;font:600 17px/1.3 ui-monospace,Consolas,monospace;letter-spacing:.04em}
-.clave button{padding:6px 12px;border:1px solid #263244;border-radius:8px;background:#18212f;color:#e6edf7;font:inherit;font-size:14px;cursor:pointer}
-.correo{display:flex;gap:12px;align-items:flex-start;margin:0 0 16px;padding:14px 16px;border:1px solid rgba(79,140,255,.45);border-radius:10px;background:rgba(79,140,255,.13);color:#e6edf7;font-size:15px}
-.correo svg{flex:none;width:22px;height:22px;margin-top:1px;color:#6ea8fe}.correo b{color:#6ea8fe}
-.boton{display:block;padding:14px;border-radius:10px;background:#4f8cff;color:#07101f;font-weight:800;text-align:center;text-decoration:none}
-.boton.otro{margin-top:10px;background:none;border:1px solid #4f8cff;color:#6ea8fe}
+.clave button{padding:6px 12px;border:1px solid #232a33;border-radius:8px;background:#181d24;color:#e8edf2;font:inherit;font-size:14px;cursor:pointer}
+.correo{display:flex;gap:12px;align-items:flex-start;margin:0 0 16px;padding:14px 16px;border:1px solid rgba(45,212,191,.45);border-radius:10px;background:rgba(45,212,191,.13);color:#e8edf2;font-size:15px}
+.correo svg{flex:none;width:22px;height:22px;margin-top:1px;color:#5eead4}.correo b{color:#5eead4}
+.boton{display:block;padding:14px;border-radius:10px;background:#2dd4bf;color:#04201c;font-weight:800;text-align:center;text-decoration:none}
+.boton.otro{margin-top:10px;background:none;border:1px solid #2dd4bf;color:#5eead4}
 .otros{margin:10px 0 0;font-size:14px;text-align:center}</style></head>
 <body><main><h1>${titulo}</h1>${cuerpo}</main></body></html>`,
     // Con la clave a la vista: que no se guarde en ninguna caché.

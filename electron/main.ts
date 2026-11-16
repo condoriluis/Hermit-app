@@ -54,7 +54,7 @@ const LUGAR = join(APP, 'data', 'ventana.json')
 /** Existe si marcaste «No volver a mostrar» en el aviso al cerrar. */
 const SIN_AVISO = join(APP, 'data', 'sin-aviso-al-cerrar.json')
 /** --bg de web/src/styles.css: el fondo mientras carga y el de la barra de título. */
-const FONDO = '#0a0e14'
+const FONDO = '#0b0e11'
 /** Cada cuánto se pregunta si hay versión nueva. */
 const CADA = 6 * 3600_000
 /**

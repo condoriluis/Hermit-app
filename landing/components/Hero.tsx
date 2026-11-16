@@ -33,7 +33,7 @@ export default function Hero() {
     const el = brillo.current
     if (!el || e.pointerType === 'touch') return
     const r = e.currentTarget.getBoundingClientRect()
-    el.style.background = `radial-gradient(560px circle at ${e.clientX - r.left}px ${e.clientY - r.top}px, rgba(79, 140, 255, 0.10), transparent 55%)`
+    el.style.background = `radial-gradient(560px circle at ${e.clientX - r.left}px ${e.clientY - r.top}px, rgba(45, 212, 191, 0.10), transparent 55%)`
   }
 
   useEffect(() => {
@@ -57,12 +57,12 @@ export default function Hero() {
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[550px] bg-gradient-to-b from-accent/15 via-accent/5 to-transparent blur-3xl pointer-events-none -z-10 animate-brillo" />
 
       {/* Subtle grid pattern */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#26324415_1px,transparent_1px),linear-gradient(to_bottom,#26324415_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none -z-10" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#232a3315_1px,transparent_1px),linear-gradient(to_bottom,#232a3315_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none -z-10" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         {/* Titular corto: la prueba visual la pone la mesa, no las palabras */}
         <h1 className="entrada text-5xl sm:text-7xl lg:text-8xl font-extrabold tracking-tight font-heading text-text max-w-4xl mx-auto leading-[1.05]">
-          Tu <span className="bg-gradient-to-r from-accent via-accent-hover to-[#8db8ff] bg-clip-text text-transparent">fábrica de contenido</span> con IA
+          Tu <span className="bg-gradient-to-r from-accent via-accent-hover to-[#99f6e4] bg-clip-text text-transparent">fábrica de contenido</span> con IA
         </h1>
 
         <p className="entrada mt-5 text-base sm:text-lg text-muted max-w-xl mx-auto" style={{ animationDelay: '120ms' }}>

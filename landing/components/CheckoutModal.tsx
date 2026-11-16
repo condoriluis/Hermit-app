@@ -322,7 +322,7 @@ export default function CheckoutModal({ isOpen, onClose, plan, precioUSD, cambio
                 type="checkbox"
                 checked={acepto}
                 onChange={(e) => setAcepto(e.target.checked)}
-                className="mt-0.5 accent-[#4f8cff]"
+                className="mt-0.5 accent-[#2dd4bf]"
               />
               <span>
                 {aviso}{' '}

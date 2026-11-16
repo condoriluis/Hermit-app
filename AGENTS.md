@@ -44,7 +44,7 @@ Ahí están los repos, los comandos y cómo verificar cada despliegue. Si algo v
 
 - Rápida y sencilla antes que completa. Antes de añadir algo, pregunta si se puede quitar otra cosa. Lo que se anima sin
   fin va con `steps()`: suave, gasta CPU siempre.
-- La paleta es la de Hermit (variables en `web/src/styles.css`); no inventes colores. La excepción son los logos de otras
+- La paleta es la de Hermit (variables en `web/src/tokens.css`); no inventes colores. La excepción son los logos de otras
   marcas (`web/src/Logos.tsx`). El logo es `web/public/icon.svg`. Los iconos son de trazo (`web/src/Iconos.tsx`), nunca emojis.
 - La interfaz y los comentarios van en español.
 - Las skills viven en `skills/`. Hermit dev las lee de ahí (su Claude usa `data/claude`); `~/.claude/skills` es de la

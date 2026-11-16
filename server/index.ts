@@ -836,6 +836,27 @@ function deConfianza(req: IncomingMessage): boolean {
   return peticionDeConfianza(req, PORT)
 }
 
+/**
+ * Primera pasada de CSP, solo en reporte: nada se bloquea, los avisos salen en la consola del navegador para ver qué
+ * rompería una política de verdad. `unsafe-inline` en script y style hace falta hoy (el index trae un módulo en línea y
+ * los componentes usan estilos en línea); afinarla es el paso siguiente cuando el reporte salga limpio.
+ */
+const CSP = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob:",
+  "media-src 'self' blob:",
+  "font-src 'self'",
+  "connect-src 'self' ws: wss:",
+  "worker-src 'self' blob:",
+  "frame-src 'self' blob:",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'self'"
+].join('; ')
+
 server.on('request', async (req, res) => {
   if (!deConfianza(req)) return send(res, 403, { error: 'Hermit solo atiende a su propia ventana.' })
   const url = new URL(req.url ?? '/', `http://${req.headers.host}`)
@@ -847,6 +868,7 @@ server.on('request', async (req, res) => {
   } catch (error) {
     return send(res, 500, { error: error instanceof Error ? error.message : String(error) })
   }
+  res.setHeader('Content-Security-Policy-Report-Only', CSP)
   interfaz(req, res)
 })
 

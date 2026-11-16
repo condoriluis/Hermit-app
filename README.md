@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/condoriluis/Hermit/releases"><b>Descargar</b></a> ·
+  <a href="https://github.com/condoriluis/Hermit-app/releases"><b>Descargar</b></a> ·
   <a href="https://myhermit.vercel.app">Página oficial</a> ·
   <a href="https://myhermit.vercel.app/#apoyo">Apoyar</a>
 </p>
@@ -43,7 +43,7 @@ Cada formato es una **herramienta** visible en la pantalla principal:
 ## Correr desde el código
 
 ```bash
-git clone https://github.com/condoriluis/Hermit.git
+git clone https://github.com/condoriluis/Hermit-app.git
 cd Hermit
 npm ci
 npm start

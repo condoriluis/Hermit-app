@@ -63,7 +63,7 @@ Ahí están los repos, los comandos y cómo verificar cada despliegue. Si algo v
 
 ### Issue tracker
 
-GitHub (`condoriluis/Hermit`): usar siempre la cuenta **condoriluis** para `gh`, commits y push; comprobar la cuenta antes de operar.
+GitHub (`condoriluis/Hermit-app`): usar siempre la cuenta **condoriluis** para `gh`, commits y push; comprobar la cuenta antes de operar.
 Para el autor de los commits, usar el correo `noreply` de esa cuenta.
 Issues, sub-issues y bloqueos nativos: `docs/agents/issue-tracker.md`.
 

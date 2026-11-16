@@ -221,7 +221,7 @@ const ventana = {
   version: VERSION,
   description: 'Hermit',
   author: 'luchodev',
-  homepage: 'https://github.com/condoriluis/Hermit',
+  homepage: 'https://github.com/condoriluis/Hermit-app',
   // En Linux, el nombre con que el escritorio junta la ventana con su icono.
   desktopName: 'hermit.desktop',
   main: 'main.cjs',

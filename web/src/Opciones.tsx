@@ -25,7 +25,7 @@ import './Opciones.css'
 
 /**
  * Opciones: una lista de ajustes por grupos. Cada fila es una cosa: su logo, su nombre y debajo lo que es o cómo está
- * puesta (a veces se abre para cambiarla); a la derecha su estado, verde si está bien, ámbar si te toca hacer algo, y
+ * puesta (a veces se abre para cambiarla); a la derecha su estado, verde si está bien, menta si te toca hacer algo, y
  * lo que se puede hacer con ella, en un botón o en un desplegable.
  */
 export function Opciones({ onDone }: { onDone(): void }) {
@@ -1329,7 +1329,7 @@ function Agentes() {
 
 /**
  * Cuánto va de los límites del plan de Claude o de ChatGPT, debajo de la cuenta: una barra por ventana, verde con holgura,
- * ámbar si se acerca y roja casi al tope, con cuándo vuelve a cero. Preguntarlo abre Claude Code (o Codex): solo aquí, y
+ * menta si se acerca y roja casi al tope, con cuándo vuelve a cero. Preguntarlo abre Claude Code (o Codex): solo aquí, y
  * el servidor lo guarda un minuto.
  */
 function Limites({ proveedor }: { proveedor: Proveedor }) {

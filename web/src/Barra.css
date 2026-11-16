@@ -120,7 +120,7 @@ button.barra-seccion:hover { color: var(--text); }
 .plegada .sessions .session-row .session-icon { display: grid; }
 /* Un borrador no tiene punto de estado: el suyo es un punto de acento, como «pendiente de enviar». */
 .plegada .draft-row::after { content: ''; position: absolute; top: 4px; right: 4px; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
-/* Un lote en pausa lo delata su icono en ámbar: su aviso y el «Seguir» solo salen con la barra abierta. */
+/* Un lote en pausa lo delata su icono en menta: su aviso y el «Seguir» solo salen con la barra abierta. */
 .plegada .lote:has(.lote-pausa) .session-icon svg, .plegada .lote:has(.lote-pausa) .session-icon .icon-trazo { color: var(--warn); }
 /* Con el filtro de atención las cabeceras de sección («Hoy», «Ayer»…) quedarían sueltas: ni líneas ni botones
    de archivados; los iconos que quedan ya hablan por su punto. */

@@ -1,5 +1,5 @@
 /*
- * Donde se escribe en la comunidad (`Escribir.tsx`): una tarjeta cálida con un resplandor ámbar detrás, que se enciende
+ * Donde se escribe en la comunidad (`Escribir.tsx`): una tarjeta cálida con un resplandor menta detrás, que se enciende
  * al escribir. Compacto (al editar, en un modal), sin resplandor.
  */
 .esc { position: relative; isolation: isolate; padding: 14px 16px 10px; border-radius: 18px; border: 1px solid var(--line); background: linear-gradient(180deg, var(--panel-2), var(--panel)); transition: border-color 0.2s, box-shadow 0.2s; }

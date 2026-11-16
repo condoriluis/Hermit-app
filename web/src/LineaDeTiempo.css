@@ -18,7 +18,7 @@
 .regla { position: relative; border-bottom: 1px solid var(--line); overflow: hidden; }
 .regla span { position: absolute; top: 4px; padding-left: 4px; border-left: 1px solid var(--line); font-size: 10.5px; color: var(--muted); font-family: var(--mono); line-height: 14px; white-space: nowrap; }
 
-/* Las escenas: su número y su nombre, o su miniatura. La elegida para pedir un cambio, en ámbar; donde trabaja el agente, con un halo. */
+/* Las escenas: su número y su nombre, o su miniatura. La elegida para pedir un cambio, en menta; donde trabaja el agente, con un halo. */
 .pista-vacia { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); white-space: nowrap; }
 .clip { position: absolute; top: 5px; bottom: 5px; display: flex; align-items: center; overflow: hidden; border-radius: 5px; background: var(--panel-2); border: 1px solid var(--line); cursor: pointer; transition: border-color 0.15s, background 0.15s; animation: etapa-entra 0.3s ease-out; }
 .clip:nth-child(even) { background: color-mix(in srgb, var(--panel-2) 70%, var(--line)); }
@@ -30,7 +30,7 @@
 .clip.elegida .clip-texto { color: var(--accent-hover); }
 .clip > img, .clip > .cuadro { flex: none; height: 100%; width: auto; aspect-ratio: 16 / 9; object-fit: cover; border: 0; border-radius: 0; }
 
-/* Las piezas: una barra por cada tramo en que se ve, en carriles. La elegida, en ámbar. */
+/* Las piezas: una barra por cada tramo en que se ve, en carriles. La elegida, en menta. */
 .pista-piezas { border-bottom: 1px solid var(--line); }
 .pieza { position: absolute; height: 13px; padding: 0 5px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; border-radius: 3px; background: var(--panel-2); border: 1px solid var(--line); font-size: 10px; line-height: 11px; color: var(--muted); cursor: pointer; animation: etapa-entra 0.3s ease-out; }
 .pieza:hover { border-color: var(--muted); color: var(--text); }

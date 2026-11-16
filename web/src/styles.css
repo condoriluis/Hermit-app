@@ -106,7 +106,7 @@ input, textarea, select { font: inherit; color: inherit; }
 .new-head .card-icon.big { font-size: 24px; }
 .new-head h1 { margin: 0; font-size: 19px; font-weight: 650; letter-spacing: -0.01em; }
 .new-head p { margin: 0; font-size: 12.5px; color: var(--muted); }
-/* «Con tus cambios (N)» (TusCambios.tsx): ámbar, que avisa sin alarmar. */
+/* «Con tus cambios (N)» (TusCambios.tsx): menta, que avisa sin alarmar. */
 .tus-cambios { margin-top: 8px; padding: 3px 11px; border-radius: 999px; border: 1px solid var(--warn); color: var(--warn); font-size: 12.5px; font-weight: 600; transition: background 0.15s; }
 .tus-cambios:hover { background: var(--warn-soft); }
 .new-head .tus-cambios-listo { margin-top: 8px; font-size: 12.5px; }
@@ -256,7 +256,7 @@ input, textarea, select { font: inherit; color: inherit; }
 .icon-trazo { width: 1em; height: 1em; vertical-align: -0.15em; }
 .card-icon .icon-trazo { color: var(--accent); stroke-width: 1.6; }
 .chip-name { max-width: 280px; overflow: hidden; text-overflow: ellipsis; }
-/* La de un enlace: eslabón ámbar, el sitio y la ruta en gris. En el globo es un enlace de verdad. */
+/* La de un enlace: eslabón menta, el sitio y la ruta en gris. En el globo es un enlace de verdad. */
 .link-chip { color: inherit; text-decoration: none; }
 .link-chip .chip-icon, .quote-chip .chip-icon { stroke: var(--accent); background: var(--accent-soft); }
 .quote-chip .chip-name { font-weight: 400; font-style: italic; }

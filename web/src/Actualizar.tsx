@@ -61,7 +61,7 @@ const juntar = (xs: string[]) => (xs.length > 1 ? `${xs.slice(0, -1).join(', ')}
 
 /**
  * En el header: si Claude Code, Codex u OpenCode sacaron una versión más nueva que la que tienes (`server/agentes.ts`),
- * el botón que la baja, con sus modelos nuevos — un icono con punto ámbar y las versiones en el tooltip. Los hilos
+ * el botón que la baja, con sus modelos nuevos — un icono con punto menta y las versiones en el tooltip. Los hilos
  * abiertos siguen con la de antes; los nuevos van con la nueva. Mientras baja, un punto que gira.
  */
 export function AvisoAgentes() {

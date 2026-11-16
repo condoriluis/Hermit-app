@@ -11,7 +11,7 @@
 .tags input { width: 110px; padding: 3px 8px; border-radius: 999px; background: var(--panel); border: 1px solid var(--line); outline: none; font-size: 12px; }
 .tags input:focus { border-color: var(--accent); }
 
-/* El estado de cada video: en verde lo que ya está, en ámbar lo que falta, en rojo lo que falló. */
+/* El estado de cada video: en verde lo que ya está, en menta lo que falta, en rojo lo que falló. */
 .insignia { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; max-width: 100%; margin-top: -2px; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); font-size: 11px; white-space: nowrap; }
 .insignia.hecho { border-color: transparent; background: var(--ok-soft); color: var(--ok); }
 .insignia.falta { color: var(--warn); border-color: var(--warn-border); }
@@ -63,7 +63,7 @@
 
 /* En la barra lateral, sobre el historial: lo que falló en redes, con un punto rojo (los estilos, en Barra.css). */
 
-/* «Mis videos»: el calendario de cada red. Cada día, un punto por hueco: verde relleno si ya salió, borde verde si espera su hora, ámbar si está libre. */
+/* «Mis videos»: el calendario de cada red. Cada día, un punto por hueco: verde relleno si ya salió, borde verde si espera su hora, menta si está libre. */
 .calendario-redes { display: flex; flex-direction: column; gap: 8px; }
 .calendario-red { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; font-size: 13px; }
 .calendario-dias { display: flex; flex-wrap: wrap; gap: 4px; }
@@ -78,7 +78,7 @@
 .calendario-texto .hueco { color: var(--warn); }
 
 /* Opciones → Redes: lo primero y lo que más se ve, porque es por donde salen los videos. Un título grande con lo que
-   hacen, un borde ámbar tenue, logos grandes y, bajo cada red, su calendario (el mismo de «Mis videos»). */
+   hacen, un borde menta tenue, logos grandes y, bajo cada red, su calendario (el mismo de «Mis videos»). */
 .redes-cabeza { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; padding: 0 4px 4px; }
 .redes-cabeza h2 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -0.01em; }
 .redes-cabeza p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }

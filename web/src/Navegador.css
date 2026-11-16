@@ -8,7 +8,7 @@
 .navegador-borde:hover, .navegador-borde:active { background: linear-gradient(to right, transparent 3px, var(--accent) 3px, var(--accent) 5px, transparent 5px); }
 .estudio > .navegador > .navegador-borde { display: none; }
 .navegador-barra { position: relative; display: flex; align-items: center; gap: 2px; padding: 6px 8px; border-bottom: 1px solid var(--line); }
-/* Mientras carga, una línea ámbar quieta bajo la barra. */
+/* Mientras carga, una línea menta quieta bajo la barra. */
 .navegador.cargando .navegador-barra::after { content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--accent); opacity: 0.7; }
 .navegador-boton { flex: none; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 7px; color: var(--muted); transition: background 0.15s, color 0.15s; }
 .navegador-boton:hover:not(:disabled) { background: var(--panel-2); color: var(--text); }
@@ -64,7 +64,7 @@
 .navegador-vacio span { max-width: 340px; overflow-wrap: anywhere; }
 .navegador-vacio .navegador-chip { margin-top: 8px; border-color: var(--line); }
 
-/* El globo del encabezado, redondo como el de pedir una mejora: ámbar mientras se ve, con un punto si el agente lo usa. */
+/* El globo del encabezado, redondo como el de pedir una mejora: menta mientras se ve, con un punto si el agente lo usa. */
 .boton-navegador { position: relative; flex: none; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--line); color: var(--muted); transition: color 0.15s, border-color 0.15s, background 0.15s; }
 .boton-navegador:hover { color: var(--text); background: var(--panel-2); }
 .boton-navegador.on { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); background: var(--accent-soft); }

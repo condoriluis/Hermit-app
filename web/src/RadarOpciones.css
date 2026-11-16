@@ -2,7 +2,7 @@
 .radar-fuentes { gap: 14px; }
 .radar-fuentes p { margin: 0 0 6px; }
 .radar-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-/* Una fuente: un punto verde si se leyó bien, ámbar si no respondió, gris si aún no se lee; su ✕ la quita. */
+/* Una fuente: un punto verde si se leyó bien, menta si no respondió, gris si aún no se lee; su ✕ la quita. */
 .radar-chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 4px 3px 9px; border-radius: 999px; background: var(--panel); border: 1px solid var(--line); font-size: 12px; }
 .radar-chip::before { content: ''; flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--ok); }
 .radar-chip.falla::before { background: var(--warn); }

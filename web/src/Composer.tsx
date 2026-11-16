@@ -274,7 +274,7 @@ function withLinks(text: string): Node[] {
 /**
  * «Uso»: cuánto le queda al agente para recordar este chat y cuánto queda de tu plan, a un clic. Antes era un círculo con
  * un % junto a Enviar, y se leía como el avance del video. Todo se mide en lo que queda. Con el chat casi lleno sale un
- * punto ámbar y se puede resumir ya (lo mismo que escribir /compact); si no, el agente lo resume solo al llenarse. El plan
+ * punto menta y se puede resumir ya (lo mismo que escribir /compact); si no, el agente lo resume solo al llenarse. El plan
  * se consulta solo con la tarjeta abierta: pedirlo abre Claude Code o Codex.
  */
 function Uso({ used, max, proveedor, flow, onCompactar }: { used: number; max: number; proveedor: Proveedor; flow?: GastoFlow; onCompactar?(): Promise<unknown> }) {

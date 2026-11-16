@@ -543,7 +543,7 @@ function useAhora() {
 
 /**
  * En «Mis videos»: el calendario de cada red, de hoy al último día con algo. Cada día lleva un punto por hueco del ritmo:
- * relleno si ya salió, con borde verde si espera su hora y ámbar si está libre. Dice cuántos salieron hoy, hasta cuándo
+ * relleno si ya salió, con borde verde si espera su hora y menta si está libre. Dice cuántos salieron hoy, hasta cuándo
  * hay videos y dónde cae el siguiente que programes (el primer hueco libre). Cada minuto mira otra vez qué salió.
  */
 export function CalendarioRedes({ marcas }: { marcas?: MarcasDeRedes }) {

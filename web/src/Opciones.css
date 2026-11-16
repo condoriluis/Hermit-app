@@ -89,7 +89,7 @@
 .sub .picker-trigger svg { width: 11px; height: 11px; }
 .grupo-titulo .resumen { margin: 0; }
 
-/* El estado, con un punto: verde si está bien, ámbar si te toca hacer algo, gris si no está. */
+/* El estado, con un punto: verde si está bien, menta si te toca hacer algo, gris si no está. */
 .estado { display: inline-flex; align-items: center; gap: 7px; flex-shrink: 0; max-width: 50%; color: var(--text); font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .estado::before { content: ''; flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--ok); }
 .estado.falta { color: var(--warn); }
@@ -99,7 +99,7 @@
 .estado.apagado { color: var(--muted); }
 .estado.apagado::before { background: var(--line); box-shadow: inset 0 0 0 1px var(--muted); }
 
-/* A la derecha: el ámbar para lo que falta hacer, el de borde para lo que se cambia, y un desplegable con el estado por cara. */
+/* A la derecha: el menta para lo que falta hacer, el de borde para lo que se cambia, y un desplegable con el estado por cara. */
 .panel .primary { padding: 6px 14px; font-size: 12.5px; border-radius: 8px; flex-shrink: 0; }
 .boton { flex-shrink: 0; padding: 5px 12px; border-radius: 8px; border: 1px solid var(--line); color: var(--text); font-size: 12.5px; font-weight: 600; transition: border-color 0.15s, color 0.15s; }
 .boton:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
@@ -118,13 +118,13 @@
 /* Un interruptor con su nombre a la izquierda: pulsar el nombre también lo cambia. */
 .con-interruptor { flex: none; display: inline-flex; align-items: center; gap: 7px; color: var(--muted); font-size: 12.5px; cursor: pointer; }
 .con-interruptor + .con-interruptor { margin-left: 6px; }
-/* Un interruptor: apagado, la bolita gris a la izquierda; encendido, el fondo ámbar y la bolita a la derecha. */
+/* Un interruptor: apagado, la bolita gris a la izquierda; encendido, el fondo menta y la bolita a la derecha. */
 .interruptor { flex: none; position: relative; width: 34px; height: 20px; border-radius: 999px; background: var(--line); transition: background 0.15s; }
 .interruptor span { position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 50%; background: var(--muted); transition: transform 0.15s, background 0.15s; }
 .interruptor.on { background: var(--accent); }
 .interruptor.on span { transform: translateX(14px); background: var(--on-solid); }
 
-/* Los límites del plan de Claude, debajo de la cuenta: una barra por ventana, verde con holgura, ámbar si se acerca, roja casi al tope. */
+/* Los límites del plan de Claude, debajo de la cuenta: una barra por ventana, verde con holgura, menta si se acerca, roja casi al tope. */
 .limites { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px 24px; padding-top: 2px; font-size: 12px; }
 .limite { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
 .limite-nombre { display: flex; justify-content: space-between; gap: 8px; font-variant-numeric: tabular-nums; }

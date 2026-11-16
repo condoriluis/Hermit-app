@@ -54,7 +54,7 @@
 .com-elegir select { appearance: none; padding: 0 2px 0 0; border: 0; outline: none; background: none; color: var(--text); font-size: 12.5px; font-weight: 600; cursor: pointer; }
 .com-elegir select option { background: var(--panel); color: var(--text); }
 
-/* Las secciones: píldoras; la elegida, en ámbar. */
+/* Las secciones: píldoras; la elegida, en menta. */
 .com-secciones { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
 .com-secciones button { display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--muted); font-size: 13.5px; font-weight: 600; transition: color 0.15s, background 0.15s, border-color 0.15s; }
 .com-secciones button:hover { color: var(--text); border-color: var(--line-fuerte); }
@@ -89,7 +89,7 @@
 .com-vacio-logo img { position: relative; width: 64px; height: 64px; }
 @keyframes com-respira { 50% { transform: scale(1.12); opacity: 0.7; } }
 
-/* El feed: una tarjeta por publicación. La fijada lleva el borde ámbar. */
+/* El feed: una tarjeta por publicación. La fijada lleva el borde menta. */
 .com-feed { display: flex; flex-direction: column; gap: 14px; margin-top: 18px; }
 .com-post { position: relative; padding: 16px 18px 12px; border-radius: 14px; border: 1px solid var(--line); background: var(--panel); cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s; }
 .com-post:hover { border-color: var(--line-fuerte); box-shadow: 0 12px 30px var(--shadow); }

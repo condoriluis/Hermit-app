@@ -8,7 +8,7 @@ import './RadarOpciones.css'
 /**
  * El radar en Opciones (`server/radar/`): qué noticias sigue, si las está leyendo y un solo campo para darle más. Su fila
  * dice el tema y lo que trajo en 24 h; abierta, enseña las fuentes como fichas, con un punto verde si se leyeron bien,
- * ámbar si no respondieron y gris si aún no se leen, y su ✕ para quitarlas. En el campo, una web o una @cuenta se prueba
+ * menta si no respondieron y gris si aún no se leen, y su ✕ para quitarlas. En el campo, una web o una @cuenta se prueba
  * y se añade si responde; unas palabras son un tema, y Claude propone sus fuentes, ya probadas, para elegir.
  */
 

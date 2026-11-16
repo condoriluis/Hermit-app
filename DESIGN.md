@@ -12,10 +12,11 @@ visual (07 y 08) sirve para valorar el título junto a la miniatura, sin copiar 
 
 ## Paleta
 
-La instrucción del proyecto prevalece sobre los colores de las referencias. Usar las variables actuales de Hermit:
-fondo `--bg` #0f0e0c, superficie `--panel` #171512 y `--panel-2` #221f1b, texto `--text` #ede6d6, secundario `--muted`
-#9a907f, bordes `--line` #2e2a24, acción `--amber` #e8a33d, hover `--amber-2` #f4b04a, éxito `--ok` #8fc177 y error
-`--bad` #e06c55. Mantener el tema oscuro existente; no introducir un tema nuevo.
+La instrucción del proyecto prevalece sobre los colores de las referencias. Usar las variables actuales de Hermit
+(`web/src/tokens.css`): fondo `--bg` #0b0e11, superficie `--panel` #12161b y `--panel-2` #181d24, texto `--text`
+#e8edf2, secundario `--muted` #8b97a5, bordes `--line` #232a33, acción `--accent` #2dd4bf, hover `--accent-hover`
+#5eead4, texto sobre el acento `--on-solid` #04201c, éxito `--ok` #4ade80 y error `--bad` #f87171. Mantener el tema
+oscuro existente; no introducir un tema nuevo.
 
 ## Tipografía
 
@@ -66,34 +67,34 @@ una miniatura elegida. No programar publicaciones cuyos títulos o miniaturas to
 Lo que la gente hace con Hermit y cómo lo hace, como la comunidad de Skool, pero cálido y oscuro como el resto de Hermit.
 Al centro, el feed: «Escribe algo», las secciones en píldoras (General, Lo que hice, Ayuda, Mejoras, Anuncios),
 «Comienza aquí» y una tarjeta por publicación. A la derecha, la tarjeta de la comunidad (portada con el logo, qué es,
-miembros, activos hoy, creador, caras y tu perfil), que se queda a la vista al bajar. El ámbar, solo donde hay vida: la
+miembros, activos hoy, creador, caras y tu perfil), que se queda a la vista al bajar. El acento, solo donde hay vida: la
 sección elegida, la acción principal, lo fijado y los comentarios que aún no lees.
 
 ## Paleta
 
-La de Hermit, sin colores nuevos: fondo `--bg`, tarjetas `--panel`, compositor y comentarios `--panel-2`, bordes `--line`
-(#4a4236 al pasar el ratón), texto `--text` y `--muted`. Acción y vida: `--amber`, `--amber-2` y `--amber-tinte`. Hecha
+La de Hermit, sin colores nuevos: fondo `--bg`, tarjetas `--panel`, compositor y comentarios `--panel-2`, bordes `--line`,
+texto `--text` y `--muted`. Acción y vida: `--accent`, `--accent-hover` y `--accent-soft`. Hecha
 y pasos cumplidos: `--ok`. Borrar: `--bad`.
 
 ## Patrones
 
-- Tarjeta: cara, nombre (con «Creador» en ámbar si es el creador), «hace 2 h · Sección»; título en 18 px 700 y dos líneas
+- Tarjeta: cara, nombre (con «Creador» en acento si es el creador), «hace 2 h · Sección»; título en 18 px 700 y dos líneas
   del texto; a la derecha, la portada (la imagen o el primer cuadro del video, con su botón de play). Abajo, me gusta,
-  comentarios, las caras de quienes comentaron y «Nuevo comentario hace 5 h» en ámbar si aún no la abres.
-- Lo fijado lleva borde ámbar y «Fijada» arriba a la derecha. En Mejoras, una píldora dice cómo va: Idea, Se está
-  haciendo (ámbar) o Hecha (verde).
+  comentarios, las caras de quienes comentaron y «Nuevo comentario hace 5 h» en acento si aún no la abres.
+- Lo fijado lleva borde de acento y «Fijada» arriba a la derecha. En Mejoras, una píldora dice cómo va: Idea, Se está
+  haciendo (acento) o Hecha (verde).
 - Abierta, sobre un velo: entera, con su video (vertical a 9:16), sus imágenes que se amplían, la barra del creador
   (fijar, «Se está haciendo», marcar hecha) y los comentarios en globos, con donde se comenta al final.
 - El compositor (`Escribir.tsx`): título, texto que crece, capturas pegadas o soltadas, un video de «Mis videos» y la
-  sección en el pie; con un resplandor ámbar detrás. «Ayúdame a decirlo» (el símbolo de Claude, lo único fuera de la
+  sección en el pie; con un resplandor de acento detrás. «Ayúdame a decirlo» (el símbolo de Claude, lo único fuera de la
   paleta) en Ayuda y Mejoras, y en «Pedir una mejora» de cada hilo.
 - «Comienza aquí»: un anillo verde con lo que llevas y tres pasos (tu nombre y tu foto, presentarte, comentar).
 - Comentarios: debajo de cada globo, me gusta y «Responder»; las respuestas van sangradas con una raya que las une.
-- La campana, junto al título: un panel con tus avisos (lo nuevo con tinte ámbar y su punto); los que no has leído
-  también salen en un contador ámbar junto a «Comunidad», en la barra lateral.
+- La campana, junto al título: un panel con tus avisos (lo nuevo con tinte de acento y su punto); los que no has leído
+  también salen en un contador de acento junto a «Comunidad», en la barra lateral.
 - Reportar: una bandera en lo de los demás y una caja con los motivos. Lo reportado lleva para el creador una píldora
   roja («Reportada · 2») y «Está bien, se queda».
-- Sin foto, la cara es la inicial en ámbar sobre `--panel-2`; el creador sin foto, el logo de Hermit.
+- Sin foto, la cara es la inicial en acento sobre `--panel-2`; el creador sin foto, el logo de Hermit.
 
 ## Evitar
 

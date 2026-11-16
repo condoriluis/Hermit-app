@@ -932,6 +932,31 @@ function NewSession(props: {
 
   // Lo que hacen los carteles, siempre las mismas funciones (van memorizados) y con lo de ahora.
   const alCartel = useRef<AccionesCartel>(null as never)
+  // .new-top: la página de arriba (cabecera y estante de estilos), que scrollea sola detrás del chat.
+  const arriba = useRef<HTMLDivElement>(null)
+  const abajo = useRef<HTMLDivElement>(null)
+  // La rueda sobre el chat también mueve la página de arriba: .new-top es hermano y no ancestro del chat,
+  // así que el encadenado nativo no llega hasta él — se le pasa el delta cuando el scroll interno
+  // (.new-antes, o el composer en ventanas bajas) ya no puede consumirlo. Listener nativo: el composer
+  // es un contentEditable y cualquier cosa en medio no debe poder tragarse el gesto.
+  useEffect(() => {
+    const el = abajo.current, top = arriba.current
+    if (!el || !top) return
+    const onWheel = (e: WheelEvent) => {
+      const interno = (e.target as Element).closest('.new-antes, .composer')
+      // Solo cuenta como consumidor un scroller de verdad (overflow auto/scroll): con `visible`
+      // scrollHeight puede pasar de clientHeight sin que el bloque pueda moverse — ahí el delta
+      // siempre pasa a la página de arriba.
+      const oy = interno ? getComputedStyle(interno).overflowY : ''
+      if (interno && (oy === 'auto' || oy === 'scroll')) {
+        const puede = e.deltaY < 0 ? interno.scrollTop > 0 : interno.scrollTop + interno.clientHeight < interno.scrollHeight - 1
+        if (puede) return
+      }
+      top.scrollTop += e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY
+    }
+    el.addEventListener('wheel', onWheel, { passive: true })
+    return () => el.removeEventListener('wheel', onWheel)
+  }, [])
   alCartel.current = {
     // Sin videos terminados (sin previa) solo se elige: su galería saldría vacía.
     elegir: (c) => (props.onPick(c), setEnEstilo(esDeVideo(c) && !!previas[c.id])),
@@ -1071,7 +1096,7 @@ function NewSession(props: {
       {soltar.aviso}
       {/* Arriba las skills (o, con un estilo elegido, sus videos), que hacen scroll solas con la cabecera;
           abajo la skill elegida y el compositor, que no se mueven de su sitio. */}
-      <div className="new-top">
+      <div className="new-top" ref={arriba}>
         <header className="new-session-head">
           <div>
             <h1>Nuevo chat</h1>
@@ -1108,7 +1133,7 @@ function NewSession(props: {
           </section>
         )}
       </div>
-      <div className="new-bottom">
+      <div className="new-bottom" ref={abajo}>
         {/* En ventanas bajas (una laptop pequeña) esto hace scroll interno: el compositor nunca se va con él. */}
         <div className="new-antes">
           <div className="new-head">

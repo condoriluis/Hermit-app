@@ -78,11 +78,12 @@ input, textarea, select { font: inherit; color: inherit; }
    tope y el aire lateral que antes tenía la caja: el contenido se ve igual. */
 .new-top { flex: 1; min-height: 0; width: 100%; display: flex; flex-direction: column; justify-content: flex-start; overflow-y: auto; overflow-x: hidden; }
 .new-top > * { width: 100%; max-width: 1560px; margin-left: auto; margin-right: auto; padding-left: 32px; padding-right: 32px; }
-/* El compositor del inicio, ancho de lectura (~900px) y centrado; la descripción del formato, encima y sobria.
+/* El compositor del inicio, el mismo ancho del chat de los hilos (.session-composer: 868 por fuera, 820 la caja)
+   y centrado; la descripción del formato, encima y sobria.
    Tope del 55%: en pantallas bajas el estante de estilos siempre conserva su mitad. */
-/* El bloque de abajo (estilo elegido + composer) va enmarcado como un dialog: borde fino, línea de acento arriba y
-   esquinas redondeadas, para distinguirlo del fondo de la página. El composer de adentro no cambia. */
-.new-bottom { flex: 0 1 auto; min-height: 0; max-height: 55%; width: 100%; max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; padding: 4px 24px 20px; border: 1px solid var(--line); border-top: 2px solid var(--accent); border-radius: 14px; }
+/* El bloque de abajo (estilo elegido + composer) va sin marco: flota sobre el fondo de la página,
+   sin bordes ni esquinas. El composer de adentro no cambia. */
+.new-bottom { flex: 0 1 auto; min-height: 0; max-height: 55%; width: 100%; max-width: 868px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; padding: 4px 24px 20px; }
 /* En ventanas bajas encoge y hace scroll interno: el compositor queda siempre a la vista. */
 .new-antes { flex: 0 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
 /* Si ni así alcanza (pantalla muy baja), la tarjeta del compositor también encoge y scrollea por dentro:
@@ -96,7 +97,6 @@ input, textarea, select { font: inherit; color: inherit; }
 @media (max-height: 760px) {
   .new-session { padding: 14px 0 10px; }
   .new-top { padding: 0 24px; }
-  .new-top > .estilo { padding-left: 16px; padding-right: 16px; }
   .new-bottom { padding: 4px 16px 14px; }
   .new-session-head h1 { font-size: 20px; }
   .new-session-head p { display: none; }
@@ -150,11 +150,9 @@ input, textarea, select { font: inherit; color: inherit; }
 .card-actions span { width: 24px; height: 24px; display: grid; place-items: center; border-radius: 6px; background: var(--scrim-control); color: var(--text); font-size: 12px; }
 .card-actions span:hover { background: var(--panel); }
 .card-actions span.danger:hover { color: var(--bad); }
-/* Un estilo elegido: sus videos en el sitio de las cards. Ocupa el ancho de la tarjeta del compositor
-   (.new-bottom, 900px) y no todo el área: las dos quedan alineadas, como un dialog sobre la página. */
+/* Un estilo elegido: sus videos en el sitio de las cards. */
 /* La página del estilo crece con su contenido: quien scrollea es .new-top (arriba, con la cabecera).
    La rejilla de videos no scrollea por dentro; carga por tandas según se acerca al viewport. */
-.new-top > .estilo { max-width: 900px; padding-left: 24px; padding-right: 24px; }
 .estilo { flex: none; display: flex; flex-direction: column; gap: 10px; }
 .estilo .videos { flex: none; overflow: visible; }
 .estilo-volver { align-self: flex-start; color: var(--muted); font-size: 12.5px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); transition: color 0.15s, border-color 0.15s; }

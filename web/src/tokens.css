@@ -1,24 +1,24 @@
-/* La única fuente de color de Hermit: grafito azulado y azul acero. Los componentes usan el rol, no el color. */
+/* La única fuente de color de Hermit: grafito neutro y menta. Los componentes usan el rol, no el color. */
 :root {
   color-scheme: dark;
 
-  --bg: #0a0e14;
-  --panel: #111722;
-  --panel-2: #18212f;
+  --bg: #0b0e11;
+  --panel: #12161b;
+  --panel-2: #181d24;
 
-  --line: #263244;
-  --line-fuerte: #3a4a63;
+  --line: #232a33;
+  --line-fuerte: #323c49;
 
-  --text: #e6edf7;
-  --text-2: #c5d0df;
-  --muted: #94a3b8;
-  --placeholder: #64748b;
+  --text: #e8edf2;
+  --text-2: #c4ccd6;
+  --muted: #8b97a5;
+  --placeholder: #667281;
 
-  --accent: #4f8cff;
-  --accent-hover: #6ea8fe;
+  --accent: #2dd4bf;
+  --accent-hover: #5eead4;
   --accent-soft: color-mix(in srgb, var(--accent) 14%, transparent);
   --accent-border: color-mix(in srgb, var(--accent) 45%, transparent);
-  --on-solid: #07101f;
+  --on-solid: #04201c;
 
   --warn: #fbbf24;
   --warn-soft: color-mix(in srgb, var(--warn) 13%, transparent);

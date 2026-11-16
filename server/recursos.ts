@@ -31,7 +31,7 @@ const PRIORIZADOS = 8
  * no acaparen la máquina y congelen a los demás. Piso de 2: con menos, un render se arrastraría.
  */
 export function hilosPara(agentes: number): number {
-  return Math.max(2, Math.min(hardware.nucleos, Math.floor(hardware.nucleos / Math.max(1, agentes))))
+  return Math.min(hardware.nucleos, Math.max(2, Math.floor(hardware.nucleos / Math.max(1, agentes))))
 }
 
 /** Las variables que leen NumPy, Torch, OpenBLAS, MKL y Accelerate (macOS) para sus hilos. */

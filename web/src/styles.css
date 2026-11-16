@@ -1,4 +1,12 @@
 /* Los colores viven en tokens.css. Aquí solo se compone la interfaz. */
+/* Inter variable local (SIL OFL 1.1, The Inter Project Authors): sin CDN, Hermit funciona sin internet. */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/inter-latin.woff2') format('woff2');
+}
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; margin: 0; }
 body {

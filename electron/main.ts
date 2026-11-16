@@ -203,6 +203,9 @@ function abrir() {
   const { maximizada, ...medidas } = lugar()
   const v = new BrowserWindow({
     ...medidas,
+    // Por debajo de esto el compositor y las galerías no caben; los cortes de CSS siguen para el zoom alto.
+    minWidth: 900,
+    minHeight: 600,
     title: 'Hermit',
     show: false,
     // Sin barra de título: el header de la app lleva sus botones (en Mac quedan los semáforos, arriba a la izquierda).

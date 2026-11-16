@@ -1007,14 +1007,49 @@ function NewSession(props: {
               />
             )}
             {conFormato && (
-              <Segmento
-                label="Formato"
-                valor={formato}
-                opciones={[
-                  { id: 'vertical', texto: 'Vertical', title: formatoEscrito ? 'Lo trae la idea' : '1080x1920, para TikTok', disabled: !!formatoEscrito },
-                  { id: 'horizontal', texto: 'Horizontal', title: formatoEscrito ? 'Lo trae la idea' : '1920x1080, para YouTube', disabled: !!formatoEscrito }
+              <Picker
+                flotante
+                className="formato-picker"
+                label={
+                  <span className="formato-trigger">
+                    <span className={`formato-ico ${formato}`} />
+                    {formato === 'vertical' ? 'Vertical' : 'Horizontal'}
+                  </span>
+                }
+                value={formato}
+                disabled={!!formatoEscrito}
+                groups={[
+                  {
+                    label: formatoEscrito ? 'Lo trae la idea' : 'Para TikTok o para YouTube',
+                    options: [
+                      {
+                        value: 'vertical',
+                        label: (
+                          <span className="formato-op">
+                            <span className="formato-ico vertical" />
+                            <span className="formato-txt">
+                              <b>Vertical</b>
+                              <small>9:16 · TikTok, Shorts</small>
+                            </span>
+                          </span>
+                        )
+                      },
+                      {
+                        value: 'horizontal',
+                        label: (
+                          <span className="formato-op">
+                            <span className="formato-ico horizontal" />
+                            <span className="formato-txt">
+                              <b>Horizontal</b>
+                              <small>16:9 · YouTube</small>
+                            </span>
+                          </span>
+                        )
+                      }
+                    ]
+                  }
                 ]}
-                onCambio={(f) => setFormatos({ ...formatos, [card.id]: f })}
+                onChange={(f) => setFormatos({ ...formatos, [card.id]: f as 'vertical' | 'horizontal' })}
               />
             )}
             {conFormato && (

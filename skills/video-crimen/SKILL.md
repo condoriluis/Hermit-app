@@ -1,6 +1,6 @@
 ---
 name: video-crimen
-description: Hace un video de misterio, true crime o caso real sin resolver, vertical (TikTok, Reels, Shorts) u horizontal (YouTube). Formato de alta fidelidad de audiencia con fotos de expedientes, mapas interactivos, recortes de periódicos de la época, efectos de audio de ambiente tenso, narración misteriosa y preguntas abiertas al público. Úsala cuando pidan un caso real, un misterio o un video de true crime.
+description: Hace un video de misterio, true crime o caso real sin resolver, vertical (TikTok, Reels, Shorts) u horizontal (YouTube). Un expediente en video con fotos de expedientes, mapas interactivos, recortes de periódicos de la época, efectos de audio de ambiente tenso, narración misteriosa y preguntas abiertas al público. Úsala cuando pidan un caso real, un misterio o un video de true crime.
 ---
 
 # Misterio y Crimen
@@ -10,7 +10,7 @@ errores ya vistos), [`FORMATO.md`](../video-base/FORMATO.md), [`VOZ.md`](../vide
 
 ## La esencia
 
-Uno de los géneros con mayor tiempo promedio de reproducción y comunidad recurrente en YouTube y TikTok.
+El caso real contado como expediente audiovisual: evidencia, cronología y las preguntas que quedan abiertas.
 
 - **Atmósfera inmersiva y fría:** Iluminación en clave baja, tonos fríos o sepia vintage, efecto de grano sutil de película y viñetas oscuras en los bordes.
 - **Evidencia tangible:** Mapas satelitales con pines que señalan el lugar de los hechos, recortes de noticias reales de la prensa, fotografías de archivo con fechas precisas sobrepuestas.
@@ -21,6 +21,7 @@ Uno de los géneros con mayor tiempo promedio de reproducción y comunidad recur
 
 - **Respeto y rigor:** Cero morbo gratuito; los hechos, nombres y fechas deben corresponder a registros periodísticos o judiciales reales, anotados en `fuentes/caso.md`.
 - **Efecto cliffhanger:** Termina planteando las preguntas o teorías que siguen abiertas, invitando al debate en los comentarios.
+- **Derechos:** nada de imágenes de víctimas ni de personas identificables sin licencia registrada; el material de archivo entra con su fuente, anotada en `fuentes/caso.md`.
 - El proyecto va en `<nombre>` (la ruta completa de la línea `Carpeta:` del mensaje: úsala tal cual, no depende de dónde estés). Sin ella, `crimen-<tema>`.
 
 ## Formato

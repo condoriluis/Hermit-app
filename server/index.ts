@@ -74,6 +74,8 @@ const ATTACHMENTS = join(APP, 'data', 'attachments')
 const ATTACHMENT_TYPES: Record<string, string> = { ...IMAGE_TYPES, '.wav': 'audio/wav', '.mp3': 'audio/mpeg', '.mp4': 'video/mp4', '.webm': 'video/webm' }
 /** Código de salida que le pide a `scripts/start.mjs` que vuelva a levantar el servidor. */
 const RESTART = 75
+/** El puerto está tomado por otra aplicación: start.mjs no lo reintenta y Electron dice qué pasó. */
+const PUERTO_OCUPADO = 76
 // Los scripts de las skills buscan aquí los procesos del Python de Hermit (`hermit.py` o `hermit.py`).
 process.env.HERMIT_PROCESOS ??= join(APP, 'python', 'procesos')
 process.env.HERMIT_PROCESOS ??= process.env.HERMIT_PROCESOS
@@ -894,6 +896,14 @@ server.on('upgrade', (req, socket, head) => {
 const v6 = servidorTcp((socket) => server.emit('connection', socket))
 v6.on('error', () => {})
 v6.listen(PORT, '::1')
+// Sin manejador, un EADDRINUSE saldría como excepción suelta y start.mjs lo reintentaría tres veces antes de rendirse.
+server.on('error', (e) => {
+  if ((e as NodeJS.ErrnoException).code === 'EADDRINUSE') {
+    console.error(`El puerto ${PORT} está ocupado por otra aplicación. Ciérrala y vuelve a abrir Hermit.`)
+    process.exit(PUERTO_OCUPADO)
+  }
+  throw e
+})
 server.listen(PORT, '127.0.0.1', () => {
   console.log(`Hermit en http://localhost:${PORT}`)
   setTimeout(() => {

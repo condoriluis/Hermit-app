@@ -7,7 +7,7 @@ description: Hace un video explicativo, vertical (TikTok, Instagram, Shorts) u h
 
 Escribes tres archivos y corres un comando. El guion (`guion.md`), sus pruebas (`fuentes/investigacion.md`) y
 `momentos.json`: qué se ve en cada palabra. El director de la plantilla arma solo el mundo 3D, la cámara, el encuadre,
-el texto, las poses, los sonidos y el cierre, y `hacer.py` hace la voz, renderiza, mide y pone la portada. **No escribas
+el texto, las poses, los sonidos, la barra de progreso y el cierre, y `hacer.py` hace la voz, renderiza, mide y pone la portada. **No escribas
 código ni abras la plantilla**: todo lo que el video necesita se dice en `momentos.json`.
 
 `<skill>` es esta carpeta y `<base>` es `video-base`, junto a ella. Los scripts van con el `python` del sistema.
@@ -23,6 +23,8 @@ código ni abras la plantilla**: todo lo que el video necesita se dice en `momen
 - **Nada de emojis**, tampoco en los subtítulos: íconos de Phosphor o imágenes.
 - **Ningún modelo 3D se hace dos veces**: los objetos salen de la biblioteca (`modelos.py lista`) o son íconos de
   Phosphor extruidos, y lo nuevo se guarda en la biblioteca (skill [`modelos-3d`](../modelos-3d/SKILL.md)).
+- **Derechos:** las fotos de `imagen` entran con su fuente y licencia; nada de personas reales generadas (los modelos
+  3D y el personaje son inventados).
 - El proyecto va en la ruta completa de la línea `Carpeta:` (sin ella, `explicado-<tema>` en el directorio actual), y en el formato de
   `Formato:` (sin ella, vertical). Con `Formato: horizontal` (1920×1080, para YouTube) es `nuevo.py <carpeta> --formato
   horizontal` y nada más: el director acomoda el texto abajo, el personaje a la derecha y el mundo a todo el ancho, y
@@ -57,23 +59,21 @@ más barato de cambiar.
   México». **El humor es el de `habla`**: si dice humor negro, sin miedo a la muerte, la desgracia y la familia sin
   filtro (la abuela que te heredó el cuchillo y el trauma), nunca contra quien ya la pasa mal.
 - **Una idea por frase, frases cortas**, palabras de todos los días, de tú (o como diga `habla` de la marca). Cada cifra
-  en letra («sesenta y nueve por ciento»): la voz las dice y el alineador no sabe situar dígitos.
+  en letra («sesenta y nueve por ciento»): la voz las dice y el alineador no sitúa dígitos.
 - **Nombra lo que enseñas**: «suelta la niacina», no «suelta la vitamina». El nombre es lo que se lleva y lo que
-  repite; sin él, el tamal se quedó en 8 en «enseña». Uno por video, el que alguien repetiría en la mesa
-  («capsaicina»); el del laboratorio («el receptor TRPV uno», «lo clonó») se dice con palabras de todos («un sensor
-  de calor»).
+  repite; sin él, el tamal se quedó en 8 en «enseña». Uno por video, el que alguien repetiría en la mesa; el del
+  laboratorio («el receptor TRPV uno») se dice con palabras de todos («un sensor de calor»).
 - **No anuncies lo que vas a decir: dilo.** Nada de «Lo peor: …», «Dato curioso: …», «Ahora, la parte buena».
 - **El giro**: lo que el que mira creía, y por qué no es así, con la prueba (quién lo dice y cuándo).
 - **En cadena**: cada frase abre la pregunta que cierra la siguiente («Entonces cavas un escalón… pero en cuanto te
   asomas, te ven. Entonces…»), en segunda persona y con algo que el que mira ya vivió. Así se queda hasta el final.
 - **El final vuelve al principio** (el gancho, ya resuelto) y se ve: su momento repite la tarjeta o la cosa del gancho
-  (en el tamal, «las paredes ni se enteran» cayó en la olla de siempre y el chiste de la cal de pintar no volvió),
-  luego «Mándaselo a quien…» (a alguien concreto: «a quien cree que una trinchera es solo una zanja») y la frase de la
-  marca.
+  (en el tamal, la frase del gancho cayó en la olla de siempre), luego «Mándaselo a quien…» (a alguien concreto:
+  «a quien cree que una trinchera es solo una zanja») y la frase de la marca.
 
 Los videos de este género que pegan y lo que tienen, en [`REFERENCIAS.md`](REFERENCIAS.md): la vara con que se
 califica.
-- **Dura lo que pide**: ~3.4 palabras por segundo (la voz ya acelerada). Si piden un largo, se cumple: 30 s son ~100 palabras con el cierre
+- **Dura lo que pide**: ~3.4 palabras por segundo (la voz ya acelerada); si piden un largo se cumple
   (`hacer.py --dura` lo cuenta antes de pedir la voz).
 
 La forma sale del tema: una historia se cuenta en orden y con tensión; una noticia, lo que pasó primero; un cómo se
@@ -88,9 +88,9 @@ objeto 3D), su `tarjeta` (lo 2D, encima de la cosa) y la `pose` del personaje. L
 lo ya dicho se queda atrás, gris. El primer momento es el primer cuadro y la portada: **el protagonista 3D haciendo
 ya lo que sorprende** (la masa inflándose, el celular vibrando con el mensaje falso, la burbuja naciendo en el
 nudillo), con `anima` o `accion` desde el cuadro cero, una tarjeta corta encima si hace falta (`cifra`, `boton`) y la
-pose más fuerte que pida (`susto`, `reojo`, `lentes`). Una foto quieta de entrada no detiene a nadie: un revisor a
-ciegas le dio 5 a 7 de «lo vería» a los cinco que abrían con foto. Cada remate, con su pose (`ladra`, `lentes`, `susto`,
-`tapa`): con ellas la cámara se mete de cerca y el perro entra de golpe. El remate se ve en la escena (la cosa que cambia con su `anima`, la persona que lo vive), nunca en una foto ni un logo: hacer.py lo revisa. **De dos a tres fotos reales por video**,
+pose más fuerte que pida (`susto`, `reojo`, `lentes`). Una foto quieta de entrada no detiene a nadie: un revisor le dio
+5 a 7 de «lo vería» a los cinco que abrían con foto. Cada remate, con su pose (`ladra`, `lentes`, `susto`,
+`tapa`): la cámara se mete de cerca y el perro entra de golpe. El remate se ve en la escena (la cosa que cambia con su `anima`, la persona que lo vive), nunca en una foto ni un logo: hacer.py lo revisa. **De dos a tres fotos reales por video**,
 después del gancho, como prueba (quién lo dice, la cosa real): sin ellas, todo es un ícono genérico.
 - **Lo que dice la tarjeta es lo que dice la voz**: la misma cifra, en el mismo momento («la mitad» es `50 %`, no `38`;
   «más de setenta y cinco dólares» no es `$25+`). Una que no coincide se nota y tumba lo claro.
@@ -138,16 +138,9 @@ después del gancho, como prueba (quién lo dice, la cosa real): sin ellas, todo
   modelo las dice `modelos.py lista`. Lo que animas arranca en 0 si la cosa no lo trae en `props`: si en ese modelo el 0
   no es como se ve siempre (la hogaza con `dorado` 0 es masa cruda), ponlo en `props`. **`gris: true`**: lo desmentido o lo que se acaba se queda gris desde ahí.
 - **`tarjeta`**, una de:
-  - `imagen`: `src` (en `public/`), `pie` (dos a cuatro palabras) y `fuente`. **Lo real se reconoce más que un ícono**:
-    el producto, el anuncio, la página, la persona, el lugar. De dos a tres por video, de las páginas que ya
-    leíste (la de una noticia o una tienda trae su foto):
-    `python -B -X utf8 <skill>/scripts/imagenes.py <nombre>=<url de la página o de la imagen>…` (todas en una
-    llamada, ~3 s) las deja en `public/img/<nombre>.jpg`. Una `Imagen adjunta:` del mensaje también puede salir en
-    escena: cópiala a `public/img/` (la ruta que trae es la del adjunto; `--adjunta` ya la aparta para la portada) y
-    úsala como esta `imagen`, con su `pie` y `fuente`. Si una no sale, va un ícono: no se inventan. La foto enseña la cosa (el estómago, el pájaro, el habanero), nunca el logo de quien lo dice: eso va en `fuente`; el logo de Scientific American en «nada apaga el eco» no enseñó nada. **La foto
-    entra cuando el protagonista ya se vio**: nunca en los dos primeros momentos ni antes de unos 5 s (15 palabras), y
-    se queda 2 s o más (6 palabras); mientras se ve, el director para y quita lo de detrás. En el del corazón entró a
-    los 3 s y «al modelo 3D ya no se le permitió ver nada».
+  - `imagen`: `src` (en `public/`), `pie` (dos a cuatro palabras) y `fuente`. **Lo real se reconoce más que un
+    ícono**: el producto, el anuncio, la página, la persona, el lugar; de dos a tres por video, nunca en los dos
+    primeros momentos ni antes de unos 5 s, y se queda 2 s o más. De dónde salen y qué foto: [`FOTOS.md`](FOTOS.md).
   - `cifra`: `valor` (corto y con su unidad: «0», «$200», «8 €», «69 %», «4 cm»), `nota`, `fuente`, `icono`, `color`; `cuenta: [0, 200]` la hace correr.
   - `prueba`: quién lo dijo (su `logo` real, con `logos.py`; si no tiene, un `icono`; y `fuente` con la fecha) y solo
     la frase que importa: `antes`, `frase`
@@ -188,9 +181,7 @@ después del gancho, como prueba (quién lo dice, la cosa real): sin ellas, todo
   alarma), desde el primer momento: es lo que más sube «entretiene». Uno inventado (lágrimas 0, 2, 4… 120) baja «enseña». Es un dato como cualquier otro: verdadero,
   o un ejemplo que la voz dice como ejemplo («si tienes diez mil en la cuenta…»).
 
-Las reglas de la imagen que siguen valiendo, y que el director no puede poner por ti: pocas palabras en lo que se ve
-(un número o dos palabras: el texto de arriba ya dice el resto), imágenes en vez de nombres (un logo, un ícono, un
-objeto), y nada de etiquetas de cambio sueltas («−94 %»): el número ya lo dice.
+Las reglas de lo que se ve en las tarjetas: [`CINE.md`](CINE.md), al final.
 
 ## Los pasos
 
@@ -203,18 +194,9 @@ objeto), y nada de etiquetas de cambio sueltas («−94 %»): el número ya lo d
    `python -B -X utf8 <skill>/scripts/marca.py ver` (con la misma `--marca`);
    `python -B -X utf8 <skill>/../modelos-3d/scripts/modelos.py lista`; y de dos a cuatro búsquedas web a la vez. Si a
    la marca le falta algo, pregúntalo ([`MARCA.md`](MARCA.md)).
-   **La pieza central**: si la biblioteca no tiene el objeto que sostiene la historia (la olla del tamal, el aparato del
-   baño de pies, la hogaza del pan), en cuanto sepas cuál es lanza **un** subagente en segundo plano que lo haga a
-   medida, con tu mismo modelo: «sigue la skill modelos-3d (4 y 5): escríbelo en `src/modelos/<id>.tsx` de
-   `<proyecto>`: <qué es y qué partes trae>. El objeto mismo llena su caja: sin mesa, piso ni base debajo (el mundo ya
-   trae piso), porque el video lo escala por su caja y una mesa lo deja diminuto. Compacto, casi tan alto como ancho: lo
-   largo va de pie (el video es vertical; la articulación de los dedos, dos huesos acostados, quedó una tira delgada). Con props de 0 a 1 para lo que cambia
-   en la historia (<cuáles>), que se vean de frente a la cámara y a su tamaño, y una que la haga actuar sola todo el
-   video mientras vale más de 0 (<la acción que no para: pica, late, gotea>; guárdala con `--actua`). Que la acción
-   tenga el detalle de la vida real: lo que salta, se deshace o salpica al hacerla (las capas de la cebolla que se
-   separan, el jugo, las gotitas), no solo el objeto que sube y baja. Primero, en unos 4 minutos, una versión
-   que compile con todas sus props; luego guárdalo con `modelos.py guardar`. No toques nada más.» Úsalo como la cosa de tu escena principal, con sus props en `anima`.
-   Es lo que más sube un video: con ella, la escena se arma frente al que mira; sin ella, son íconos sueltos.
+   **La pieza central**: si la biblioteca no tiene el objeto que sostiene la historia, encarga su modelado a un
+   subagente: [`MODELAR.md`](MODELAR.md). Es lo que más sube un video: con ella, la escena se arma frente al que mira;
+   sin ella, son íconos sueltos.
    **Prefiere las piezas que actúan** (`modelos.py lista` dice «ACTÚA con `<prop>`»): de protagonista, encendidas desde
    el primer momento, el video tiene una acción que no para (el cuchillo que pica, el corazón que late). Si el tema pide
    comparar (con filo y sin filo, antes y después), una pieza que enseñe los dos lados a la vez con su contador
@@ -250,7 +232,5 @@ objeto), y nada de etiquetas de cambio sueltas («−94 %»): el número ya lo d
    hiciste la pieza central al vuelo, avísalo: «El <objeto> no estaba en la biblioteca: lo hice al vuelo y se ve
    menos pulido; si va a volver a salir, que se pula en Modelos 3D». Nunca dejes un video sin su pieza porque no estaba.
 
-Si algo que el video necesita de verdad no cabe en `momentos.json` (una pieza 2D que no hay), escríbela en
-`src/piezas/<nombre>.tsx` (las piezas del kit, en [`KIT.md`](KIT.md)) y úsala con
-`"tarjeta": { "tipo": "pieza", "nombre": "<nombre>", "props": {…}, "w": <ancho px>, "h": <alto px> }`; recibe además
-`en` y `hasta` (sus cuadros). Y díselo al usuario: falta en el director.
+Si algo que el video necesita de verdad no cabe en `momentos.json` (una pieza 2D que no hay), se escribe a mano como
+explica [`KIT.md`](KIT.md), y díselo al usuario: falta en el director.

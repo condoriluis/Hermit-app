@@ -23,6 +23,8 @@ export type PropsDeVideo = {
   deVideo: number[]
   /** Si se ve la fase Video. Fuera de ella el monitor se esconde, pero la línea de tiempo sigue abajo. */
   visible: boolean
+  /** El agente está trabajando en el hilo: lo que lanza procesos propios (renderizar) espera a que acabe. */
+  trabaja: boolean
   /** Lleva el estudio a la fase Video: tocar la línea de tiempo desde otra fase es querer verlo. */
   onVer(): void
 }
@@ -49,8 +51,8 @@ export const useTiempo = (r: Reloj) => useSyncExternalStore(r.oir, r.get)
 
 /** El video que dice el motor: cuánto dura, a cuántos cuadros por segundo y su tamaño. */
 export type Info = { duracion: number; fps: number; ancho: number; alto: number }
-/** Una escena del video según el motor (sus secuencias de Remotion), en segundos. */
-export type EscenaMotor = { nombre: string; desde: number; hasta: number }
+/** Una escena del video según el motor (sus secuencias de Remotion), en segundos. `escena`: su id si la plantilla lo da (edicion.json, V8). */
+export type EscenaMotor = { nombre: string; desde: number; hasta: number; escena?: string }
 /** Un audio que suena en el video: de dónde sale y en qué tramo. `recorte`: desde qué segundo del archivo. */
 export type AudioMotor = { src: string; desde: number; hasta: number; recorte: number }
 /**

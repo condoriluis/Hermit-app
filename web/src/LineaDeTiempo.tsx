@@ -10,8 +10,8 @@ import './LineaDeTiempo.css'
  * una escena o una pieza la elige para pedir un cambio. El cabezal solo se mueve con el video o con el usuario.
  */
 
-/** Una escena en la línea de tiempo, en segundos. `marca`: su número o su id (`b06`); `cuadro`: su miniatura, si la tiene. */
-export type Clip = { id: string; marca: string; nombre: string; desde: number; hasta: number; cuadro?: ReactNode; title?: string }
+/** Una escena en la línea de tiempo, en segundos. `marca`: su número o su id (`b06`); `cuadro`: su miniatura, si la tiene. `escena`: su id si la plantilla lo da (edicion.json, V8). */
+export type Clip = { id: string; marca: string; nombre: string; desde: number; hasta: number; cuadro?: ReactNode; title?: string; escena?: string }
 
 /** Lo que suena, ya como archivo de la carpeta del hilo. */
 export type Pista = Omit<AudioMotor, 'src'> & { ruta: string }
@@ -44,6 +44,8 @@ export function LineaDeTiempo(props: {
   onRango(r: [number, number] | undefined, fin?: boolean): void
   onEscena(c: Clip): void
   onPieza(c: Clip): void
+  /** Una fila extra bajo la barra (p. ej. el panel de edición de la pieza elegida), a lo ancho de las dos columnas. */
+  panel?: ReactNode
 }) {
   const { duracion } = props
   const scroller = useRef<HTMLDivElement>(null)
@@ -175,6 +177,7 @@ export function LineaDeTiempo(props: {
           <Icono de="ajustar" />
         </button>
       </div>
+      {props.panel}
       <div className="linea-nombres" style={filas}>
         <span />
         {conEscenas && <span>Escenas</span>}

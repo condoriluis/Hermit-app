@@ -289,6 +289,16 @@ a.link-chip:hover { border-color: var(--accent); }
 .picker-option:hover { background: var(--panel-2); }
 .picker-option.on { color: var(--accent); background: var(--accent-soft); }
 .picker-menu.down { bottom: auto; top: calc(100% + 8px); animation-name: drop; }
+/* El formato del video: el icono es el cuadro con su proporción real (9:16 o 16:9), en el menú y en el disparador. */
+.formato-ico { flex: none; display: inline-block; border: 1.5px solid var(--muted); border-radius: 3px; background: var(--panel-2); }
+.formato-ico.vertical { width: 9px; height: 15px; }
+.formato-ico.horizontal { width: 15px; height: 9px; }
+.formato-picker .picker-option.on .formato-ico { border-color: var(--accent); }
+.formato-trigger { display: inline-flex; align-items: center; gap: 6px; }
+.formato-op { display: flex; align-items: center; gap: 10px; }
+.formato-txt { display: flex; flex-direction: column; line-height: 1.25; }
+.formato-txt small { color: var(--muted); font-size: 11px; }
+.picker-option.on .formato-txt small { color: var(--accent); }
 /* La lista de modelos dentro de Avanzado conserva el menú de Hermit y sale por encima de su panel. */
 .picker-menu.picker-flotante { position: fixed; margin: 0; min-width: 0; color: var(--text); }
 .modelos-selector > .picker-trigger { gap: 10px; padding: 0 8px 0 10px; height: 28px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel-2); color: var(--text); white-space: nowrap; }

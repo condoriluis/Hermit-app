@@ -343,7 +343,7 @@ export function Picker(props: {
   flotante?: boolean
   value: string
   disabled?: boolean
-  groups: { label: string; options: { value: string; label: string }[] }[]
+  groups: { label: string; options: { value: string; label: ReactNode }[] }[]
   onChange(value: string): void
 }) {
   const [open, setOpen] = useState(false)

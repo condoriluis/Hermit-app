@@ -503,6 +503,17 @@ function termino(codigo: number | null) {
     if (!ventana) app.quit()
     return
   }
+  // 76: el puerto está tomado por otra aplicación (server/index.ts lo dice en el registro).
+  if (codigo === 76) {
+    dialog.showMessageBoxSync({
+      type: 'warning',
+      title: 'Hermit',
+      message: `El puerto ${process.env.PORT ?? '4848'} está ocupado por otra aplicación.`,
+      detail: 'Ciérrala y vuelve a abrir Hermit.'
+    })
+    salir()
+    return
+  }
   dialog.showMessageBoxSync({ type: 'warning', title: 'Hermit', message: 'Hermit se cerró.', detail: `Lo que pasó está en el registro:\n${REGISTRO}` })
   salir()
 }

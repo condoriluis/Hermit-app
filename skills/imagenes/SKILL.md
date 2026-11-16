@@ -50,6 +50,8 @@ Las imágenes no gastan créditos, ni en Flow ni en ChatGPT. No pidas permiso de
 
 ## Cuántas
 
+- **Personas reales:** nunca la imagen de una persona real identificable; lo que se genera es original (personajes,
+  lugares, objetos, escenas).
 - Una idea → una imagen. Una idea con variantes → una por variante, cambiando el encuadre, la luz o el ángulo (no
   repitas).
 - Si pide «N imágenes» o una tanda, genera esas, cada una con su archivo.

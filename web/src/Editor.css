@@ -1,3 +1,33 @@
+/* El panel de edición de la pieza Subtitulos (V8): una fila de la línea de tiempo, con su etiqueta en la columna de
+   nombres (76px) y la misma línea vertical que separa nombres de pistas. Los controles envuelven en ventanas angostas. */
+.edicion { grid-column: 1 / -1; display: grid; grid-template-columns: 76px minmax(0, 1fr); align-items: stretch; background: var(--panel); border-bottom: 1px solid var(--line); font-size: 12.5px; }
+.edicion-titulo { display: flex; align-items: center; padding: 0 12px; border-right: 1px solid var(--line); font-size: 10.5px; font-weight: 650; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); overflow: hidden; }
+.edicion-titulo-texto { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.edicion-controles { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; padding: 8px 14px; min-width: 0; }
+.edicion-campo { display: flex; align-items: center; gap: 8px; }
+.edicion-campo input[type='range'] { width: 110px; accent-color: var(--accent); }
+.edicion-campo input[type='color'] { width: 30px; height: 24px; padding: 0; border: 1px solid var(--line); border-radius: 6px; background: var(--panel-2); cursor: pointer; }
+.edicion-campo select { padding: 3px 6px; border-radius: 6px; background: var(--panel-2); border: 1px solid var(--line); }
+.edicion-campo b { min-width: 2ch; text-align: right; font-variant-numeric: tabular-nums; }
+.edicion-limpiar { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 6px; color: var(--muted); }
+.edicion-limpiar:hover { background: var(--line); color: var(--text); }
+.edicion-limpiar .ico { width: 12px; height: 12px; }
+.edicion-error { color: var(--bad); }
+
+/* Las entradas de escena: cada opción enseña su efecto en una miniatura que se repite (steps: no gasta CPU). */
+.edicion-entradas { display: flex; flex-wrap: wrap; gap: 6px; }
+.entrada-opcion { display: flex; align-items: center; gap: 7px; padding: 4px 9px 4px 4px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); color: var(--muted); font-size: 11.5px; cursor: pointer; }
+.entrada-opcion:hover { color: var(--text); }
+.entrada-opcion.activa { border-color: var(--accent); color: var(--text); }
+.entrada-previa { position: relative; flex: none; width: 46px; height: 28px; border-radius: 5px; overflow: hidden; border: 1px solid var(--line); background: var(--panel); }
+.entrada-previa::before { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, var(--panel-2) 0 50%, color-mix(in srgb, var(--accent) 40%, var(--panel-2)) 50% 100%); }
+.previa-desenfoque::after { content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 12px; transform: translateX(-50%); background: linear-gradient(90deg, transparent, var(--line) 50%, transparent); filter: blur(3px); animation: entrada-desb 1.2s steps(4) infinite; }
+@keyframes entrada-desb { 0%, 100% { opacity: 0.15; } 50% { opacity: 0.9; } }
+.previa-destello::after { content: ''; position: absolute; inset: 0; background: var(--text); opacity: 0.15; animation: entrada-flash 1.2s steps(4) infinite; }
+@keyframes entrada-flash { 0%, 55%, 100% { opacity: 0.15; } 25%, 40% { opacity: 0.85; } }
+.previa-fundido::after { content: ''; position: absolute; inset: 0; background: var(--bg); animation: entrada-fade 1.6s steps(5) infinite; }
+@keyframes entrada-fade { 0% { opacity: 0.95; } 100% { opacity: 0.1; } }
+
 /* La miniatura de una escena sin su cuadro renderizado: su primer cuadro, dibujado aquí. Su texto crece con él (cqw). */
 .cuadro { position: relative; container-type: inline-size; aspect-ratio: 16 / 9; display: grid; place-items: center; overflow: hidden; border-radius: 6px; background: var(--bg); border: 1px solid var(--line); }
 .cuadro-clip { color: var(--muted); display: grid; place-items: center; }

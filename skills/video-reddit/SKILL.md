@@ -10,7 +10,7 @@ errores ya vistos), [`FORMATO.md`](../video-base/FORMATO.md), [`VOZ.md`](../vide
 
 ## La esencia
 
-Un formato faceless de retención masiva y altamente monetizable. Tres elementos lo sostienen:
+Formato faceless en lote. Tres elementos lo sostienen:
 
 - **El gancho visual y contextual:** Los primeros 3 segundos enseñan la tarjeta exacta del post de Reddit (subreddit, usuario, título y votos) con sonido de pop/notificación mientras se lee la primera frase de impacto.
 - **Fondo hipnótico continuo:** Un video de fondo agradable y sin distracciones (gameplay fluido, satisfacción visual, tomas aéreas) que no compite con el relato pero mantiene la vista atrapada.
@@ -20,6 +20,7 @@ Un formato faceless de retención masiva y altamente monetizable. Tres elementos
 
 - **Autónomo y en lote:** Todo se genera y ensambla de principio a fin. La voz sale de AI Studio (o TTS) y el fondo de la biblioteca de clips sin copyright.
 - **El gancho no se salta:** La primera frase debe plantear el dilema ("¿Hice mal al cancelar la boda de mi hermana?", "Descubrí el secreto de mi jefe").
+- **Derechos:** el fondo y las imágenes entran con licencia registrada; nada de personas reales generadas con IA.
 - El proyecto va en la ruta completa de la línea `Carpeta:` del mensaje (úsala tal cual, no depende de dónde estés). Sin ella, `reddit-<tema>`.
 
 ## Formato

@@ -5,6 +5,8 @@
 // FIRMA (la llave privada Ed25519 en PKCS8 y base64; la pública va en server/licencia.ts) y PUBLICAR (la llave de
 // `npm run publicar`, que también está en %APPDATA%\hermit\licencias\publicar.txt). La base de datos se crea con
 // `npm run licencias -- d1 migrations apply hermit-licencias --remote`. El instalador vive en el bucket DESCARGAS.
+// Los correos salen por Resend (RESEND_API_KEY) o, sin ella o si falla, por la Gmail API de la cuenta de soporte:
+// GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REFRESH_TOKEN y GOOGLE_EMAIL_ADDRESS (los mismos del backend de BotFlow).
 {
   "name": "hermit-licencias",
   "main": "src/index.ts",

@@ -52,6 +52,7 @@ La imagen **no debe ser genérica ni sencilla**. Debe tener estética editorial 
 - **Estilo visual**: Arte conceptual 3D hiperrealista, render en Octane/Cinema4D o fotografía cinematográfica con iluminación volumétrica dramática, reflejos sutiles, texturas de vidrio esmerilado, circuitos holográficos limpios o metales oscuros satinados.
 - **Paleta de color**: Sofisticada y de alto contraste (obsidiana con toques cian y ámbar, azul eléctrico profundo o minimalismo monocromático de alta tecnología).
 - **Regla estricta**: **SIN texto ni letras dentro de la imagen** (el título ya lo muestra el blog en la cabecera; meter texto en la imagen se ve redundante).
+- **Personas reales**: nunca la imagen de una persona real identificable; la portada es conceptual u original.
 - Guardar como `portada.png` en la raíz de la carpeta del artículo.
 
 ## Fases de trabajo en tiempo real en Hermit

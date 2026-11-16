@@ -38,6 +38,8 @@ errores ya vistos), [`FORMATO.md`](../video-base/FORMATO.md), [`FLOW.md`](../vid
   una mascota, un robot ni un recipiente genérico. Si el símbolo oficial representa un animal, úsalo como emblema gráfico
   3D, no como un animal realista. No inventes una marca cuando no puedas confirmar cuál es: pregunta o usa una referencia
   que proporcione el usuario. No añadas logos sueltos a la escena ni copies historias de otro canal.
+- **Personas reales:** los personajes son los logos y símbolos del elenco; nunca la imagen de una persona real
+  identificable.
 - **Sin texto añadido.** No generes letreros, subtítulos ni marcas de agua. Las letras que formen parte inseparable del
   icono oficial pueden permanecer en la cabeza; no añadas nombres o palabras a la ropa ni al fondo. Los subtítulos los
   pone `unir.py`.

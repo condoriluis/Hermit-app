@@ -66,6 +66,11 @@ Una presentación profesional se reconoce en el primer vistazo: **poco texto, mu
 lejos y una sola familia visual**. El exportador ya pone la barra de acento, el número de diapositiva y la paleta de
 Hermit; tu trabajo es que el contenido la acompañe.
 
+**Derechos**
+
+- Las imágenes generadas nunca retratan a una persona real identificable; las de archivo entran con su licencia
+  registrada.
+
 **Texto**
 
 - **Pocos puntos por diapositiva**: 3 a 5, cada uno de **una línea** (máx. ~10 palabras). Si un punto necesita dos

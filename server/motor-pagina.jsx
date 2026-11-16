@@ -74,6 +74,20 @@ function leer(seqs, c) {
     nivel = seqs.filter((s) => capas.has(s.parent))
   }
   const seg = (f) => Math.round((f / c.fps) * 1000) / 1000
+  // La plantilla puede publicar sus escenas de verdad (`window.__hermitEscenas`, V8): un mundo continuo no tiene
+  // secuencias que leer, y sin ellas el carril Escenas solo mostraría los sonidos.
+  const propias = typeof window !== 'undefined' ? window.__hermitEscenas : undefined
+  if (Array.isArray(propias) && propias.length) {
+    return {
+      escenas: propias
+        .filter((e) => e && typeof e.desde === 'number' && typeof e.hasta === 'number')
+        .map((e) => ({ nombre: e.nombre ?? e.escena ?? '', escena: e.escena, desde: e.desde, hasta: e.hasta }))
+        .sort((a, b) => a.desde - b.desde),
+      audios: seqs
+        .filter((s) => (s.type === 'audio' || s.type === 'video') && typeof s.src === 'string' && !s.muted)
+        .map((s) => ({ src: s.src, desde: seg(abs(s)), hasta: seg(abs(s) + s.duration), recorte: seg(s.startMediaFrom ?? 0) })),
+    }
+  }
   return {
     escenas: escenas
       .map((s) => ({ nombre: s.displayName || nombreDe(s.singleChildComponent), desde: seg(abs(s)), hasta: seg(abs(s) + s.duration) }))

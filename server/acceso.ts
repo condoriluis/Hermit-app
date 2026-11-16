@@ -1,4 +1,5 @@
-import { chmodSync, mkdirSync, readFileSync } from 'node:fs'
+import { execFileSync } from 'node:child_process'
+import { chmodSync, existsSync, mkdirSync, readFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { Proveedor } from '../shared/providers.ts'
@@ -32,11 +33,14 @@ const CODEX_ENV = 'HERMIT_OPENAI_API_KEY'
 type Guardado = Partial<Record<Proveedor, { llave?: string; api?: boolean; prestar?: boolean }>>
 
 let datos: Guardado = {}
+let dueno: string | undefined
 try {
   datos = JSON.parse(readFileSync(ARCHIVO, 'utf8'))
 } catch {
   // Sin archivo, los dos con su cuenta.
 }
+// Las llaves guardadas antes de la ACL también se cierran: una vez al arrancar, no en cada escritura.
+if (process.platform === 'win32' && existsSync(ARCHIVO)) soloDelDueno()
 aplicar()
 
 function aplicar() {
@@ -93,8 +97,22 @@ export function prestarLlaves(p: Proveedor, usar: boolean) {
 function escribir() {
   mkdirSync(dirname(ARCHIVO), { recursive: true })
   guardar(ARCHIVO, JSON.stringify(datos, null, 2))
-  // Solo de quien la guardó: son llaves.
-  if (process.platform !== 'win32') chmodSync(ARCHIVO, 0o600)
+  // Solo de quien la guardó: son llaves. En Windows el chmod no existe; se cierra por ACL.
+  if (process.platform === 'win32') soloDelDueno()
+  else chmodSync(ARCHIVO, 0o600)
+}
+
+/**
+ * `icacls`: quita la herencia y deja el archivo solo para el usuario que corre Hermit (`whoami` da EQUIPO\\usuario).
+ * Si falla (sin icacls, sin permiso), el archivo queda como estaba: guardar la llave no puede depender de esto.
+ */
+function soloDelDueno() {
+  try {
+    dueno ??= execFileSync('whoami', { encoding: 'utf8' }).trim()
+    execFileSync('icacls', [ARCHIVO, '/inheritance:r', '/grant:r', `${dueno}:(F)`], { stdio: 'ignore' })
+  } catch {
+    // Sin restricción extra; el chmod de los demás sistemas ya cubre su caso.
+  }
 }
 
 /** La llave guardada, aunque ahora se pague con la cuenta. DeepSeek y Gemini solo trabajan con ella. */

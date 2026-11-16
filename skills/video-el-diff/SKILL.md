@@ -36,6 +36,7 @@ entregar dile cómo poner la suya. Con varios noticieros, cada uno más es `marc
 - **Cada dato es verdadero y sale de su fuente primaria**: su `cita` es el texto literal de la página, y eso es lo que
   se ve resaltado. Si la fuente dice otra cosa que el video del tema, gana la fuente y se lo dices al usuario.
 - **Se renderiza una sola vez.** Lo que veas después va en lo que conviene que mire el usuario, con el segundo.
+- **Derechos:** el metraje encontrado y los recortes entran con su fuente; nada de personas reales generadas con IA ni material de terceros sin licencia.
 - Las rutas que le des al usuario van en un bloque de código.
 
 ## El ángulo

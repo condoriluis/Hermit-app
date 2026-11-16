@@ -1,6 +1,6 @@
 ---
 name: video-top
-description: Hace un video de top o ranking (Top 3, 5 o 10 curiosidades, lugares, misterios o datos asombrosos), vertical (TikTok, Reels, Shorts) u horizontal (YouTube). Formato faceless de alto RPM con cuenta regresiva, tarjetas numeradas, clips e imágenes reales de archivo para cada puesto, efectos de sonido de cambio de puesto y narración ágil. Úsala cuando pidan un top, un ranking, curiosidades o datos que no sabías.
+description: Hace un video de top o ranking (Top 3, 5 o 10 curiosidades, lugares, misterios o datos asombrosos), vertical (TikTok, Reels, Shorts) u horizontal (YouTube). Formato faceless con cuenta regresiva, tarjetas numeradas, clips e imágenes reales de archivo para cada puesto, efectos de sonido de cambio de puesto y narración ágil. Úsala cuando pidan un top, un ranking, curiosidades o datos que no sabías.
 ---
 
 # Top curiosidades
@@ -10,7 +10,7 @@ errores ya vistos), [`FORMATO.md`](../video-base/FORMATO.md), [`VOZ.md`](../vide
 
 ## La esencia
 
-El rey de la retención y monetización por su estructura intrínseca de recompensa (el espectador quiere llegar al número 1).
+La cuenta regresiva crea anticipación: el espectador quiere llegar al número 1.
 
 - **Estructura de cuenta regresiva:** Cada elemento tiene su tarjeta numerada clara ("Número 5", "Número 4"...), con sonido de golpe seco y un titular intrigante.
 - **Ritmo constante:** Cada puesto dura entre 10 y 18 segundos en formato vertical (total ~60 s), o entre 45 y 90 segundos en formato horizontal largo.
@@ -20,6 +20,7 @@ El rey de la retención y monetización por su estructura intrínseca de recompe
 
 - **Datos comprobables:** Los datos deben ser ciertos, de fuentes confiables (anotadas en `fuentes/investigacion.md`).
 - **El número 1 debe ser el más impactante:** La lista se ordena de menor a mayor sorpresa para evitar abandono prematuro.
+- **Derechos:** clips e imágenes de archivo con licencia registrada; nada de personas reales generadas con IA.
 - El proyecto va en `<nombre>` (la ruta completa de la línea `Carpeta:` del mensaje: úsala tal cual, no depende de dónde estés). Sin ella, `top-<tema>`.
 
 ## Formato

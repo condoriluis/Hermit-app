@@ -1,6 +1,6 @@
 ---
 name: video-motivacional
-description: Hace un video motivacional o de desarrollo y disciplina, vertical (TikTok, Reels, Shorts) u horizontal (YouTube). Formato altamente viralizable en lote con clips cinematográficos en cámara lenta (entrenamiento, paisajes desérticos o urbanos oscuros, estatuas clásicas, lluvia), voz grave y pausada, música épica o de piano progresivo, y citas contundentes con subtítulos minimalistas. Úsala cuando pidan un video motivacional, de estoicismo o mentalidad.
+description: Hace un video motivacional o de desarrollo y disciplina, vertical (TikTok, Reels, Shorts) u horizontal (YouTube). En lote, con clips cinematográficos en cámara lenta (entrenamiento, paisajes desérticos o urbanos oscuros, estatuas clásicas, lluvia), voz grave y pausada, música épica o de piano progresivo, y citas contundentes con subtítulos minimalistas. Úsala cuando pidan un video motivacional, de estoicismo o mentalidad.
 ---
 
 # Motivacional
@@ -21,6 +21,7 @@ Un formato centrado en la emoción pura, la pausa dramática y la estética cine
 
 - **Cero clichés vacíos:** El mensaje debe transmitir peso emocional y psicológico real, inspirado en estoicismo, disciplina o superación genuina.
 - **Audio cinematográfico:** Mezcla impecable donde la voz se sienta profunda y presente por encima de la música.
+- **Derechos:** clips de archivo con licencia registrada; nada de personas reales generadas con IA.
 - El proyecto va en `<nombre>` (la ruta completa de la línea `Carpeta:` del mensaje: úsala tal cual, no depende de dónde estés). Sin ella, `motivacional-<tema>`.
 
 ## Formato

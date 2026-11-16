@@ -50,6 +50,8 @@ La evidencia (once reels de referencia, transcritos y mirados cuadro a cuadro) e
   los escenarios son recortes de fotos reales con licencia libre.
 - **Un dato que se diga es verdadero**, de su fuente primaria. Si el video del tema dice otra cosa, gana la fuente y se lo
   dices al usuario.
+- **Derechos:** el personaje recortado es el del usuario; el fondo y el escenario llevan licencia libre; nada de personas
+  ajenas generadas con IA.
 - El proyecto es `reel-<tema>`, en la ruta completa de la línea `Carpeta:` del mensaje (la pone Hermit, sola o en la
   línea `Lote:`; su panel de etapas la busca ahí); `nuevo.py` lo crea pasándole esa ruta tal cual. Sin esa línea,
   `reel-<tema>` en el directorio actual. Las rutas que le des al usuario van en un bloque de código.

@@ -1,3 +1,4 @@
+import { spawn } from 'node:child_process'
 import { closeSync, createReadStream, existsSync, fstatSync, globSync, mkdirSync, openSync, readFileSync, readdirSync, readSync, type Stats, statSync, watch } from 'node:fs'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { basename, extname, isAbsolute, join, matchesGlob, relative, resolve, sep } from 'node:path'
@@ -5,8 +6,10 @@ import { enCurso, tiemposDe } from '../shared/etapas.ts'
 import { deTipo, type Archivo, type ArticuloHecho, type Avance, type AvanceCorto, type Card, type CarpetaDeVideo, type ImagenHecha, type MarcasDeRedes, type Pieza, type PiezasDeTodos, type PresentacionHecha, type Produce, type Render, type ServerPush, type SessionMeta, type VideoFinal, type VideoHecho } from '../shared/types.ts'
 import { cuerpo, json } from './http.ts'
 import { IMAGE_TYPES } from './agent.ts'
-import { aLaPapelera, huella } from './disco.ts'
+import { aLaPapelera, guardar, huella } from './disco.ts'
 import { motorDe, servirMotor, servirOnda } from './motor.ts'
+import { rutaPythonHermit } from './requisitos.ts'
+import { carpetaSkill, SKILLS } from './skills.ts'
 import { tamImagen } from './tamano-imagen.ts'
 import type { Sessions } from './sessions.ts'
 import { anotar } from './telemetria.ts'
@@ -739,10 +742,97 @@ function reavisar(sessionId: string, cuando: number, avisar: Avisar) {
   reavisos.set(sessionId, timer)
 }
 
+/** Lo que `edicion.json` puede traer hoy (V8: subtítulos y la entrada de cada escena); lo que no se reconoce se descarta. */
+type Edicion = {
+  subtitulos?: { tamano?: number; color?: string; fuente?: 'figtree' | 'mono' | 'marcador'; desplazaX?: number; desplazaY?: number }
+  escenas?: Record<string, { entrada?: 'desenfoque' | 'destello' | 'fundido' }>
+}
+const ENTRADAS = ['desenfoque', 'destello', 'fundido']
+
+function edicionValida(v: unknown): Edicion | null {
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return null
+  const e = v as Record<string, unknown>
+  const ed: Edicion = {}
+
+  const s = e.subtitulos
+  if (s !== undefined) {
+    if (!s || typeof s !== 'object' || Array.isArray(s)) return null
+    const sub = s as Record<string, unknown>
+    const out: NonNullable<Edicion['subtitulos']> = {}
+    const num = (k: 'tamano' | 'desplazaX' | 'desplazaY', min: number, max: number) => {
+      const n = sub[k]
+      if (n === undefined) return true
+      if (typeof n !== 'number' || !Number.isFinite(n) || n < min || n > max) return false
+      out[k] = n
+      return true
+    }
+    if (sub.color !== undefined) {
+      if (typeof sub.color !== 'string' || !/^#[0-9a-fA-F]{6}$/.test(sub.color)) return null
+      out.color = sub.color
+    }
+    if (sub.fuente !== undefined) {
+      if (!['figtree', 'mono', 'marcador'].includes(String(sub.fuente))) return null
+      out.fuente = sub.fuente as 'figtree' | 'mono' | 'marcador'
+    }
+    if (!num('tamano', 20, 200) || !num('desplazaX', -600, 600) || !num('desplazaY', -600, 600)) return null
+    ed.subtitulos = out
+  }
+
+  const esc = e.escenas
+  if (esc !== undefined) {
+    if (!esc || typeof esc !== 'object' || Array.isArray(esc)) return null
+    const escenas: NonNullable<Edicion['escenas']> = {}
+    for (const [id, valor] of Object.entries(esc).slice(0, 300)) {
+      if (!valor || typeof valor !== 'object' || Array.isArray(valor)) return null
+      const entrada = (valor as Record<string, unknown>).entrada
+      if (entrada !== undefined && !ENTRADAS.includes(String(entrada))) return null
+      if (entrada !== undefined) escenas[id] = { entrada: entrada as 'desenfoque' | 'destello' | 'fundido' }
+    }
+    ed.escenas = escenas
+  }
+
+  return ed
+}
+
+/** Un render final pedido desde el editor (`final.py` de la skill): corre en segundo plano y se sigue por GET. */
+type RenderVivo = { inicio: number; fin?: number; codigo?: number; error?: string; progreso?: number; cola: string[] }
+const rendersVivos = new Map<string, RenderVivo>()
+
+/** El `final.py` de la skill de la card (render + música + comprobación + portada), si la trae: con él se renderiza sin agente. */
+function finalDe(card: Card | undefined): string | undefined {
+  const dir = card?.skill ? carpetaSkill(card.skill) : undefined
+  const final = dir && join(dir, 'scripts', 'final.py')
+  return final && existsSync(final) ? final : undefined
+}
+
+/** Lo que no es entrada del render final: salidas, cachés y archivos de trabajo. `src/`, `public/` y `edicion.json` sí cuentan. */
+const NO_RENDER = ['**/node_modules', '**/.git', '**/__pycache__', 'out', 'revision', 'portada', 'trabajo', '**/.*', '*.log']
+
+/**
+ * Cómo está el render final respecto a las entradas del proyecto: `sinVideo` si aún no hay MP4 en `out/`; si lo hay,
+ * `entrada` es el archivo más nuevo posterior a él (lo que el render no tiene); sin `entrada`, está al día. Pedir otro
+ * render con el MP4 al día sería gastar minutos en un archivo idéntico.
+ */
+function renderEstado(folder: string): { sinVideo: boolean; entrada?: string } {
+  const ultimo = files(join(folder, 'out'), '*.{mp4,webm}').at(-1)
+  if (!ultimo) return { sinVideo: true }
+  let entrada: string | undefined
+  let t = ultimo.t
+  for (const ruta of globSync('**/*', { cwd: folder, exclude: NO_RENDER })) {
+    const st = statSync(join(folder, ruta), { throwIfNoEntry: false })
+    if (st?.isFile() && st.mtimeMs > t) {
+      t = st.mtimeMs
+      entrada = ruta.replaceAll('\\', '/')
+    }
+  }
+  return { sinVideo: false, entrada }
+}
+
 /**
  * `GET /api/sessions/<id>/etapas`, `GET /api/sessions/<id>/archivo?ruta=…`, `GET /api/sessions/<id>/vivo/<ruta>`,
  * `GET /api/sessions/<id>/motor` (y `/motor/motor.js`), `GET /api/sessions/<id>/onda?ruta=…`,
- * `GET`/`POST /api/sessions/<id>/carpeta` y `POST /api/sessions/<id>/version`.
+ * `GET`/`POST /api/sessions/<id>/carpeta`, `POST /api/sessions/<id>/version`, `POST /api/sessions/<id>/edicion` y
+ * `GET`/`POST /api/sessions/<id>/renderizar`.
  * Devuelve si atendió la petición. `avisar` manda `{ type: 'etapas' }` cuando cambia la carpeta de un hilo que alguien
  * mira. Una imagen pedida con `&mini` sale en pequeño (`miniatura`, de `server/miniaturas.ts`); un archivo pedido con
  * `&descarga=<nombre>`, se descarga con ese nombre.
@@ -756,8 +846,8 @@ export async function etapasApi(
   avisar: Avisar,
   miniatura: (file: string) => Promise<string>
 ): Promise<boolean> {
-  const m = /^\/api\/sessions\/([\w-]+)\/(etapas|archivo|carpeta|vivo|motor|onda|imagen|version)(?:\/(.+))?$/.exec(url.pathname)
-  const metodos = m?.[2] === 'carpeta' ? ['GET', 'POST'] : m?.[2] === 'version' ? ['POST'] : ['GET']
+  const m = /^\/api\/sessions\/([\w-]+)\/(etapas|archivo|carpeta|vivo|motor|onda|imagen|version|edicion|renderizar)(?:\/(.+))?$/.exec(url.pathname)
+  const metodos = m?.[2] === 'carpeta' || m?.[2] === 'renderizar' ? ['GET', 'POST'] : m?.[2] === 'version' || m?.[2] === 'edicion' ? ['POST'] : ['GET']
   // `vivo` va siempre con su ruta; `motor`, con o sin ella (la página o su script); las demás, sin.
   const ruta = m?.[2] === 'vivo' ? !!m[3] : m?.[2] === 'motor' || !m?.[3]
   if (!m || !ruta || !metodos.includes(req.method ?? '')) return false
@@ -844,6 +934,82 @@ export async function etapasApi(
     )
     avisar({ type: 'etapas', sessionId: meta.id })
     return json(res, 200, { carpeta: nueva })
+  }
+
+  // La edición a mano del video (`edicion.json`, V8): lo que el usuario cambia en el editor y no es del agente. Va en
+  // `public/`: el motor la relee sin recompilar y, si no existe (videos de antes), todo queda por omisión. El agente la
+  // lee como cualquier archivo de la carpeta.
+  if (m[2] === 'edicion') {
+    if (!card?.etapas?.length || !carpetaDe(meta)) return json(res, 400, { error: 'Este hilo no tiene una carpeta de video propia' })
+    const edicion = edicionValida(await cuerpo<unknown>(req))
+    if (!edicion) return json(res, 400, { error: 'edicion.json no tiene la forma esperada' })
+    const destino = join(folder, 'public', 'edicion.json')
+    mkdirSync(join(folder, 'public'), { recursive: true })
+    guardar(destino, `${JSON.stringify(edicion, null, 2)}\n`)
+    return json(res, 200, { ok: true })
+  }
+
+  // El render final sin agente (`final.py` de la skill): con la edición a mano ya guardada en `public/`, el MP4 sale con
+  // ella. Solo si la card tiene carpeta propia y su skill trae ese script; un render a la vez por hilo y nunca con el
+  // agente trabajando (los dos escribirían el mismo `out/`).
+  if (m[2] === 'renderizar') {
+    const final = finalDe(card)
+    if (!card?.etapas?.length || !carpetaDe(meta) || !final) return json(res, 400, { error: 'Este video no se puede renderizar desde aquí' })
+    if (req.method === 'GET') {
+      const r = rendersVivos.get(meta.id)
+      const corriendo = !!r && r.fin === undefined
+      // El barrido de entradas no hace falta mientras corre (y es lo caro): se mira al terminar.
+      const estado = corriendo ? { sinVideo: false } : renderEstado(folder)
+      return json(res, 200, {
+        disponible: true,
+        corriendo,
+        desde: r?.inicio,
+        fin: r?.fin,
+        codigo: r?.codigo,
+        error: r?.error,
+        progreso: r?.progreso,
+        al_dia: !estado.sinVideo && !estado.entrada,
+        sin_video: estado.sinVideo,
+        entrada: estado.entrada
+      })
+    }
+    if (meta.running || meta.background?.length || meta.pendiente) return json(res, 409, { error: 'El agente sigue con este video: espera a que termine.' })
+    const previo = rendersVivos.get(meta.id)
+    if (previo && previo.fin === undefined) return json(res, 409, { error: 'Ya hay un render en curso.' })
+    const estado = renderEstado(folder)
+    if (!estado.sinVideo && !estado.entrada) return json(res, 409, { error: 'El video ya está renderizado con lo último: edita algo para que cambie.' })
+    const r: RenderVivo = { inicio: Date.now(), cola: [] }
+    rendersVivos.set(meta.id, r)
+    const hijo = spawn(rutaPythonHermit() ?? (process.platform === 'win32' ? 'python' : 'python3'), ['-B', '-X', 'utf8', final], {
+      cwd: folder,
+      env: { ...process.env, HERMIT_SKILLS: SKILLS }
+    })
+    const oir = (d: Buffer) => {
+      for (const l of d.toString('utf8').split('\n')) {
+        const t = l.trim()
+        if (!t) continue
+        // `render.cjs` dice el avance del render («30 % (faltan 1 min)»): se muestra en el botón.
+        const pct = /^(\d{1,3}) %/.exec(t)
+        if (pct) r.progreso = Math.min(100, +pct[1])
+        r.cola.push(t)
+        if (r.cola.length > 40) r.cola.shift()
+      }
+    }
+    hijo.stdout?.on('data', oir)
+    hijo.stderr?.on('data', oir)
+    hijo.on('error', (e) => {
+      r.fin = Date.now()
+      r.codigo = 1
+      r.error = `No se pudo lanzar el render: ${e.message}`
+    })
+    hijo.on('close', (codigo) => {
+      r.fin = Date.now()
+      r.codigo = codigo ?? 1
+      if (codigo) r.error = r.cola.slice(-3).join(' · ') || `El render salió con código ${codigo}`
+      // El MP4 nuevo lo ve la vigilancia de la carpeta; si falló, el estado queda para quien pregunte.
+      avisarCarpeta(folder)
+    })
+    return json(res, 202, { ok: true })
   }
 
   // El motor en vivo: su página lee lo de `public/` por la ruta de la vista en vivo.

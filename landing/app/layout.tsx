@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Plus_Jakarta_Sans, Inter, JetBrains_Mono } from 'next/font/google'
+import SeguidorCursor from '@/components/SeguidorCursor'
 import './globals.css'
 
 const headingFont = Plus_Jakarta_Sans({
@@ -75,6 +76,7 @@ export default function RootLayout({
     >
       <body className="bg-bg text-text antialiased min-h-screen flex flex-col justify-between selection:bg-accent selection:text-on-solid font-sans">
         {children}
+        <SeguidorCursor />
       </body>
     </html>
   )

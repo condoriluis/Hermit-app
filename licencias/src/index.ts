@@ -69,11 +69,17 @@ export interface Env {
   /** Las primeras personas que apoyan, fundadoras (hasta `FUNDADORES_HASTA` si se pone, una fecha ISO). */
   FUNDADORES: number
   FUNDADORES_HASTA?: string
-  /** Para los correos (avisos de cobro y folios). Sin ella, no se mandan: se anotan en el registro. */
+  /** Para los correos (avisos de cobro y folios). Sin ella, se usa la cuenta de Gmail de abajo; sin ninguna, no se mandan. */
   RESEND_API_KEY?: string
-  /** De quién salen (`Hermit <avisos@TU-DOMINIO-VERIFICADO>`, dominio verificado en Resend) y adónde se responden. */
+  /** De quién salen por Resend (`Hermit <avisos@TU-DOMINIO-VERIFICADO>`, dominio verificado en Resend). */
   CORREO_DE: string
   CORREO_RESPUESTA: string
+  /** Plan B de los correos: la Gmail API con la cuenta de soporte, por OAuth2 (los mismos secretos del backend de BotFlow). */
+  GOOGLE_CLIENT_ID?: string
+  GOOGLE_CLIENT_SECRET?: string
+  GOOGLE_REFRESH_TOKEN?: string
+  /** La cuenta Gmail que los manda: `Hermit <esa-cuenta>`. */
+  GOOGLE_EMAIL_ADDRESS?: string
 }
 
 /** `gratis`: un lugar gratis de por vida, de cuando Hermit se vendía; `cuenta`: una cuenta gratis, sin apoyo. */
@@ -327,6 +333,12 @@ export default {
 async function atender(req: Request, env: Env, ctx: ExecutionContext, url: URL): Promise<Response> {
   try {
     if (req.method === 'GET' && url.pathname === '/precio') return json(await precios(env))
+    // El logo de los correos (un PNG del isotipo: los clientes de correo no leen SVG), guardado en DESCARGAS.
+    if (req.method === 'GET' && url.pathname === '/correo-logo.png') {
+      const obj = await env.DESCARGAS.get('correo/logo.png')
+      if (!obj) return new Response('No está.', { status: 404 })
+      return new Response(obj.body, { headers: { 'content-type': 'image/png', 'cache-control': 'public, max-age=86400', etag: obj.httpEtag } })
+    }
     // Los Fundadores que pidieron salir en los créditos de la página.
     if (req.method === 'GET' && url.pathname === '/creditos') return json({ fundadores: await creditos(env) })
     if (req.method === 'GET' && url.pathname === '/version') return json(await ultimaPara(req, env, sistema(url.searchParams.get('so'))))
@@ -830,16 +842,12 @@ async function unirse(env: Env, email: string, equipo: string, acepto: string, t
   if (suya) return json({ clave: suya.clave })
   if (!(await cupo(env, desde, 'cuenta', CUENTAS_AL_DIA))) throw new Rechazo(429, 'Desde esta conexión ya se pidieron muchas cuentas hoy. Prueba mañana.')
   let clave = (await env.DB.prepare("SELECT clave FROM licencias WHERE email = ? AND plan = 'cuenta' AND estado = 'gratis' LIMIT 1").bind(email).first<{ clave: string }>())?.clave
-  if (!clave) {
+  const nueva = !clave
+  if (nueva) {
     await sinOtra(env, email, false)
     clave = nuevaClave()
-    await env.DB.prepare(
-      `INSERT INTO licencias (id, clave, email, plan, monto, fundador, estado, autorizada, creada, acepto, terminos, modo)
-       VALUES (?, ?, ?, 'cuenta', 0, 0, 'gratis', ?, ?, ?, ?, ?)`
-    )
-      .bind(crypto.randomUUID(), clave, email, acepto, acepto, acepto, terminos, env.PAYPAL_MODO)
-      .run()
   }
+  // El correo va antes de guardar: si no sale, no queda una cuenta con una clave que nadie recibió.
   const enviada = await correo(env, email, 'Tu cuenta de Hermit', [
     'Hola:',
     'Ya tienes tu cuenta de Hermit: con ella entras a la comunidad. Hermit es gratis y lo seguirá siendo.',
@@ -847,6 +855,13 @@ async function unirse(env: Env, email: string, equipo: string, acepto: string, t
     'Hermit trabaja con tu propia cuenta de IA (Claude, ChatGPT, Gemini, Devin y más), que pagas aparte a su proveedor. Si tienes dudas, responde a este correo.'
   ]).catch((e) => (console.error('Correo de la cuenta', e instanceof Error ? e.message : e), false))
   if (!enviada) throw new Rechazo(502, 'No pudimos mandarte el correo con tu clave. Prueba en un rato.')
+  if (nueva)
+    await env.DB.prepare(
+      `INSERT INTO licencias (id, clave, email, plan, monto, fundador, estado, autorizada, creada, acepto, terminos, modo)
+       VALUES (?, ?, ?, 'cuenta', 0, 0, 'gratis', ?, ?, ?, ?, ?)`
+    )
+      .bind(crypto.randomUUID(), clave, email, acepto, acepto, acepto, terminos, env.PAYPAL_MODO)
+      .run()
   if (!porCorreo) throw new Rechazo(409, `Te mandamos tu clave a ${email}. Escríbela en Opciones de Hermit, en «Ya apoyo».`)
   return json({ enviada: true })
 }
@@ -1336,21 +1351,141 @@ export function faltaAvisar(f: Pick<Fila, 'estado' | 'pagado_hasta' | 'avisado_p
   return cobro > ahora && cobro - ahora <= AVISO
 }
 
-/** Manda un correo con Resend. `false` si no hay llave todavía: se anota y no se marca como enviado. */
+/**
+ * Manda un correo. Prueba Resend si hay llave y, si falla o no la hay, la Gmail API de la cuenta de soporte
+ * (`correoGmail`): así los correos salen aunque el dominio de Resend no esté verificado. `false` si no hay
+ * ninguna de las dos cuentas: se anota y no se marca como enviado.
+ */
 async function correo(env: Env, para: string, asunto: string, parrafos: string[]): Promise<boolean> {
-  if (!env.RESEND_API_KEY) {
-    console.log('Correo sin mandar (falta RESEND_API_KEY):', asunto)
+  const metodos: ((env: Env, para: string, asunto: string, parrafos: string[]) => Promise<boolean>)[] = []
+  if (env.RESEND_API_KEY) metodos.push(correoResend)
+  if (env.GOOGLE_REFRESH_TOKEN && env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.GOOGLE_EMAIL_ADDRESS) metodos.push(correoGmail)
+  if (!metodos.length) {
+    console.log('Correo sin mandar (falta RESEND_API_KEY y la cuenta de Gmail):', asunto)
     return false
   }
+  let ultimo: unknown
+  for (const metodo of metodos) {
+    try {
+      if (await metodo(env, para, asunto, parrafos)) return true
+    } catch (e) {
+      ultimo = e
+      console.error(`Correo por ${metodo.name} falló:`, e instanceof Error ? e.message : e)
+    }
+  }
+  throw ultimo
+}
+
+/** El texto y el HTML del correo: los párrafos y el pie (`PROVEEDOR · correo de respuesta`). */
+function cuerpoCorreo(env: Env, parrafos: string[]): { texto: string; html: string } {
   const pie = `${PROVEEDOR} · ${env.CORREO_RESPUESTA}`
-  const html = `<div style="font:15px/1.6 system-ui,sans-serif;color:#0f172a;max-width:560px">${parrafos.map((p) => `<p>${escapar(p)}</p>`).join('')}<p style="color:#64748b;font-size:12px">${escapar(pie)}</p></div>`
+  const texto = [...parrafos, '', pie].join('\n\n')
+  // Tablas e estilos en línea: es lo que entienden todos los clientes de correo. Una columna fluida = responsive.
+  const html = `<!doctype html>
+<html><body style="margin:0;padding:0;background:#f2f4f7">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f2f4f7;padding:32px 16px"><tr><td align="center">
+<table role="presentation" width="560" cellpadding="0" cellspacing="0" style="width:100%;max-width:560px;background:#ffffff;border:1px solid #e4e7ec;border-radius:16px;overflow:hidden">
+<tr><td style="padding:18px 28px;border-bottom:3px solid #2dd4bf">
+<img src="${env.ORIGEN}/correo-logo.png" width="40" height="40" alt="Hermit" style="display:inline-block;vertical-align:middle;border:0">
+<span style="font:700 17px/1 system-ui,-apple-system,sans-serif;color:#0f172a;letter-spacing:-0.02em;vertical-align:middle;margin-left:10px">Hermit</span>
+</td></tr>
+<tr><td style="padding:26px 28px 8px;font:15px/1.7 system-ui,-apple-system,sans-serif;color:#1f2937">
+${parrafos.map((p) => `<p style="margin:0 0 16px">${enlazar(p)}</p>`).join('')}
+</td></tr>
+<tr><td style="padding:0 28px 26px;font:12px/1.6 system-ui,-apple-system,sans-serif;color:#8b97a5">
+${escapar(pie)}
+</td></tr>
+</table></td></tr></table>
+</body></html>`
+  return { texto, html }
+}
+
+/** El párrafo escapado, con sus enlaces (http/https) convertidos en <a> del mismo color de acento. */
+function enlazar(p: string): string {
+  return escapar(p).replace(/https?:\/\/[^\s<]+/g, (url) => `<a href="${url}" style="color:#0d9488">${url}</a>`)
+}
+
+/** Manda un correo con Resend. */
+async function correoResend(env: Env, para: string, asunto: string, parrafos: string[]): Promise<boolean> {
+  const { texto, html } = cuerpoCorreo(env, parrafos)
   const r = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     // Resend pide un User-Agent, y el fetch de un Worker no manda ninguno.
     headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, 'content-type': 'application/json', 'user-agent': 'hermit-licencias' },
-    body: JSON.stringify({ from: env.CORREO_DE, to: [para], reply_to: env.CORREO_RESPUESTA, subject: asunto, text: [...parrafos, '', pie].join('\n\n'), html })
+    body: JSON.stringify({ from: env.CORREO_DE, to: [para], reply_to: env.CORREO_RESPUESTA, subject: asunto, text: texto, html })
   })
   if (!r.ok) throw new Error(`Resend respondió ${r.status}: ${(await r.text()).slice(0, 200)}`)
+  return true
+}
+
+/** El access token de la cuenta de Gmail, canjeado del refresh token. Se guarda mientras valga (el isolate lo reusa). */
+let tokenGmail: { valor: string; hasta: number } | undefined
+
+async function accesoGmail(env: Env): Promise<string> {
+  if (tokenGmail && Date.now() < tokenGmail.hasta) return tokenGmail.valor
+  const r = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      client_id: env.GOOGLE_CLIENT_ID!,
+      client_secret: env.GOOGLE_CLIENT_SECRET!,
+      refresh_token: env.GOOGLE_REFRESH_TOKEN!,
+      grant_type: 'refresh_token'
+    })
+  })
+  const texto = await r.text()
+  let j: { access_token?: string; expires_in?: number; error?: string } = {}
+  try {
+    j = JSON.parse(texto)
+  } catch {}
+  if (!r.ok || !j.access_token) throw new Error(`Google no dio acceso (${r.status}): ${j.error ?? texto.slice(0, 120)}`)
+  tokenGmail = { valor: j.access_token, hasta: Date.now() + ((j.expires_in ?? 3600) - 60) * 1000 }
+  return j.access_token
+}
+
+/** base64url de bytes, como lo pide la Gmail API. */
+function base64Url(datos: Uint8Array | string): string {
+  const bytes = typeof datos === 'string' ? new TextEncoder().encode(datos) : datos
+  let bin = ''
+  for (const b of bytes) bin += String.fromCharCode(b)
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+}
+
+/**
+ * Manda un correo con la Gmail API desde la cuenta de soporte (`GOOGLE_EMAIL_ADDRESS`), por OAuth2: no hace falta
+ * dominio verificado. Sale como multipart/alternative (texto + HTML), la misma plantilla que Resend.
+ */
+async function correoGmail(env: Env, para: string, asunto: string, parrafos: string[]): Promise<boolean> {
+  const { texto, html } = cuerpoCorreo(env, parrafos)
+  const limite = 'hermit-correo'
+  const mime = [
+    `From: Hermit <${env.GOOGLE_EMAIL_ADDRESS}>`,
+    `To: ${para}`,
+    `Reply-To: ${env.CORREO_RESPUESTA}`,
+    `Subject: =?UTF-8?B?${base64Url(asunto)}?=`,
+    'MIME-Version: 1.0',
+    `Content-Type: multipart/alternative; boundary="${limite}"`,
+    '',
+    `--${limite}`,
+    'Content-Type: text/plain; charset="UTF-8"',
+    'Content-Transfer-Encoding: base64',
+    '',
+    base64Url(texto),
+    `--${limite}`,
+    'Content-Type: text/html; charset="UTF-8"',
+    'Content-Transfer-Encoding: base64',
+    '',
+    base64Url(html),
+    `--${limite}--`,
+    ''
+  ].join('\r\n')
+  const token = await accesoGmail(env)
+  const r = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+    method: 'POST',
+    headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+    body: JSON.stringify({ raw: base64Url(mime) })
+  })
+  if (!r.ok) throw new Error(`Gmail respondió ${r.status}: ${(await r.text()).slice(0, 200)}`)
   return true
 }
 

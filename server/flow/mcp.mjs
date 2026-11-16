@@ -7,9 +7,8 @@
  * Cada herramienta espera como mucho 40 s: Codex corta una herramienta a los 60. Si no acabó, dice el id para seguir
  * esperando con `estado_flow`.
  */
-import { createInterface } from 'node:readline'
+import { pedir, servirMcp } from '../mcp.mjs'
 
-const URL_HERMIT = process.env.HERMIT_URL ?? 'http://127.0.0.1:4848'
 const HILO = process.env.HERMIT_HILO
 const ESPERA = 40
 const PROMPT = { type: 'string', description: 'Lo que se genera, dicho con detalle' }
@@ -63,13 +62,6 @@ const HERRAMIENTAS = [
   }
 ]
 
-async function pedir(ruta, datos) {
-  const r = await fetch(`${URL_HERMIT}${ruta}`, datos ? { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(datos) } : {})
-  const json = await r.json().catch(() => ({}))
-  if (!r.ok) throw new Error(json.error ?? `Hermit respondió ${r.status}`)
-  return json
-}
-
 /** El chat de Hermit lee de vuelta lo de «Lista» (`hechoDeFlow` en shared/flow.ts): si cambia, cambia allá también. */
 function contar(t) {
   if (t.estado === 'lista') return `Lista: ${t.archivo} (${t.modelo}, ${t.creditos} créditos gastados${t.cuenta ? `, con ${t.cuenta}` : ''}, pedido ${t.id}).${t.quedan === undefined ? '' : ` Les quedan ${t.quedan} créditos a las cuentas.`}`
@@ -116,29 +108,4 @@ const LLAMADAS = {
   }
 }
 
-const responder = (id, cosa) => process.stdout.write(`${JSON.stringify({ jsonrpc: '2.0', id, ...cosa })}\n`)
-
-createInterface({ input: process.stdin }).on('line', async (renglon) => {
-  let m
-  try {
-    m = JSON.parse(renglon)
-  } catch {
-    return
-  }
-  if (m.id === undefined) return // las notificaciones no se contestan
-  if (m.method === 'initialize')
-    return responder(m.id, { result: { protocolVersion: m.params?.protocolVersion ?? '2025-06-18', capabilities: { tools: {} }, serverInfo: { name: 'flow', version: '1.0.0' } } })
-  if (m.method === 'ping') return responder(m.id, { result: {} })
-  if (m.method === 'tools/list') return responder(m.id, { result: { tools: HERRAMIENTAS } })
-  if (m.method === 'tools/call') {
-    const llamada = LLAMADAS[m.params?.name]
-    if (!llamada) return responder(m.id, { error: { code: -32602, message: `No hay herramienta ${m.params?.name}` } })
-    try {
-      responder(m.id, { result: { content: [{ type: 'text', text: await llamada(m.params.arguments ?? {}) }] } })
-    } catch (e) {
-      responder(m.id, { result: { content: [{ type: 'text', text: e instanceof Error ? e.message : String(e) }], isError: true } })
-    }
-    return
-  }
-  responder(m.id, { error: { code: -32601, message: `No sé hacer ${m.method}` } })
-})
+servirMcp('flow', HERRAMIENTAS, LLAMADAS)

@@ -8,28 +8,27 @@ import React from "react";
 import { Easing, Img, interpolate, staticFile, useCurrentFrame } from "remotion";
 import datos from "../datos/momentos.json";
 import { cuadro, FRASES, PALABRAS } from "../tiempo";
-import { AZUL, LETRA, ZONA } from "../tema";
+import { AZUL, LETRA, MARCADOR, MONO, ZONA } from "../tema";
+import { useEdicion } from "../edicion";
 import { esIcono, Glifo } from "./iconos";
 
 // La misma letra en los dos formatos: un horizontal se ve más chico, y encogida no se lee a 480×270.
 const TAM = 74;
-const RENGLON = 86;
 const ENTRA = 5; // cuadros
 const ANTES = 1; // la palabra asoma un cuadro antes de oírse
-const ESPACIO = TAM * 0.27;
-const ICONO = TAM * 1.12;
+// El interlineado, la separación entre palabras y el tamaño del ícono salen del tamaño elegido (`tam` en el componente).
 
 const suave = Easing.bezier(0.2, 0.7, 0.2, 1);
 
 type Ficha = { texto: string; icono?: string | null; clave: boolean; caja: boolean; desde: number; ancho: number };
 
 /** El ícono delante de una palabra: un nombre de Phosphor («LockSimpleOpen») o una imagen de public («logos/x.png»). */
-const IconoPalabra: React.FC<{ valor: string; color: string }> = ({ valor, color }) => (
-  <span style={{ display: "inline-flex", verticalAlign: "-0.12em", marginRight: TAM * 0.2 }}>
+const IconoPalabra: React.FC<{ valor: string; color: string; tam: number }> = ({ valor, color, tam }) => (
+  <span style={{ display: "inline-flex", verticalAlign: "-0.12em", marginRight: tam * 0.2 }}>
     {esIcono(valor) ? (
-      <Glifo nombre={valor} tam={TAM * 0.92} color={color} />
+      <Glifo nombre={valor} tam={tam * 0.92} color={color} />
     ) : (
-      <Img src={staticFile(valor)} style={{ width: TAM * 0.92, height: TAM * 0.92, borderRadius: TAM, display: "block" }} />
+      <Img src={staticFile(valor)} style={{ width: tam * 0.92, height: tam * 0.92, borderRadius: tam, display: "block" }} />
     )}
   </span>
 );
@@ -39,8 +38,8 @@ const IconoPalabra: React.FC<{ valor: string; color: string }> = ({ valor, color
 const PESO = { clave: 800, relleno: 600 };
 const RELLENO = 0.74;
 
-const medir = (texto: string, clave: boolean) =>
-  measureText({ text: texto, fontFamily: LETRA, fontSize: TAM, fontWeight: String(clave ? PESO.clave : PESO.relleno), letterSpacing: "-0.01em" })
+const medir = (texto: string, clave: boolean, tam: number, fuente: string) =>
+  measureText({ text: texto, fontFamily: fuente, fontSize: tam, fontWeight: String(clave ? PESO.clave : PESO.relleno), letterSpacing: "-0.01em" })
     .width;
 
 const inicio = (i: number) => cuadro(PALABRAS[i].s) - ANTES;
@@ -49,6 +48,16 @@ const CON_CONTADOR = Boolean((datos as { contador?: unknown }).contador);
 
 export const Subtitulos: React.FC<{ texto: string; tenue: string }> = ({ texto, tenue }) => {
   const f = useCurrentFrame();
+  // La edición a mano (`public/edicion.json`, V8): tamaño, color, fuente y corrimiento; lo que no se dice, el estilo.
+  const ed = useEdicion().subtitulos;
+  const tam = ed?.tamano && ed.tamano > 0 ? ed.tamano : TAM;
+  const fuente = ed?.fuente === "mono" ? MONO : ed?.fuente === "marcador" ? MARCADOR : LETRA;
+  const colorEd = ed?.color ?? texto;
+  const dx = ed?.desplazaX ?? 0;
+  const dy = ed?.desplazaY ?? 0;
+  const espacio = tam * 0.27;
+  const icono = tam * 1.12;
+  const paso = tam * 1.16;
   const n = FRASES.findLastIndex((fr) => inicio(fr.palabras[0].i) <= f);
   if (n < 0) return null;
   const fichas: Ficha[] = FRASES[n].palabras.map((p) => ({
@@ -57,20 +66,20 @@ export const Subtitulos: React.FC<{ texto: string; tenue: string }> = ({ texto, 
     clave: p.clave,
     caja: p.caja,
     desde: inicio(p.i),
-    ancho: medir(p.t, p.clave) + (p.icono ? ICONO : 0),
+    ancho: medir(p.t, p.clave, tam, fuente) + (p.icono ? icono : 0),
   }));
 
   // Los renglones salen de la frase entera, así no cambian mientras aparecen las palabras.
   const renglones: Ficha[][] = [[]];
   let usado = 0;
   for (const ficha of fichas) {
-    const extra = (renglones.at(-1)!.length ? ESPACIO : 0) + ficha.ancho;
+    const extra = (renglones.at(-1)!.length ? espacio : 0) + ficha.ancho;
     if (usado + extra > ZONA.texto.ancho && renglones.at(-1)!.length) {
       renglones.push([]);
       usado = 0;
     }
     renglones.at(-1)!.push(ficha);
-    usado += (renglones.at(-1)!.length > 1 ? ESPACIO : 0) + ficha.ancho;
+    usado += (renglones.at(-1)!.length > 1 ? espacio : 0) + ficha.ancho;
   }
 
   const avance = (fi: Ficha) => interpolate(f, [fi.desde, fi.desde + ENTRA], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: suave });
@@ -80,24 +89,24 @@ export const Subtitulos: React.FC<{ texto: string; tenue: string }> = ({ texto, 
       {renglones.map((renglon, r) => {
         // Ancho de lo que ya se ve: la palabra que entra suma su ancho poco a poco, y el renglón se recentra solo.
         let visible = 0;
-        renglon.forEach((fi, k) => (visible += avance(fi) * (fi.ancho + (k ? ESPACIO : 0))));
-        let x = ZONA.texto.x - visible / 2;
+        renglon.forEach((fi, k) => (visible += avance(fi) * (fi.ancho + (k ? espacio : 0))));
+        let x = ZONA.texto.x + dx - visible / 2;
         // Con contador debajo, los renglones de más crecen hacia arriba: hacia abajo se encimaban con él («cebolla.» sobre «40×»).
-        const y = ZONA.texto.centro - TAM / 2 + (r - (CON_CONTADOR ? renglones.length - 1 : 0)) * RENGLON;
+        const y = ZONA.texto.centro - tam / 2 + dy + (r - (CON_CONTADOR ? renglones.length - 1 : 0)) * paso;
         return renglon.map((fi, k) => {
           const a = avance(fi);
-          const izquierda = x + (k ? ESPACIO * a : 0);
-          x += a * (fi.ancho + (k ? ESPACIO : 0));
+          const izquierda = x + (k ? espacio * a : 0);
+          x += a * (fi.ancho + (k ? espacio : 0));
           if (a <= 0) return null;
-          const color = texto;
+          const color = colorEd;
           return (
-            <div key={`${r}-${k}`} style={{ position: "absolute", left: izquierda, top: y, height: TAM * 1.15, whiteSpace: "nowrap" }}>
-              {fi.caja ? <Caja ancho={fi.ancho} alto={TAM * 1.12} avance={a} /> : null}
+            <div key={`${r}-${k}`} style={{ position: "absolute", left: izquierda, top: y, height: tam * 1.15, whiteSpace: "nowrap" }}>
+              {fi.caja ? <Caja ancho={fi.ancho} alto={tam * 1.12} avance={a} /> : null}
               <span
                 style={{
                   display: "inline-block",
-                  fontFamily: LETRA,
-                  fontSize: TAM,
+                  fontFamily: fuente,
+                  fontSize: tam,
                   fontWeight: fi.clave ? PESO.clave : PESO.relleno,
                   letterSpacing: "-0.01em",
                   lineHeight: 1.12,
@@ -107,7 +116,7 @@ export const Subtitulos: React.FC<{ texto: string; tenue: string }> = ({ texto, 
                   transform: `translateY(${(1 - a) * 10}px)`,
                 }}
               >
-                {fi.icono ? <IconoPalabra valor={fi.icono} color={color} /> : null}
+                {fi.icono ? <IconoPalabra valor={fi.icono} color={color} tam={tam} /> : null}
                 {fi.texto}
               </span>
             </div>

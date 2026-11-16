@@ -29,6 +29,7 @@ Un formato periodístico incisivo, serio y de alta retención donde se expone la
 - **Rigurosidad en los datos:** Cifras, fechas y nombres deben estar respaldados en `fuentes/caso.md`.
 - **Sin marcas de agua ni rótulos artificiales:** Las imágenes (sean fotos reales, capturas o generadas) se muestran siempre limpias, profesionales y a pantalla completa. Queda estrictamente prohibido estampar textos como «Recreación visual», «No es foto de prensa» o sellos ficticios sobre la imagen; la transparencia sobre las fuentes se expresa en el contenido del análisis y en el guion, no ensuciando el material visual.
 - **Audio masterizado a −14 LUFS:** Con música incidental de tensión a bajo volumen (−22 dB) para no tapar la voz.
+- **Personas reales:** las ilustraciones con IA nunca retratan a una persona real identificable; las fotos y recortes de archivo entran con su licencia registrada.
 - El proyecto va en `<nombre>` (la ruta completa de la línea `Carpeta:` del mensaje: úsala tal cual, no depende de dónde estés). Sin ella, `politica-<tema>`.
 
 ## Formato

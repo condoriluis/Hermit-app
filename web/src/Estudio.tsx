@@ -82,7 +82,7 @@ export function Estudio({ session, card, head, chat }: { session: SessionMeta; c
   // tienen video en vivo, así que su fila inferior no existe (`sin-linea` en el grid).
   const esVideo = esDeVideo(card)
   const props: PropsDeVideo | undefined = esVideo && avance
-    ? { sessionId: session.id, card, avance, p, deVideo, visible: vista === 'video' && !navegador, onVer: () => elegir('video') }
+    ? { sessionId: session.id, card, avance, p, deVideo, visible: vista === 'video' && !navegador, trabaja: session.running || !!session.background?.length || !!session.pendiente, onVer: () => elegir('video') }
     : undefined
 
   // Ancho y colapsado del panel de chat (como en VS Code)

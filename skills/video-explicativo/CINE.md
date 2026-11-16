@@ -84,3 +84,9 @@ alrededor), `neon` (cian, con contraluz magenta). La luz dice el tono: la estafa
 - **Lo que existe se anima como en la vida real.** Si un modelo nuevo hace una acción que existe (el martillo que pega,
   el agua que hierve, la broca que perfora), quien lo modela mira primero un video real de esa acción para copiarle el
   ritmo, el peso y el rebote (skill `modelos-3d`).
+
+## 5. Lo que se ve en las tarjetas
+
+Reglas de la imagen que siguen valiendo, y que el director no puede poner por ti: pocas palabras en lo que se ve
+(un número o dos palabras: el texto de arriba ya dice el resto), imágenes en vez de nombres (un logo, un ícono, un
+objeto), y nada de etiquetas de cambio sueltas («−94 %»): el número ya lo dice.

@@ -65,6 +65,8 @@ function run() {
   })
   child.on('exit', (code, signal) => {
     if (code === 75) return run()
+    // El puerto está tomado por otra app: el servidor ya dijo por qué y reintentarlo no lo libera.
+    if (code === 76) process.exit(76)
     // Una caída también lo vuelve a levantar: la ventana se reconecta sola y los hilos siguen donde iban. Si cae más de
     // tres veces en un minuto, algo lo tumba al arrancar y se para, para que se vea el error.
     const ahora = Date.now()

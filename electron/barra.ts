@@ -49,7 +49,6 @@ export async function anclar(): Promise<'anclada' | 'no' | 'windows'> {
 async function pedir(): Promise<'anclada' | 'no' | 'windows' | 'sin-api'> {
   const k = require('koffi') as typeof import('koffi')
   const combase = k.load('combase.dll')
-  const GUID = k.struct('GUID', { a: 'uint32', b: 'uint16', c: 'uint16', d: k.array('uint8', 8) })
   const guid = (s: string) => {
     const h = s.replace(/-/g, '')
     return { a: parseInt(h.slice(0, 8), 16), b: parseInt(h.slice(8, 12), 16), c: parseInt(h.slice(12, 16), 16), d: [...Buffer.from(h.slice(16), 'hex')] }

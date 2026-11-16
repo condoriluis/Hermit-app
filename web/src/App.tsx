@@ -38,7 +38,7 @@ import { PedirMejora } from './PedirMejora' // comunidad
 import { Icono } from './Iconos'
 import { Bienvenida } from './Bienvenida'
 import { Novedades } from './Novedades'
-import { Logo, MarcaAgente } from './Logos'
+import { MarcaAgente } from './Logos'
 import { YoutubeLote } from './YoutubeProgramar'
 import { CalendarioYoutube } from './YoutubeCalendario'
 import { avisarTanda, AvisoRedes, ConNavegadorRedes, usePublicar } from './Redes' // redes

@@ -1,5 +1,5 @@
 import { type ReactNode, useEffect, useRef, useState } from 'react'
-import { deTipo, esDeVideo, type Card, NAVEGADOR_REDES, type SessionMeta, type VideoHecho } from '../../shared/types'
+import { deTipo, type Card, NAVEGADOR_REDES, type SessionMeta, type VideoHecho } from '../../shared/types'
 import { api } from './api'
 import { Icon } from './Composer'
 import { compartirVideo } from './Comunidad'

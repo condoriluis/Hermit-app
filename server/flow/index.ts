@@ -94,7 +94,6 @@ const SIN_CUENTA = 'No hay cuenta de Google conectada: que el usuario conecte un
 const SIN_DERECHOS = 'Para mandar imágenes a Flow (referencias o fotogramas), el usuario debe confirmar que tiene sus derechos, en Opciones → Google Flow. No se generó nada.'
 const IMAGEN = /\.(png|jpe?g|webp)$/i
 const POR_QUE: Record<Motivo, string> = { creditos: 'sin créditos de video', frenada: 'Flow la frenó por pedir mucho', sesion: 'perdió la sesión', navegador: 'fallo del navegador (reintentando)' }
-const hora = (ms: number) => new Date(ms).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
 const dia = (ms: number) => new Date(ms).toLocaleDateString('sv')
 /** Los días de `uso` que se guardan. */
 const DIAS_DE_USO = 62

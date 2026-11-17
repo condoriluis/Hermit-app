@@ -1,4 +1,4 @@
-import { freemem, totalmem } from 'node:os'
+import { availableParallelism, cpus, freemem, totalmem } from 'node:os'
 import { hardwareInfo } from './native.ts'
 
 /**
@@ -13,7 +13,7 @@ const HARDWARE = (() => {
   const nativo = hardwareInfo()
   return Object.freeze({
     totalMb: Math.max(1, Math.round(nativo?.totalMemoryMb ?? totalmem() / (1024 * 1024))),
-    nucleos: Math.max(1, nativo?.cpuCores ?? 1),
+    nucleos: Math.max(1, nativo?.cpuCores ?? availableParallelism?.() ?? cpus().length),
   })
 })()
 

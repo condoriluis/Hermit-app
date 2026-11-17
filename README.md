@@ -20,6 +20,10 @@
 
 Creado y mantenido por **luchodev**. Es libre, sin costo oculto y con soporte opcional.
 
+<p align="center">
+  <img src="docs/imagenes/portada-app.png" alt="Hermit abierta: las cards de videos, artículos, imágenes y presentaciones" width="86%">
+</p>
+
 ## Requisitos
 
 | Sistema | Versión |
@@ -44,7 +48,7 @@ Cada formato es una **herramienta** visible en la pantalla principal:
 
 ```bash
 git clone https://github.com/condoriluis/Hermit-app.git
-cd Hermit
+cd Hermit-app
 npm ci
 npm start
 ```

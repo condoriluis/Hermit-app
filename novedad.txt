@@ -1,1 +1,1 @@
-Hermit 0.6.1: responsive en laptops, Devin sin navegador de más y los menús del composer sin recortes
+Hermit 0.6.2: edita subtítulos y escenas de tus videos y renderiza sin esperar al agente

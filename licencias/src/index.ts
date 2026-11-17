@@ -1452,6 +1452,17 @@ function base64Url(datos: Uint8Array | string): string {
 }
 
 /**
+ * base64 estándar (el de MIME: `+`, `/` y `=` de relleno), envuelto a 76 columnas como pide RFC 2045.
+ * No es `base64Url`: los clientes de correo decodifican las partes con el alfabeto de siempre.
+ */
+function base64Mime(datos: Uint8Array | string): string {
+  const bytes = typeof datos === 'string' ? new TextEncoder().encode(datos) : datos
+  let bin = ''
+  for (const b of bytes) bin += String.fromCharCode(b)
+  return btoa(bin).replace(/.{1,76}/g, '$&\r\n')
+}
+
+/**
  * Manda un correo con la Gmail API desde la cuenta de soporte (`GOOGLE_EMAIL_ADDRESS`), por OAuth2: no hace falta
  * dominio verificado. Sale como multipart/alternative (texto + HTML), la misma plantilla que Resend.
  */
@@ -1462,7 +1473,7 @@ async function correoGmail(env: Env, para: string, asunto: string, parrafos: str
     `From: Hermit <${env.GOOGLE_EMAIL_ADDRESS}>`,
     `To: ${para}`,
     `Reply-To: ${env.CORREO_RESPUESTA}`,
-    `Subject: =?UTF-8?B?${base64Url(asunto)}?=`,
+    `Subject: =?UTF-8?B?${base64Mime(asunto).replace(/\r\n/g, '')}?=`,
     'MIME-Version: 1.0',
     `Content-Type: multipart/alternative; boundary="${limite}"`,
     '',
@@ -1470,12 +1481,12 @@ async function correoGmail(env: Env, para: string, asunto: string, parrafos: str
     'Content-Type: text/plain; charset="UTF-8"',
     'Content-Transfer-Encoding: base64',
     '',
-    base64Url(texto),
+    base64Mime(texto),
     `--${limite}`,
     'Content-Type: text/html; charset="UTF-8"',
     'Content-Transfer-Encoding: base64',
     '',
-    base64Url(html),
+    base64Mime(html),
     `--${limite}--`,
     ''
   ].join('\r\n')

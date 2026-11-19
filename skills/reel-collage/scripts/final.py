@@ -2,7 +2,8 @@
 Render final en el tamaño de su formato (1080x1920 o 1920x1080, `FORMATO` de src/datos.ts), audio masterizado para
 redes (-14 LUFS, true peak <= -1 dBTP) y comprobación.
 
-    python -B final.py <nombre>          deja out/reel-<nombre>.mp4 (el panel de etapas de Hermit busca out/reel-*.mp4)
+    python -B final.py [<nombre>]       deja out/reel-<nombre>.mp4 (el panel de etapas de Hermit busca out/reel-*.mp4);
+                                       sin nombre, el de la carpeta del proyecto (reel-<tema> → <tema>)
 
 En vertical, si ya está `portada.png`, la vuelve a poner de primer fotograma. En horizontal no: ahí `portada.png` es la
 miniatura de YouTube y no entra en el video (PORTADA.md de video-base).
@@ -23,11 +24,13 @@ import candado  # de video-base: un solo render por episodio a la vez
 
 
 def main() -> None:
-    if len(sys.argv) != 2:
+    if len(sys.argv) > 2:
         sys.exit(__doc__)
+    # Sin nombre (el botón «Renderizar» del estudio lo lanza así), el de la carpeta: reel-<tema> → <tema>.
+    nombre = sys.argv[1] if len(sys.argv) == 2 else PROYECTO.name.removeprefix("reel-")
     crudo = PROYECTO / "out" / "crudo.mp4"
     audio = PROYECTO / "out" / "audio.wav"
-    final = PROYECTO / "out" / f"reel-{sys.argv[1].removeprefix('reel-')}.mp4"
+    final = PROYECTO / "out" / f"reel-{nombre.removeprefix('reel-')}.mp4"
     candado.tomar(PROYECTO)
     try:
         comprobar_disco(PROYECTO)  # barre los temporales de renders cortados y para si no cabe otro

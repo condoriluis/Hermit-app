@@ -73,6 +73,9 @@ Hermit la enseña en el inicio en cuanto ese archivo cambia, y enlaza la skill d
    - El selector de formato (Vertical u Horizontal) sale solo en las cards con `etapas`: no lleva nada para eso. El de
      la voz (mandarla tú o una de AI Studio), también; si la voz es la grabación a cámara del usuario, `"voz": false`,
      y si el estilo hace la suya (edge-tts), `"voz": { "propia": "Voz de edge-tts" }`.
+   - `"clips": true` solo si el video se arma con clips de `generar_video` de Flow (gastan créditos, como las novelas):
+     así sale el selector de modelo de clips y la `Duración:` se reparte en clips de 8 s. Un estilo de archivo, 3D o
+     imágenes fijas no lo lleva: no hay clips que elegir ni que repartir (`video-base/DURACION.md`).
 
    Listo cuando el archivo es JSON válido y la card sale en el inicio de Hermit.
 5. **Probar.** Haz dos videos de prueba cortos (de 10 a 15 s) siguiendo la skill nueva, uno vertical y uno horizontal,

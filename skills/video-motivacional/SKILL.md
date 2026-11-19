@@ -21,7 +21,7 @@ Un formato centrado en la emoción pura, la pausa dramática y la estética cine
 
 - **Cero clichés vacíos:** El mensaje debe transmitir peso emocional y psicológico real, inspirado en estoicismo, disciplina o superación genuina.
 - **Audio cinematográfico:** Mezcla impecable donde la voz se sienta profunda y presente por encima de la música.
-- **Derechos:** clips de archivo con licencia registrada; nada de personas reales generadas con IA.
+- **Derechos:** el material entra con licencia registrada: las referencias son las de [`../video-base/MATERIAL.md`](../video-base/MATERIAL.md) (`mixkit:`, `archive:`, `commons:`, `nasa:` o una URL de video; los bancos los busca `video-documental/scripts/buscar.py`); nada de personas reales generadas con IA.
 - El proyecto va en `<nombre>` (la ruta completa de la línea `Carpeta:` del mensaje: úsala tal cual, no depende de dónde estés). Sin ella, `motivacional-<tema>`.
 
 ## Formato
@@ -34,10 +34,10 @@ El mensaje trae `Formato: vertical` o `Formato: horizontal`; sin la línea, vert
 ## Pasos
 
 1. **Tema.** Se define el ángulo o la enseñanza estoica/motivacional en `fuentes/tema.md`.
-2. **Guion.** En `guion.md`: frases de impacto, pausas anotadas y remate contundente.
+2. **Guion.** En `guion.md`: frases de impacto, pausas anotadas y remate contundente (las líneas en negrita son textos en pantalla, no narración).
 3. **Voz.** La voz se genera de forma autónoma: con `generar_voz` si el mensaje indica una voz de AI Studio, o automáticamente con TTS en `public/voz.wav` sin detener el turno. Se masteriza con `node <base>/scripts/masterizar.mjs` a −14 LUFS.
-4. **Material.** Clips de archivo libres en 4K o HD con tratamiento de color oscuro en `fuentes/material/`.
-5. **Revisión.** Hoja de contacto en `revision/hoja.png` con `node <base>/scripts/hoja.mjs` para validar ritmo y contraste de lectura.
-6. **Subtítulos.** Se queman con `python <base>/scripts/subtitulos.py <video> out/motivacional-<nombre>.mp4 --voz public/voz.wav --estilo minimal --formato <vertical|horizontal>`: blanco puro palabra a palabra, sin colores estridentes. Si el vídeo abre con una tarjeta o un plano sin voz, `--offset <segundos>` para que entren cuando empiece la narración.
-7. **Final y Portada.** El render final queda en `out/motivacional-<nombre>.mp4`, comprobado con `comprobar.mjs`. En vertical se adhiere la portada de primer fotograma con `portada.mjs`; en horizontal se genera `portada.png` para YouTube.
+4. **Escenas.** En `escenas.json`: cada escena con la `palabra` del guion donde entra, su `look` y su `material` — una lista de 1 a 4 cosas que se reparten el tramo en partes iguales: `{"foto": "<ruta o referencia>"}` (paneo Ken Burns) o `{"clip": "<ruta o referencia>", "desde": <segundo>, "velocidad": <n>}` (0.6 = cámara lenta). El `look` es el tratamiento de color: `bn` (blanco y negro de contraste), `desaturado` (el de serie: colores apagados y contraste alto; es el de omisión) o `color` (sin tratar). Una escena **sin `material`** es una tarjeta sobre fondo negro con la cita centrada (`titular`, `\n` parte renglones): sirve para el gancho o una frase que debe leerse sola. Las referencias las da `buscar.py` y `hacer.py` las baja con su licencia en `FUENTES.md`; el material va en `fuentes/material/` con tratamiento de color oscuro ya aplicado o lo pone el `look`.
+5. **Música.** Si el video la lleva, el tema épico o de piano progresivo va en `public/musica.mp3` (o `musica.mp3`, `public/musica.wav`): suena a bajo volumen debajo de la voz, con entrada y salida en fundido.
+6. **Render.** Se corre `python -I -B -X utf8 <skill>/scripts/hacer.py --en <carpeta del proyecto> [--formato vertical|horizontal] [--revisa]`. Valida el proyecto en un segundo (`--revisa`, sin red ni voz), baja el material una vez por URL, y hace el resto: los tramos con su `look`, la voz masterizada con la música, los subtítulos karaoke en **Bebas Neue** (`subtitulos.py --estilo minimal`, blanco puro palabra a palabra) y la portada de primer fotograma en vertical. Deja `revision/hoja.png` y `revision/tiempos.json`.
+7. **Revisión y Final.** Se mira `revision/hoja.png`: ritmo de las pausas, que el look se lea (sombrío, nunca chillón) y que los subtítulos respiren en la franja baja. El video queda en `out/motivacional-<nombre>.mp4` (el `-base.mp4` de la misma carpeta es el video sin subtítulos, por si hay que re-subtitular). Se pasa `node <base>/scripts/comprobar.mjs`. En horizontal, `portada.png` es la miniatura de YouTube según [`PORTADA.md`](../video-base/PORTADA.md) con `--fuente <base>/assets/fonts/BebasNeue-Regular.ttf --color "#fff4e6"`.
 

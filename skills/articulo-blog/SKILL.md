@@ -44,6 +44,17 @@ El artículo se genera en `articulo.json` con los siguientes campos obligatorios
 - **`Formato: horizontal`** (estándar para artículos web): la imagen de portada se genera en formato 16:9 (1200×675 px o 1536×864 px), óptima para cabecera del artículo y metadatos Open Graph / redes sociales.
 - **`Formato: vertical`**: la portada web usa encuadre horizontal 16:9; si se indica vertical, la portada se mantiene en 16:9.
 
+## La línea `Imágenes:`
+
+El usuario elige en Hermit con qué motor se genera la portada (el menú «Imágenes»). Lo elegido llega en el primer mensaje:
+
+- `Imágenes: genéralas en Google Flow con <modelo> …`: con el MCP `flow` y su `generar_imagen`. El cómo, en
+  [video-base/FLOW.md](../video-base/FLOW.md).
+- `Imágenes: con ChatGPT …`: con Codex y su `image_gen`, como en [video-base/PORTADA.md](../video-base/PORTADA.md).
+- Sin la línea: con lo que esté conectado (Google Flow si hay cuenta de Google; si no, ChatGPT).
+
+La portada es una imagen: no gasta créditos. No pidas permiso de gasto por ella.
+
 ## Imagen de portada de alto impacto (`portada.png`)
 
 La imagen **no debe ser genérica ni sencilla**. Debe tener estética editorial moderna de revista tecnológica de alta gama (estilo *Wired*, *MIT Technology Review*, *The Verge* o *Stripe Press*):

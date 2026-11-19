@@ -31,7 +31,8 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from material import AGENTE, API, Falla, pedir, pedir_json, resolver, sin_html  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "video-base" / "scripts"))
+from bancos import AGENTE, API, Falla, pedir, pedir_json, resolver, sin_html  # noqa: E402
 
 POR_IDEA = 6
 LIMITADO: set[str] = set()   # los bancos que contestaron «demasiadas peticiones»

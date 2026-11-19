@@ -96,7 +96,7 @@ def generar_ass(palabras: list[dict], salida_ass: Path, vertical: bool = True) -
         "",
         "[V4+ Styles]",
         "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding",
-        f"Style: Reddit,Arial Black,{font_size},&H00FFFFFF,&H000000FF,&H00000000,&H80000000,-1,0,0,0,100,100,1,0,1,6,3,2,60,60,100,1",
+        f"Style: Reddit,Varela Round,{font_size},&H00FFFFFF,&H000045FF,&H00000000,&H80000000,-1,0,0,0,100,100,1,0,1,6,3,2,60,60,100,1",
         "",
         "[Events]",
         "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text",
@@ -128,7 +128,7 @@ def generar_ass(palabras: list[dict], salida_ass: Path, vertical: bool = True) -
             for j, other in enumerate(g):
                 clean_w = other["w"].strip().upper()
                 if j == i:
-                    txt_parts.append(r"{\c&H00FFFF&}" + clean_w + r"{\c&H00FFFFFF&}")
+                    txt_parts.append(r"{\c&H000045FF&}" + clean_w + r"{\c&H00FFFFFF&}")
                 else:
                     txt_parts.append(clean_w)
             linea = " ".join(txt_parts)
@@ -186,6 +186,9 @@ def main() -> None:
     # 2. Overlay de la tarjeta en los primeros 3 segundos con fade out suave
     # 3. Subtítulos ass
     ass_escaped = str(ass_path).replace("\\", "/").replace(":", "\\:")
+    # La tipografía del estilo viaja con video-base (Varela Round); sin fontsdir ffmpeg usaría la del sistema.
+    # Entre comillas y con los dos puntos escapados (C\:) para que el parser del filtro no parta la ruta.
+    fuentes = "'" + (BASE.parent / "assets" / "fonts").as_posix().replace(":", "\\:") + "'"
 
     filter_complex = [
         f"[0:v]scale={ancho}:{alto}:force_original_aspect_ratio=increase,crop={ancho}:{alto},setsar=1,format=yuv420p[vbg]",
@@ -210,7 +213,7 @@ def main() -> None:
         )
         curr_v = "[vov]"
 
-    filter_complex.append(f"{curr_v}subtitles='{ass_escaped}':charenc=UTF-8,format=yuv420p[vout]")
+    filter_complex.append(f"{curr_v}subtitles='{ass_escaped}':fontsdir={fuentes}:charenc=UTF-8,format=yuv420p[vout]")
 
     if musica:
         inputs.extend(["-stream_loop", "-1", "-i", str(musica)])

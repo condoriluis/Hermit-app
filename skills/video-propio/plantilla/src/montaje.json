@@ -1,0 +1,17 @@
+{
+  "ancho": 1080,
+  "alto": 1920,
+  "fps": 30,
+  "duracion": 90,
+  "acento": "#8ef0c8",
+  "escenas": [
+    {
+      "tipo": "tarjeta",
+      "variante": "intro",
+      "titulo": "Video con tu material",
+      "subtitulo": "",
+      "desde": 0,
+      "hasta": 90
+    }
+  ]
+}

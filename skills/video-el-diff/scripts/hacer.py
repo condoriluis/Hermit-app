@@ -452,7 +452,10 @@ def portada(m: dict, guion: dict, vertical: bool) -> str | None:
     titulo = titulo_portada(m.get("portada_titulo") or "") or titulo_portada(
         " ".join(x.strip() for x in str(m.get("gancho") or guion.get("gancho") or RAIZ.name)
                  .replace("\n", "/").split("/") if x.strip()))
-    r = correr(["node", str(BASE / "portada_sin_ia.mjs"), str(cuadro), str(destino), "--titulo", titulo])
+    # La portada usa la letra de los títulos del estilo (Anton, la de estilo.ts) en su crema, no la Arial Black por defecto.
+    fuente = BASE.parent / "assets" / "fonts" / "Anton-Regular.ttf"
+    r = correr(["node", str(BASE / "portada_sin_ia.mjs"), str(cuadro), str(destino), "--titulo", titulo,
+                "--fuente", str(fuente), "--color", "#f4ead2"])
     return None if destino.exists() else "la portada: " + cola(r, 400)
 
 

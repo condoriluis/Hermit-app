@@ -24,17 +24,17 @@ Las imágenes no gastan créditos, ni en Flow ni en ChatGPT. No pidas permiso de
 ## La línea `Carpeta:` y el `Formato:`
 
 - `Carpeta:`: la ruta completa de la carpeta del hilo, la raíz donde van las imágenes. Guárdalas ahí, no en subcarpetas.
-- `Formato: vertical` (por defecto): imágenes **9:16** (1080×1920). `Formato: horizontal`: **16:9** (1920×1080). Si en el
-  mensaje se pide otra proporción (cuadrada, 4:3), esa manda. Nunca recortes una del otro formato.
-- **Qué cambia de lugar:** en vertical, la composición se apila (sujeto al centro, aire arriba y abajo); en horizontal,
-  el sujeto va a un tercio y el resto ocupa el ancho. Nunca se hace en uno para recortarlo al otro.
+- `Formato: vertical` (por defecto): imágenes **9:16**. `Formato: horizontal`: **16:9**. También `Formato: 1:1` (cuadrada), `Formato: 4:3` y `Formato: 3:4`: las cinco proporciones que `generar_imagen` compone nativas (`FORMATOS_IMAGEN` en `shared/flow.ts`). Si en el mensaje se pide otra proporción, esa manda. Nunca recortes una del otro formato.
+- **Qué cambia de lugar:** en vertical, la composición se apila (sujeto al centro, aire arriba y abajo); en horizontal
+  y en las apaisadas, el sujeto va a un tercio y el resto ocupa el ancho; en las verticales estrechas, se apila. Nunca
+  se hace en una proporción para recortarla a otra.
 
 ## Cómo trabajas
 
 1. **Encargo** (`encargo.md`, fase Idea). Deja en la raíz de la carpeta lo que vas a hacer: qué pide el usuario, cuántas
    imágenes serán y **el prompt en inglés de cada una**, numeradas (concreto: sujeto, estilo, luz y encuadre).
 2. **Imágenes** (`<nombre>.png`, fase Entrega). Genera cada una con el motor de la línea `Imágenes:` y el `formato` que
-   toque (`9:16` o `16:9`), y déjala en la raíz de la carpeta.
+   toque (el de la línea `Formato:`: `9:16`, `16:9`, `1:1`, `4:3` o `3:4`), y déjala en la raíz de la carpeta.
    - Con Flow: pide un `_<nombre>.jpg` con `generar_imagen` y pásalo a `<nombre>.png`
      (`ffmpeg -nostdin -v error -y -i _<nombre>.jpg <nombre>.png`). El `_` deja el intermedio fuera de la galería; el
      entregable es solo el `.png`.

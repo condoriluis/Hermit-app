@@ -446,15 +446,19 @@ function relevar(archivo: string) {
   }
   const secreto = typeof antes.secreto === 'string' && antes.secreto ? antes.secreto : randomBytes(18).toString('hex')
   const http = createServer((_req, res) => res.writeHead(404).end())
-  new WebSocketServer({ server: http, maxPayload: 64 * 1024 * 1024 }).on('connection', (ws, req) => {
+  const wss = new WebSocketServer({ server: http, maxPayload: 64 * 1024 * 1024 })
+  // `ws` re-emite el error del servidor HTTP: sin este manejador sale como excepción suelta y tumba el proceso.
+  wss.on('error', (e) => console.error('El navegador integrado no puede escuchar al agente:', e.message))
+  wss.on('connection', (ws, req) => {
     const [, s, hilo] = new URL(req.url ?? '/', 'http://x').pathname.split('/')
     if (s !== secreto || !hilo || req.headers.origin) return ws.close(1008)
     void conectar(ws, decodeURIComponent(hilo))
   })
   let puerto = typeof antes.puerto === 'number' ? antes.puerto : 0
   http.on('error', (e: NodeJS.ErrnoException) => {
-    // Su puerto de la otra vez ya es de otro: cualquiera libre.
-    if (e.code === 'EADDRINUSE' && puerto) http.listen((puerto = 0), '127.0.0.1')
+    // El puerto de la vez pasada ya no sirve: ocupado (EADDRINUSE) o reservado por Windows (EACCES, los rangos
+    // excluidos de Hyper-V/WSL cambian en cada arranque). Cualquiera libre; si tampoco, queda dicho en el registro.
+    if (puerto) http.listen((puerto = 0), '127.0.0.1')
     else console.error('El navegador integrado no puede escuchar al agente:', e.message)
   })
   http.listen(puerto, '127.0.0.1', () => {

@@ -69,4 +69,4 @@
 .boton-navegador:hover { color: var(--text); background: var(--panel-2); }
 .boton-navegador.on { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); background: var(--accent-soft); }
 .boton-navegador .ico { width: 15px; height: 15px; }
-.boton-navegador.agente:not(.on)::after { content: ''; position: absolute; top: 1px; right: 1px; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px var(--bg); }
+.boton-navegador.agente:not(.on)::after { content: ''; position: absolute; top: 1px; right: 1px; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px var(--bg); animation: pulse 1.2s steps(5) infinite; }

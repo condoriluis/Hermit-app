@@ -357,37 +357,32 @@ export function Comunidad() {
 
         <aside className="com-lado">
           <div className="com-comunidad">
-            <div className="com-comunidad-portada">
+            <div className="com-comunidad-cabeza">
               <img src="/icon.svg" alt="" />
-            </div>
-            <div className="com-comunidad-cuerpo">
-              <h2>Comunidad Hermit</h2>
-              <p>Lo que la gente hace con Hermit y cómo lo hace. Comparte tus videos, pregunta lo que no te sale y pide lo que le falta.</p>
-              <div className="com-numeros">
-                <div>
-                  <strong>{feed ? feed.miembros.toLocaleString('es-MX') : '–'}</strong>
-                  <span>Miembros</span>
-                </div>
-                <div>
-                  <strong>{feed ? feed.activos.toLocaleString('es-MX') : '–'}</strong>
-                  <span>Activos hoy</span>
-                </div>
-                <div>
-                  <strong>1</strong>
-                  <span>Creador</span>
-                </div>
+              <div className="com-comunidad-id">
+                <h2>Comunidad Hermit</h2>
+                <p>Comparte, pregunta y pide lo que le falta.</p>
               </div>
-              {caras.length > 0 && (
-                <div className="com-caras">
-                  {caras.map((a) => (
-                    <Cara key={a.id} autor={a} tam="chica" />
-                  ))}
-                </div>
-              )}
-              <button className="com-perfil" disabled={!yo} onClick={() => setPerfil({})}>
-                <Cara autor={yo} tam="chica" />
-                {yo?.nombre ? 'Tu perfil' : 'Ponte tu nombre'}
-              </button>
+            </div>
+            <div className="com-comunidad-pie">
+              <span className="com-stats">
+                <span><b>{feed ? feed.miembros.toLocaleString('es-MX') : '–'}</b> miembros</span>
+                <span><b>{feed ? feed.activos.toLocaleString('es-MX') : '–'}</b> activos hoy</span>
+                <span><b>1</b> creador</span>
+              </span>
+              <span className="com-comunidad-acciones">
+                {caras.length > 0 && (
+                  <span className="com-caras">
+                    {caras.map((a) => (
+                      <Cara key={a.id} autor={a} tam="chica" />
+                    ))}
+                  </span>
+                )}
+                <button className="com-perfil" disabled={!yo} onClick={() => setPerfil({})}>
+                  <Cara autor={yo} tam="chica" />
+                  {yo?.nombre ? 'Tu perfil' : 'Ponte tu nombre'}
+                </button>
+              </span>
             </div>
           </div>
           {feed && <Votar roadmap={feed.roadmap} fundador={feed.yo.insignia === 'fundador'} onVoto={(roadmap) => setFeed((f) => f && { ...f, roadmap })} />}

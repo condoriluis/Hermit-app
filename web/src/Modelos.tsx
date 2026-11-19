@@ -225,7 +225,7 @@ export function Modelos(props: {
   )
 }
 
-function Fila({ nombre, para, medido, children }: { nombre: string; para: string; medido?: string; children: React.ReactNode }) {
+export function Fila({ nombre, para, medido, children }: { nombre: string; para: string; medido?: string; children: React.ReactNode }) {
   return (
     <div className="modelos-fila">
       <span className="modelos-tarea">

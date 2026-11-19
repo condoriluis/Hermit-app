@@ -14,7 +14,6 @@ const CAMBIOS: { texto: string; pide: string; conVoz?: boolean }[] = [
   { texto: 'Hazlo más corto', pide: 'Hazlo más corto: quita lo que sobra y deja lo esencial, sin perder el gancho ni el cierre.' },
   { texto: 'Dale más ritmo', pide: 'Dale más ritmo: cortes más rápidos, menos pausas y más movimiento, con la música y los efectos a tono.', conVoz: true },
   { texto: 'Cambia la música', pide: 'Cambia la música por otra distinta que le vaya al video, y ajusta los efectos de sonido a ella.', conVoz: true },
-  { texto: 'Cambia el final', pide: 'Cambia el final: haz otro cierre, que remate mejor el video.' }
 ]
 /** No pisa la actual: el servidor pasa el hilo a una carpeta nueva y se lo dice al agente (`otraVersion` en etapas.ts). */
 const VERSION = 'Haz otra versión'

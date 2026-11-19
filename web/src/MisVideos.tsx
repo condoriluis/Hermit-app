@@ -223,7 +223,7 @@ export function VideoDe({ video, onVer, insignia, estilo }: { video: VideoHecho;
         <span className="pieza-titulo">
           {estilo && (
             <span className="video-estilo" title={estilo.title}>
-              <Icon icon={estilo.icon ?? '✦'} />
+              <Icon icon={estilo.icon ?? '✦'} /> {estilo.title}
             </span>
           )}
           {video.titulo}

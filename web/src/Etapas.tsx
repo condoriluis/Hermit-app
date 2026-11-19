@@ -8,6 +8,7 @@ import { Picker } from './Composer'
 import { imageUrl } from './Images'
 import { buildTimeline } from './items'
 import { GenerarVoz } from './Voz' // voz de AI Studio
+import { Icono } from './Iconos'
 import './Etapas.css'
 
 /** Cuánto tardó una etapa: «3 min», «1 h 20 min». */
@@ -327,12 +328,6 @@ const kind = (ruta: string) => {
   return 'texto'
 }
 
-/** Abre un archivo de la sesión con la app del sistema (el navegador, para un `.html`), sin pasar por la API en localhost. */
-async function abrirArchivo(sessionId: string, ruta: string) {
-  const { actual } = await api<{ actual: string }>(`/api/sessions/${sessionId}/carpeta`)
-  await api('/api/open', { path: `${actual}/${ruta}`, abrir: true })
-}
-
 /** Lo que dejó una etapa, según el tipo de archivo. Lo nuevo entra con un fundido. `writing` es el texto que se está escribiendo. */
 function Muestra({ sessionId, archivos, writing, copiar }: { sessionId: string; archivos: Avance['etapas'][number]['archivos']; writing?: { text: string; json: boolean }; copiar?: boolean }) {
   const src = (a: { ruta: string; t: number }) => `/api/sessions/${sessionId}/archivo?ruta=${encodeURIComponent(a.ruta)}&t=${Math.round(a.t)}`
@@ -343,6 +338,7 @@ function Muestra({ sessionId, archivos, writing, copiar }: { sessionId: string; 
   // Los textos de la etapa: el legible (.md) por defecto; si hay más de uno, arriba sale para cambiar (p. ej. el
   // `articulo.json` del blog, que se ve formateado).
   const [elegido, setElegido] = useState('')
+  const [grande, setGrande] = useState('')
   const textos = archivos.filter((a) => kind(a.ruta) === 'texto')
   const text = textos.find((a) => a.ruta === elegido) ?? textos.filter((a) => !/\.json$/i.test(a.ruta)).at(-1) ?? textos.at(-1)
   return (
@@ -368,9 +364,6 @@ function Muestra({ sessionId, archivos, writing, copiar }: { sessionId: string; 
         <div className="etapa-html">
           <div className="etapa-html-barra">
             <span className="etapa-html-titulo">Vista previa</span>
-            <button className="etapa-html-abrir" onClick={() => abrirArchivo(sessionId, html.ruta).catch(() => {})}>
-              Abrir en el navegador ↗
-            </button>
           </div>
           <iframe className="etapa-html-iframe" src={src(html)} title="Vista previa" />
         </div>
@@ -388,11 +381,19 @@ function Muestra({ sessionId, archivos, writing, copiar }: { sessionId: string; 
       {images.length > 0 && (
         <div className={`etapa-rejilla c${images.length <= 2 ? 1 : images.length <= 10 ? 2 : 3}`}>
           {images.map((i) => (
-            // En rejilla va la miniatura: decenas de capturas enteras traban el estudio. El clic abre la entera.
-            <a key={i.ruta} href={src(i)} target="_blank" rel="noreferrer" title={i.ruta}>
+            // En rejilla va la miniatura: decenas de capturas enteras traban el estudio. El clic la abre en la app.
+            <button key={i.ruta} className="etapa-img" onClick={() => setGrande(i.ruta)} title={i.ruta}>
               <img className="etapa-nuevo" src={images.length > 2 ? `${src(i)}&mini` : src(i)} alt={i.ruta} loading="lazy" decoding="async" />
-            </a>
+            </button>
           ))}
+        </div>
+      )}
+      {grande && (
+        <div className="lightbox" onClick={() => setGrande('')}>
+          <img src={src({ ruta: grande, t: 0 })} alt={grande} onClick={(e) => e.stopPropagation()} />
+          <button className="lightbox-x" title="Cerrar" aria-label="Cerrar" onClick={() => setGrande('')}>
+            <Icono de="cerrar" />
+          </button>
         </div>
       )}
     </>

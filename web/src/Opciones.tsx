@@ -103,7 +103,7 @@ function Ajustes({ onDone, iniciando, onIniciando }: { onDone(): void; iniciando
               </>
             )}
             {seccion === 'agentes' && (
-              <Grupo titulo="Agentes" nota="Cada agente se descarga la primera vez que lo eliges. Claude y ChatGPT necesitan un plan de pago o una llave de API; OpenCode, solo tu cuenta, que es gratis. Los demás, la cuenta o la llave de cada uno.">
+              <Grupo titulo="Agentes" nota="Cada agente se descarga la primera vez que lo eliges. Claude necesita plan de pago o llave de API; ChatGPT y OpenCode tienen nivel gratis con límites. Los demás, la cuenta o la llave de cada uno.">
                 <Agentes />
                 <CuentaCodex />
                 <CuentaOpenCode />
@@ -665,7 +665,9 @@ export function CuentaOpenCode({ aviso = false, onFalta }: { aviso?: boolean; on
       <div className="fila">
         <Logo de="opencode" />
         <div className="fila-nombre">
-          <strong>OpenCode · rango gratis con tu cuenta</strong>
+          <strong>
+            OpenCode <span className="gratis">Gratis con tope</span>
+          </strong>
           {cuenta?.conectada ? (
             <Picker
               className="sub"
@@ -748,7 +750,7 @@ type OtroAgente = (typeof OTROS_AGENTES)[number]
  * iniciar sesión; `navegador`: da un enlace que se autoriza en el navegador; `llave`: se pega una llave de API.
  */
 /** `salir`: el de ventana que sabe cerrar su sesión (los de navegador y llave siempre pueden). */
-const OTROS: Record<OtroAgente, { titulo: string; logo: string; como: 'ventana' | 'navegador' | 'llave'; texto: ReactNode; ayuda?: ReactNode; uso?: string; abreSolo?: string; beta?: boolean; salir?: true }> = {
+const OTROS: Record<OtroAgente, { titulo: string; logo: string; como: 'ventana' | 'navegador' | 'llave'; texto: ReactNode; ayuda?: ReactNode; uso?: string; abreSolo?: string; beta?: boolean; gratis?: string; salir?: true }> = {
   deepseek: {
     titulo: 'DeepSeek · con tu llave de API',
     logo: 'deepseek',
@@ -770,6 +772,7 @@ const OTROS: Record<OtroAgente, { titulo: string; logo: string; como: 'ventana' 
     logo: 'grok',
     como: 'ventana',
     beta: true,
+    gratis: 'Gratis con cupo',
     texto: 'Hermit trabaja con tu cuenta de Grok. Al conectar se abre una ventana de Grok que te lleva a autorizarla en el navegador.',
     uso: 'https://grok.com',
     salir: true
@@ -780,6 +783,7 @@ const OTROS: Record<OtroAgente, { titulo: string; logo: string; como: 'ventana' 
     como: 'navegador',
     beta: true,
     abreSolo: 'Abriendo Antigravity: al terminar se abre sola la página de Google',
+    gratis: 'Gratis con cupo semanal',
     texto: 'Hermit trabaja con tu cuenta de Google en Antigravity, con sus modelos de Gemini. La cuenta se autoriza en el navegador.'
   },
   gemini: {
@@ -787,6 +791,7 @@ const OTROS: Record<OtroAgente, { titulo: string; logo: string; como: 'ventana' 
     logo: 'gemini',
     como: 'llave',
     beta: true,
+    gratis: 'Gratis para probar',
     texto: 'Trabaja con Gemini CLI y tu llave de AI Studio: no con tu cuenta ni tu plan de Google, que Gemini CLI ya no acepta. La llave gratis alcanza para probar; para trabajar, actívale la facturación.',
     ayuda: (
       <>
@@ -879,6 +884,7 @@ export function CuentaAgente({ p, aviso = false, onFalta }: { p: OtroAgente; avi
           <strong>
             {o.titulo}
             {o.beta && <span className="beta">Beta</span>}
+            {o.gratis && <span className="gratis">{o.gratis}</span>}
           </strong>
           {cuenta?.conectada ? (
             <Picker
@@ -1032,7 +1038,10 @@ function CuentaCodex({ aviso = false, onFalta }: { aviso?: boolean; onFalta?(fal
       <div className="fila">
         <Logo de="codex" />
         <div className="fila-nombre">
-          <strong>Codex · ChatGPT</strong>
+          <strong>
+            Codex · ChatGPT
+            {cuenta?.conectada && !llave.activa && cuenta.plan?.toLowerCase() === 'free' && <span className="gratis">Gratis con cupo</span>}
+          </strong>
           {cuenta?.conectada ? (
             <Picker
               className="sub"
@@ -1056,7 +1065,7 @@ function CuentaCodex({ aviso = false, onFalta }: { aviso?: boolean; onFalta?(fal
               onChange={(que) => llave.elegir(que) || (que === 'uso' ? window.open('https://chatgpt.com/codex/settings/usage', '_blank', 'noreferrer') : conectar())}
             />
           ) : (
-            <span>Hermit trabaja con tu plan de pago de ChatGPT (Plus o Pro), o con una llave de API, y con ella hace las imágenes de los videos: portadas y personajes. La cuenta se autoriza en el navegador.</span>
+            <span>Hermit trabaja con tu cuenta de ChatGPT — el plan gratis tiene cupo limitado — o con una llave de API, y con ella hace las imágenes de los videos: portadas y personajes. La cuenta se autoriza en el navegador.</span>
           )}
         </div>
         {agentes?.codex.instalando ? <Bajando a={agentes.codex} /> : version.estado}

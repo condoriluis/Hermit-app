@@ -97,8 +97,8 @@ const POR_QUE: Record<Motivo, string> = { creditos: 'sin créditos de video', fr
 const dia = (ms: number) => new Date(ms).toLocaleDateString('sv')
 /** Los días de `uso` que se guardan. */
 const DIAS_DE_USO = 62
-const sumar = (a: GastoFlow, b: GastoFlow): GastoFlow => ({ videos: a.videos + b.videos, creditos: a.creditos + b.creditos })
-const NADA: GastoFlow = { videos: 0, creditos: 0 }
+const sumar = (a: GastoFlow, b: GastoFlow): GastoFlow => ({ videos: a.videos + b.videos, creditos: a.creditos + b.creditos, imagenes: (a.imagenes ?? 0) + (b.imagenes ?? 0) })
+const NADA: GastoFlow = { videos: 0, creditos: 0, imagenes: 0 }
 
 export function flow(app: string, google: Google) {
   const carpeta = join(app, 'data', 'flow')
@@ -168,12 +168,12 @@ export function flow(app: string, google: Google) {
     guardarAjustes()
   }
 
-  /** `videos`: 0 si Flow lo rechazó y aun así cobró. */
-  function apuntarUso(correo: string, creditos: number, videos = 1) {
+  /** Lo que la cuenta produjo: videos con sus créditos, e imágenes (no gastan, pero cada una cuenta para el ritmo de Flow). */
+  function apuntarUso(correo: string, gasto: { creditos: number; videos?: number; imagenes?: number }) {
     const hoy = dia(Date.now())
     const desde = dia(Date.now() - DIAS_DE_USO * 86_400_000)
     const uso = Object.fromEntries(Object.entries(ajustes.uso ?? {}).filter(([d]) => d >= desde))
-    uso[hoy] = { ...uso[hoy], [correo]: sumar(uso[hoy]?.[correo] ?? NADA, { videos, creditos }) }
+    uso[hoy] = { ...uso[hoy], [correo]: sumar(uso[hoy]?.[correo] ?? NADA, { videos: gasto.videos ?? 1, creditos: gasto.creditos, imagenes: gasto.imagenes ?? 0 }) }
     ajustes.uso = uso
     guardarAjustes()
   }
@@ -293,11 +293,14 @@ export function flow(app: string, google: Google) {
           guardar(`${t.salida}.huella`, t.huella)
           t.creditos = hecho.creditos
           if (t.tipo === 'video') {
-            apuntarUso(c.correo, hecho.creditos)
+            apuntarUso(c.correo, { creditos: hecho.creditos })
             gastarPermiso(t, hecho.creditos)
             // En la misma página y antes de darlo por hecho: así el agente sabe cuánto queda.
             apuntarSaldo(c.correo, await leerSaldo(page).catch(() => null))
             t.quedan = quedan(Date.now())
+          } else {
+            // La imagen no gasta créditos, pero cuenta para el ritmo de Flow: así se ve cuántas hace cada cuenta.
+            apuntarUso(c.correo, { creditos: 0, videos: 0, imagenes: 1 })
           }
           t.archivo = t.salida
           t.estado = 'lista'
@@ -312,7 +315,7 @@ export function flow(app: string, google: Google) {
       const frenada = (e instanceof Rechazado && AVISO_FRENADA.test(e.aviso)) || (e instanceof SinEmpezar && AVISO_FRENADA.test(e.message))
       if (e instanceof Rechazado) {
         if (e.saldo) apuntarSaldo(c.correo, e.saldo)
-        if (e.gasto) apuntarUso(c.correo, e.gasto, 0)
+        if (e.gasto) apuntarUso(c.correo, { creditos: e.gasto, videos: 0 })
         if (frenada) descansar(c.correo, 'frenada', e.aviso || mensaje(e))
       }
       // Un fallo de la página (Playwright: clic tapado, timeout, pestaña cerrada) sin créditos gastados no es una frenada

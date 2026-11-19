@@ -37,10 +37,10 @@
 .com-cara.grande { width: 48px; height: 48px; font-size: 19px; }
 .com-nombre { display: inline-flex; align-items: center; gap: 7px; min-width: 0; font-size: 14px; font-weight: 650; color: var(--text); }
 .com-creador { padding: 1px 7px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: 10.5px; font-weight: 700; letter-spacing: 0.02em; }
-.com-meta { display: flex; flex-wrap: wrap; gap: 5px; color: var(--muted); font-size: 12.5px; }
+.com-meta { display: flex; flex-wrap: wrap; gap: 4px; color: var(--muted); font-size: 12px; }
 
 /* Escribe algo: cerrado, una fila con tu cara; abierto, el compositor con quién publica y dónde. */
-.com-escribe { display: flex; align-items: center; gap: 12px; width: 100%; margin-top: 22px; padding: 12px 16px; border-radius: 16px; border: 1px solid var(--line); background: linear-gradient(180deg, var(--panel-2), var(--panel)); color: var(--muted); font-size: 16px; text-align: left; transition: border-color 0.2s, box-shadow 0.2s; }
+.com-escribe { display: flex; align-items: center; gap: 12px; width: 100%; margin-top: 18px; padding: 12px 16px; border-radius: 16px; border: 1px solid var(--line); background: linear-gradient(180deg, var(--panel-2), var(--panel)); color: var(--muted); font-size: 16px; text-align: left; transition: border-color 0.2s, box-shadow 0.2s; }
 .com-escribe:hover:not(:disabled) { border-color: var(--line-fuerte); box-shadow: 0 0 0 4px var(--accent-soft); color: var(--text); }
 .com-nueva { margin-top: 22px; }
 .com-nueva-cabeza { display: flex; align-items: center; gap: 10px; margin: 0 0 10px 2px; color: var(--muted); font-size: 13px; }
@@ -55,14 +55,14 @@
 .com-elegir select option { background: var(--panel); color: var(--text); }
 
 /* Las secciones: píldoras; la elegida, en menta. */
-.com-secciones { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
+.com-secciones { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
 .com-secciones button { display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--muted); font-size: 13.5px; font-weight: 600; transition: color 0.15s, background 0.15s, border-color 0.15s; }
 .com-secciones button:hover { color: var(--text); border-color: var(--line-fuerte); }
 .com-secciones button.on { background: var(--accent); border-color: var(--accent); color: var(--on-solid); }
 .com-secciones .com-ico { width: 14px; height: 14px; }
 
 /* Comienza aquí: un anillo con lo que llevas y los pasos. */
-.com-bienvenida { margin-top: 18px; border-radius: 14px; border: 1px solid var(--line); background: var(--panel); overflow: hidden; }
+.com-bienvenida { margin-top: 16px; border-radius: 14px; border: 1px solid var(--line); background: var(--panel); overflow: hidden; }
 .com-bienvenida header { display: flex; align-items: center; gap: 12px; padding: 13px 14px 13px 16px; border-bottom: 1px solid var(--line); }
 .com-bienvenida header strong { flex: 1; font-size: 15px; font-weight: 650; }
 .com-avance { width: 26px; height: 26px; flex: none; transform: rotate(-90deg); }
@@ -90,8 +90,8 @@
 @keyframes com-respira { 50% { transform: scale(1.12); opacity: 0.7; } }
 
 /* El feed: una tarjeta por publicación. La fijada lleva el borde menta. */
-.com-feed { display: flex; flex-direction: column; gap: 14px; margin-top: 18px; }
-.com-post { position: relative; padding: 16px 18px 12px; border-radius: 14px; border: 1px solid var(--line); background: var(--panel); cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s; }
+.com-feed { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+.com-post { position: relative; padding: 14px 16px 10px; border-radius: 14px; border: 1px solid var(--line); background: var(--panel); cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s; }
 .com-post:hover { border-color: var(--line-fuerte); box-shadow: 0 12px 30px var(--shadow); }
 .com-post:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .com-post.fijada { border-color: var(--accent-border); box-shadow: 0 0 0 3px var(--accent-soft); }
@@ -99,7 +99,7 @@
 @keyframes com-entra { from { opacity: 0; transform: translateY(-10px) scale(0.985); } }
 @keyframes com-destello { from { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 0 28px var(--accent-soft); } }
 
-.com-post-cabeza { display: flex; align-items: center; gap: 12px; }
+.com-post-cabeza { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
 .com-post-quien { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
 .com-fijada { display: inline-flex; align-items: center; gap: 5px; color: var(--accent); font-size: 12.5px; font-weight: 650; white-space: nowrap; }
 .com-fijada .com-ico { width: 13px; height: 13px; }
@@ -109,9 +109,9 @@
 .com-estado.haciendo { border-color: transparent; background: var(--accent-soft); color: var(--accent); }
 .com-estado.hecha { border-color: transparent; background: var(--ok-soft); color: var(--ok); }
 
-.com-post-cuerpo { display: flex; gap: 16px; margin-top: 12px; }
+.com-post-cuerpo { display: flex; gap: 14px; margin-top: 10px; }
 .com-post-textos { flex: 1; min-width: 0; }
-.com-post-textos h3 { margin: 0 0 4px; font-size: 18px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.3; overflow-wrap: anywhere; }
+.com-post-textos h3 { margin: 0 0 3px; font-size: 17px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.3; overflow-wrap: anywhere; }
 .com-post-textos p { margin: 0; color: var(--text); opacity: 0.86; font-size: 14.5px; line-height: 1.55; white-space: pre-line; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .com-post-textos p.solo { opacity: 1; font-size: 15px; -webkit-line-clamp: 4; line-clamp: 4; }
 .com-post-portada { position: relative; width: 132px; height: 96px; flex: none; overflow: hidden; border-radius: 10px; border: 1px solid var(--line); background: var(--panel-2); }
@@ -121,7 +121,7 @@
 .com-play .com-ico { width: 14px; height: 14px; margin-left: 2px; fill: currentColor; }
 .com-mas-fotos { position: absolute; right: 5px; bottom: 5px; padding: 1px 7px; border-radius: 999px; background: var(--scrim-control); font-size: 11px; font-weight: 700; }
 
-.com-post-pie { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin-top: 12px; color: var(--muted); font-size: 13px; }
+.com-post-pie { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 12px; margin-top: 10px; color: var(--muted); font-size: 13px; }
 .com-gusta { display: inline-flex; align-items: center; gap: 6px; height: 30px; margin-left: -8px; padding: 0 9px; border-radius: 999px; color: var(--muted); font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; transition: color 0.15s, background 0.15s; }
 .com-gusta:hover { background: var(--panel-2); color: var(--text); }
 .com-gusta.on { color: var(--accent); }
@@ -140,21 +140,24 @@
    encoja y el grid se desborda a la derecha, comiéndose el aside o pidiendo scroll horizontal. */
 .com-centro, .com-lado { min-width: 0; }
 .com-lado { position: sticky; top: 36px; }
-.com-comunidad { overflow: hidden; border-radius: 16px; border: 1px solid var(--line); background: var(--panel); }
-.com-comunidad-portada { position: relative; height: 140px; display: grid; place-items: center; background: radial-gradient(60% 80% at 50% 60%, var(--accent-soft), transparent 70%), linear-gradient(180deg, var(--panel-2), var(--panel)); border-bottom: 1px solid var(--line); }
-.com-comunidad-portada img { width: 76px; height: 76px; filter: drop-shadow(0 6px 24px var(--accent-soft)); }
-.com-comunidad-cuerpo { padding: 16px 18px 18px; }
-.com-comunidad-cuerpo h2 { margin: 0 0 6px; font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
-.com-comunidad-cuerpo > p { margin: 0; color: var(--muted); font-size: 13.5px; line-height: 1.55; }
-.com-numeros { display: grid; grid-template-columns: repeat(3, 1fr); margin: 16px 0 0; padding: 14px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); text-align: center; }
-.com-numeros div + div { border-left: 1px solid var(--line); }
-.com-numeros strong { display: block; font-size: 19px; font-weight: 700; font-variant-numeric: tabular-nums; }
-.com-numeros span { color: var(--muted); font-size: 12px; }
-.com-caras { display: flex; flex-wrap: wrap; margin-top: 14px; padding-left: 7px; }
-.com-caras .com-cara { margin-left: -7px; width: 30px; height: 30px; }
-.com-perfil { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 38px; margin-top: 16px; border-radius: 10px; border: 1px solid var(--line); color: var(--text); font-size: 13.5px; font-weight: 650; transition: background 0.15s, border-color 0.15s; }
+/* La comunidad, como un membrete: filete de acento arriba, el logo con el nombre y tu perfil a la derecha,
+   y abajo los números en línea con las caras. Ocupa la mitad que la tarjeta de antes. */
+.com-comunidad { position: relative; overflow: hidden; border-radius: 16px; border: 1px solid var(--line); background: linear-gradient(180deg, var(--panel-2), var(--panel)); }
+.com-comunidad::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--accent), transparent 75%); }
+.com-comunidad-cabeza { display: flex; align-items: center; gap: 12px; padding: 14px 16px 10px; }
+.com-comunidad-cabeza > img { width: 38px; height: 38px; flex: none; filter: drop-shadow(0 4px 14px var(--accent-soft)); }
+.com-comunidad-id { flex: 1; min-width: 0; }
+.com-comunidad-id h2 { margin: 0; font-size: 16px; font-weight: 700; letter-spacing: -0.01em; }
+.com-comunidad-id p { margin: 1px 0 0; color: var(--muted); font-size: 12px; line-height: 1.4; }
+.com-comunidad-pie { display: flex; flex-direction: column; align-items: stretch; gap: 8px; padding: 0 16px 13px; }
+.com-stats { display: flex; flex-direction: column; gap: 3px; color: var(--muted); font-size: 12px; }
+.com-stats b { color: var(--text); font-weight: 650; font-variant-numeric: tabular-nums; }
+.com-comunidad-acciones { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.com-caras { display: inline-flex; padding-left: 7px; }
+.com-caras .com-cara { margin-left: -7px; width: 26px; height: 26px; }
+.com-perfil { display: inline-flex; flex: none; align-items: center; gap: 7px; height: 30px; padding: 0 13px; border-radius: 999px; border: 1px solid var(--line); color: var(--text); font-size: 12.5px; font-weight: 600; transition: background 0.15s, border-color 0.15s; }
 .com-perfil:hover:not(:disabled) { background: var(--panel-2); border-color: var(--line-fuerte); }
-.com-perfil .com-cara.chica { width: 22px; height: 22px; border-width: 1px; }
+.com-perfil .com-cara.chica { width: 20px; height: 20px; border-width: 1px; }
 
 /* Botones chicos: los iconos de una publicación y los del creador. */
 .com-icono { width: 30px; height: 30px; flex: none; display: grid; place-items: center; border-radius: 8px; color: var(--muted); transition: background 0.15s, color 0.15s; }
@@ -279,11 +282,17 @@
 
 @media (max-width: 1080px) {
   .com-rejilla { grid-template-columns: minmax(0, 1fr); max-width: 760px; }
-  .com-lado { display: none; }
+  /* La comunidad no desaparece: el membrete queda arriba del feed, a todo lo ancho. */
+  .com-lado { position: static; order: -1; }
+  .com-comunidad-cabeza { flex-wrap: wrap; }
+  .com-perfil { margin-left: auto; }
 }
 @media (max-width: 720px) {
-  .com-rejilla { padding: 24px 18px 48px; }
-  .com-post-portada { width: 96px; height: 72px; }
+  .com-rejilla { padding: 20px 14px 48px; }
+  .com-post { padding: 12px 14px 8px; }
+  .com-post-portada { width: 88px; height: 64px; }
+  .com-post-portada.vertical { width: 60px; height: 92px; }
+  .com-post-textos h3 { font-size: 16px; }
 }
 
 /* Vota qué sigue: el roadmap de myhermit.vercel.app, debajo de la comunidad */

@@ -38,12 +38,12 @@
 .etapa-rejilla { display: grid; gap: 8px; }
 .etapa-rejilla.c2 { grid-template-columns: 1fr 1fr; }
 .etapa-rejilla.c3 { grid-template-columns: 1fr 1fr 1fr; }
-.etapa-rejilla a { display: block; }
+.etapa-rejilla .etapa-img { display: block; width: 100%; padding: 0; border: 0; background: none; cursor: zoom-in; }
 .etapa-rejilla img, .etapa-rejilla video { display: block; width: 100%; border-radius: 6px; background: var(--panel-2); border: 1px solid var(--line); }
 .etapa-rejilla.c2 img, .etapa-rejilla.c3 img { aspect-ratio: 4 / 3; object-fit: cover; }
 /* Una sola pieza en su rejilla (la portada de la Entrega): se contiene en alto y se centra, para que no obligue a bajar (eje Y). */
-.etapa-rejilla.c1 > a:only-child img { width: auto; max-width: 100%; max-height: min(72vh, 600px); margin: 0 auto; }
-.etapa-rejilla a:hover img { border-color: var(--accent); }
+.etapa-rejilla.c1 > .etapa-img:only-child img { width: auto; max-width: 100%; max-height: min(72vh, 600px); margin: 0 auto; }
+.etapa-rejilla .etapa-img:hover img { border-color: var(--accent); }
 .etapa-nuevo { animation: etapa-entra 0.5s ease-out; }
 @keyframes etapa-entra { from { opacity: 0; transform: scale(0.97); filter: blur(4px); } }
 
@@ -51,8 +51,6 @@
 .etapa-html { display: flex; flex-direction: column; gap: 8px; width: 100%; margin-top: 6px; }
 .etapa-html-barra { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 6px 12px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; font-size: 12px; }
 .etapa-html-titulo { font-weight: 600; color: var(--text); }
-.etapa-html-abrir { padding: 0; border: 0; background: none; color: var(--accent); font: inherit; font-weight: 500; cursor: pointer; }
-.etapa-html-abrir:hover { text-decoration: underline; }
 .etapa-html-iframe { width: 100%; height: 560px; border: 1px solid var(--line); border-radius: var(--radio); background: var(--panel); }
 
 /* Un JSON de la etapa (el payload del artículo): formateado y en mono, para revisarlo de un vistazo. */
@@ -64,10 +62,10 @@
 }
 
 /* Cuando una etapa deja varios textos (articulo.md y articulo.json), arriba se cambia cuál ver. */
-.etapa-textos { display: inline-flex; gap: 2px; margin-bottom: 8px; padding: 3px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); }
+.etapa-textos { display: flex; flex-wrap: wrap; gap: 2px; margin-bottom: 8px; padding: 3px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); }
 .etapa-textos button {
-  padding: 3px 12px; border-radius: 999px; font-family: var(--mono); font-size: 11.5px;
-  color: var(--muted); transition: color 0.15s, background 0.15s;
+  max-width: 240px; overflow: hidden; padding: 3px 12px; border-radius: 999px; font-family: var(--mono); font-size: 11.5px;
+  color: var(--muted); white-space: nowrap; text-overflow: ellipsis; transition: color 0.15s, background 0.15s;
 }
 .etapa-textos button:hover { color: var(--text); }
 .etapa-textos button.on { color: var(--accent); background: var(--accent-soft); }

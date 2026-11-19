@@ -18,9 +18,11 @@ export function useDesplazando(ref: RefObject<HTMLElement | null>) {
         t = 0
       }, 200)
     }
-    el.addEventListener('scroll', alDesplazar, { passive: true })
+    // El scroll no burbujea pero sí baja en captura: así vale tanto si scrollea la propia rejilla
+    // como un ancestro (el estante de Nuevo chat scrollea la página, no cada grupo).
+    window.addEventListener('scroll', alDesplazar, { capture: true, passive: true })
     return () => {
-      el.removeEventListener('scroll', alDesplazar)
+      window.removeEventListener('scroll', alDesplazar, { capture: true })
       clearTimeout(t)
     }
   }, [ref])

@@ -55,7 +55,7 @@
 .mis-filtros button:hover { color: var(--text); border-color: var(--line-fuerte); }
 .mis-filtros button.on { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
 .mis-filtros .cuantos { font-size: 11px; font-variant-numeric: tabular-nums; opacity: 0.7; }
-.video-estilo { margin-right: 6px; }
+.video-estilo { display: inline-flex; align-items: center; gap: 4px; margin-right: 6px; color: var(--muted); font-weight: 600; white-space: nowrap; }
 /* «Eliminar los que ya se programaron»: discreto hasta que pasas por encima. */
 .mis-eliminar { flex-shrink: 0; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); font-size: 13px; font-weight: 600; transition: color 0.15s, border-color 0.15s; }
 .mis-eliminar:hover { color: var(--bad); border-color: var(--bad); }

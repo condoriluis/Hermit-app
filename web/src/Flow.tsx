@@ -109,7 +109,7 @@ export type UsoFlow = ReturnType<typeof useFlow>
 const POR_QUE: Record<NonNullable<CuentaEnFlow['descansa']>['motivo'], string> = { creditos: 'Sin créditos de video', frenada: 'Flow la frenó', sesion: 'Sin sesión', navegador: 'Fallo del navegador' }
 const hora = (ms: number) => new Date(ms).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
 
-const videos = (g: GastoFlow) => `${g.videos} ${g.videos === 1 ? 'video' : 'videos'} (${g.creditos} créditos)`
+const videos = (g: GastoFlow) => `${g.videos} ${g.videos === 1 ? 'video' : 'videos'} (${g.creditos} créditos)${g.imagenes ? ` · ${g.imagenes} ${g.imagenes === 1 ? 'imagen' : 'imágenes'}` : ''}`
 
 /**
  * Lo que le queda a una cuenta ahora (`queda`, lo vigente del servidor). Si su número ya venció (`piso`), Flow ya la
@@ -126,7 +126,7 @@ function cuantoLeQueda(c: CuentaEnFlow): string {
 
 /** Cómo está una cuenta, y la clase de su punto (`.estado`). */
 function comoEsta(c: CuentaEnFlow): [string, string] {
-  const hoy = c.hoy.videos ? ` · hoy ${c.hoy.videos} ${c.hoy.videos === 1 ? 'video' : 'videos'}` : ''
+  const hoy = c.hoy.videos || c.hoy.imagenes ? ` · hoy ${[c.hoy.videos ? `${c.hoy.videos} ${c.hoy.videos === 1 ? 'video' : 'videos'}` : '', c.hoy.imagenes ? `${c.hoy.imagenes} ${c.hoy.imagenes === 1 ? 'imagen' : 'imágenes'}` : ''].filter(Boolean).join(' y ')}` : ''
   const extra = ` · ${cuantoLeQueda(c)}${hoy}`
   if (c.generando) return [`Generando${extra}`, 'moviendo']
   if (c.descansa) return [`${POR_QUE[c.descansa.motivo]} · vuelve a probar a las ${hora(c.descansa.hasta)}${hoy}`, 'falta']

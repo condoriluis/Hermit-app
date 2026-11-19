@@ -17,7 +17,7 @@ const HERRAMIENTAS = [
   {
     name: 'generar_imagen',
     description:
-      'Genera UNA imagen en Google Flow, con las cuentas de Google del usuario, y deja el JPEG en `salida` (1024×1024 en 1:1, 768×1376 en 9:16). Con `referencias`, edita esas fotos o sigue su estilo: el mismo personaje, la misma escena. Las imágenes no gastan créditos. Tarda de 20 a 90 s, más con referencias; si no acaba en 40 s, devuelve un id para esperarla con estado_flow. Si nada cambió desde el último archivo de esa ruta, sale al momento.',
+      'Genera UNA imagen en Google Flow, con las cuentas de Google del usuario, y deja el JPEG en `salida` (1024×1024 en 1:1, 768×1376 en 9:16). Con `referencias`, edita esas fotos o sigue su estilo: el mismo personaje, la misma escena. Las imágenes no gastan créditos. Si necesitas varias del mismo sujeto (poses, variantes, un set), pide una hoja de contacto con varios paneles en una sola imagen y divídela en local: cada llamada cuenta para el límite de ritmo de Flow. Tarda de 20 a 90 s, más con referencias; si no acaba en 40 s, devuelve un id para esperarla con estado_flow. Si nada cambió desde el último archivo de esa ruta, sale al momento.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -87,9 +87,10 @@ function saldos(e) {
     const s = c.saldo
     const cuanto = !s ? 'aún no se sabe cuánto le queda' : s.renueva && s.renueva <= ahora ? `ya se le renovaron los créditos (a las ${hora(s.renueva)})` : `${s.creditos} créditos${s.renueva ? `, se renuevan a las ${hora(s.renueva)}` : ''}`
     const descansa = c.descansa ? `; no genera videos hasta las ${hora(c.descansa.hasta)}` : ''
-    return `- ${c.correo}: ${cuanto}${descansa}. Hoy, ${c.hoy.videos} ${c.hoy.videos === 1 ? 'video' : 'videos'}.`
+    const suHoy = [c.hoy.videos ? `${c.hoy.videos} ${c.hoy.videos === 1 ? 'video' : 'videos'}` : '', c.hoy.imagenes ? `${c.hoy.imagenes} ${c.hoy.imagenes === 1 ? 'imagen' : 'imágenes'}` : ''].filter(Boolean).join(' y ')
+    return `- ${c.correo}: ${cuanto}${descansa}.${suHoy ? ` Hoy, ${suHoy}.` : ''}`
   })
-  return `${renglones.join('\n')}\nEntre las que se saben, quedan ${e.quedan} créditos. Hoy van ${e.uso.hoy.videos} videos (${e.uso.hoy.creditos} créditos); este mes, ${e.uso.mes.videos} (${e.uso.mes.creditos}).`
+  return `${renglones.join('\n')}\nEntre las que se saben, quedan ${e.quedan} créditos. Hoy van ${e.uso.hoy.videos} videos (${e.uso.hoy.creditos} créditos)${e.uso.hoy.imagenes ? ` y ${e.uso.hoy.imagenes} imágenes` : ''}; este mes, ${e.uso.mes.videos} (${e.uso.mes.creditos}).`
 }
 
 async function generar(tipo, datos) {

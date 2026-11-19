@@ -22,6 +22,7 @@ input, textarea, select { font: inherit; color: inherit; }
 .muted { color: var(--muted); }
 .small { font-size: 12px; }
 .bad { color: var(--bad); }
+.warn { color: var(--warn); }
 .spacer { flex: 1; }
 .link { color: var(--muted); }
 .link:hover { color: var(--text); }
@@ -131,14 +132,16 @@ input, textarea, select { font: inherit; color: inherit; }
    ratón) o su última imagen; sin ella, su icono y qué hace. Abajo, sobre una sombra, el nombre y cuánto se usa. */
 /* Crece con sus cards: quien scrollea es .new-top. */
 .estante { flex: none; display: flex; flex-direction: column; gap: 10px; }
-/* Un grupo a la vez: la pestaña activa lleva una línea fina, sin fondos ni más cajas. */
-.cards-tabs { flex: none; display: flex; align-items: baseline; gap: 18px; margin: 0 6px; border-bottom: 1px solid var(--line); }
-.cards-tab { position: relative; padding-bottom: 7px; color: var(--muted); font-size: 12.5px; font-weight: 600; white-space: nowrap; transition: color 0.15s; }
-.cards-tab:hover { color: var(--text); }
-.cards-tab[aria-pressed='true'] { color: var(--text); }
-.cards-tab[aria-pressed='true']::after { content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; border-radius: 2px; background: var(--accent); }
-.cards-tab .cuenta { margin-left: 5px; color: var(--muted); font-size: 11px; font-weight: 500; }
-.cards { min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); grid-auto-rows: max-content; gap: 14px; margin: 0 -6px; padding: 4px 6px 6px; }
+/* El filtro del estante: botones píldora centrados; el activo se rellena en menta suave. Debajo, solo su grupo. */
+.estantes { display: flex; flex-direction: column; gap: 14px; }
+.estantes-filtro { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; }
+.estante-filtro { display: inline-flex; align-items: center; gap: 7px; height: 34px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--muted); font-size: 12.5px; font-weight: 600; white-space: nowrap; transition: color 0.15s, background 0.15s, border-color 0.15s; }
+.estante-filtro .ico { width: 13px; height: 13px; }
+.estante-filtro .cuenta { color: var(--muted); font-size: 11px; font-weight: 500; }
+.estante-filtro:hover { color: var(--text); border-color: var(--line-fuerte); }
+.estante-filtro.on { background: var(--accent-soft); border-color: var(--accent-border); color: var(--accent); }
+.estante-filtro.on .cuenta { color: var(--accent); }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); grid-auto-rows: max-content; gap: 14px; }
 .card { position: relative; aspect-ratio: 3 / 4; overflow: hidden; isolation: isolate; border-radius: 14px; border: 1px solid var(--line); background: var(--panel-2); text-align: left; transition: border-color 0.15s, transform 0.15s; }
 .card:hover { border-color: var(--line-fuerte); transform: translateY(-2px); }
 .card.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
@@ -153,6 +156,16 @@ input, textarea, select { font: inherit; color: inherit; }
 .card.active .card-title { color: var(--accent-hover); }
 .card-uso { font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .card-uso.vivo { color: var(--accent); }
+/* Cinta de esquina para las cards que gastan créditos de Flow: diagonal ámbar sobre la esquina superior derecha. */
+.card-cinta { position: absolute; top: 0; right: 0; z-index: 1; width: 78px; height: 78px; overflow: hidden; pointer-events: none; }
+.card-cinta > span {
+  position: absolute; top: 18px; left: -20px; width: 142px; height: 18px;
+  display: flex; align-items: center; justify-content: center;
+  transform: rotate(45deg);
+  background: var(--warn); color: var(--on-solid);
+  font-size: 9px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; white-space: nowrap;
+  box-shadow: 0 1px 4px var(--shadow);
+}
 .card-actions { position: absolute; top: 8px; right: 8px; z-index: 2; display: flex; gap: 2px; opacity: 0; transition: opacity 0.15s; }
 .card:hover .card-actions, .card:focus-visible .card-actions { opacity: 1; }
 .card-actions span { width: 24px; height: 24px; display: grid; place-items: center; border-radius: 6px; background: var(--scrim-control); color: var(--text); font-size: 12px; }
@@ -218,8 +231,11 @@ input, textarea, select { font: inherit; color: inherit; }
 .tool-mirada { display: block; margin: 2px 0 8px 26px; max-width: min(100% - 26px, 420px); border: 1px solid var(--line); border-radius: var(--radio); overflow: hidden; background: var(--panel); cursor: zoom-in; }
 .tool-mirada:hover { border-color: var(--accent); }
 .tool-mirada img { display: block; width: 100%; max-height: 220px; object-fit: contain; }
-.lightbox { position: fixed; inset: 0; z-index: 50; background: var(--scrim-fuerte); display: grid; place-items: center; padding: 40px; cursor: zoom-out; }
+.lightbox { position: fixed; inset: 0; z-index: 50; background: var(--scrim-fuerte); display: flex; align-items: center; justify-content: center; padding: 40px; cursor: zoom-out; }
 .lightbox img, .lightbox video { max-width: 100%; max-height: 100%; border-radius: var(--radio); box-shadow: 0 20px 60px var(--shadow); }
+.lightbox-x { position: absolute; top: 16px; right: 16px; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 9px; background: var(--scrim-control); border: 1px solid var(--line); color: var(--text); cursor: pointer; }
+.lightbox-x:hover { background: var(--panel-2); border-color: var(--muted); }
+.lightbox-x .ico { width: 15px; height: 15px; }
 /* «Uso»: un botón con cara de botón (no un % que parezca avance); abre con clic la tarjeta del chat y del plan. */
 .uso { position: relative; flex: none; }
 .uso > .picker-trigger { gap: 6px; padding: 0 10px; background: var(--panel); color: var(--text); }
@@ -272,6 +288,11 @@ input, textarea, select { font: inherit; color: inherit; }
 a.link-chip:hover { border-color: var(--accent); }
 .composer-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 6px; }
 .composer-bar .picker-trigger { white-space: nowrap; }
+/* Las opciones del estilo (serie, formato, voz…) las muestra el composer con la clase `visible`,
+   que pone su estado de React: foco dentro, un selector abierto o algo escrito. display:contents
+   las devuelve a la barra como si no hubiera envoltorio. */
+.composer-extra { display: none; }
+.composer-extra.visible { display: contents; }
 /* Un grupo de botones donde solo uno está elegido (`Segmento`): el formato, la duración, el modo del modelo… */
 .segmento { display: flex; border: 1px solid var(--line); border-radius: 999px; padding: 2px; font-size: 12px; }
 .segmento button { padding: 2px 10px; border-radius: 999px; color: var(--muted); transition: background 0.15s, color 0.15s; white-space: nowrap; }
@@ -293,6 +314,9 @@ a.link-chip:hover { border-color: var(--accent); }
 .formato-ico { flex: none; display: inline-block; border: 1.5px solid var(--muted); border-radius: 3px; background: var(--panel-2); }
 .formato-ico.vertical { width: 9px; height: 15px; }
 .formato-ico.horizontal { width: 15px; height: 9px; }
+.formato-ico.cuadrada { width: 11px; height: 11px; }
+.formato-ico.cuatro-tres { width: 14px; height: 10px; }
+.formato-ico.tres-cuartos { width: 10px; height: 14px; }
 .formato-picker .picker-option.on .formato-ico { border-color: var(--accent); }
 .formato-trigger { display: inline-flex; align-items: center; gap: 6px; }
 .formato-op { display: flex; align-items: center; gap: 10px; }

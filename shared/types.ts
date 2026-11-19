@@ -41,6 +41,12 @@ export interface Card {
    */
   musica?: true
   /**
+   * Su video se arma con clips de Google Flow (`generar_video`, gastan créditos): el compositor deja elegir el modelo
+   * en «Clips» y la línea `Duración:` habla de repartir clips de 8 s. Sin esto, la card arma su video con material de
+   * archivo, un mundo 3D o imágenes fijas: no hay clips que elegir ni que repartir (`video-base/DURACION.md`).
+   */
+  clips?: boolean
+  /**
    * Lo que el agente de Claude de esta card no ve: herramientas (`NotebookEdit`, `mcp__21st__bookmark`) o servidores MCP
    * enteros (`mcp__openseo`), también los del usuario. Sale de lo que sus hilos nunca usaron: menos herramientas
    * ofrecidas, menos contexto en cada mensaje.
@@ -297,6 +303,10 @@ export interface Avance {
   monitor?: { motor?: { url: string; v: number; armando: boolean; error?: string }; vivo?: { url: string; t: number }; renders: Render[] }
   /** Los videos terminados del hilo, los que se descargan. */
   finales?: VideoFinal[]
+  /** El % del render en curso (0–100): lo escribe el script del estilo en `out/_render.progreso`; el monitor lo muestra llenando el borde del video. */
+  progresoRender?: number
+  /** La fuente que baja o transcribe (`fuente.py` de video-base): su fase y, al descargar, el % con MB, velocidad y ETA (en la carpeta de cada fuente, `_progreso.json`). */
+  fuente?: { fase?: string; porcentaje?: number; detalle?: string }
 }
 
 /**
@@ -1530,6 +1540,8 @@ export interface SaldoFlow {
 export interface GastoFlow {
   videos: number
   creditos: number
+  /** Las imágenes hechas (no gastan créditos, pero cada una cuenta para el ritmo de Flow). */
+  imagenes?: number
 }
 
 /**

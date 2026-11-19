@@ -1,6 +1,6 @@
 import { Fragment, type ReactNode, useLayoutEffect, useRef, useState, useEffect, useCallback } from 'react'
 import { esDeEstudio } from '../../shared/etapas'
-import { esDeVideo, FASES, type AgentEvent, type Card, type Fase, type SessionMeta } from '../../shared/types'
+import { esDeVideo, FASES, type AgentEvent, type Avance, type Card, type Fase, type SessionMeta } from '../../shared/types'
 import { Editor } from './Editor'
 import { useEscritos, useEventos } from './eventos'
 import { CarpetaDelHilo, EtapaCuerpo, useAvance, usePasos, type Pasos } from './Etapas'
@@ -181,12 +181,15 @@ export function Estudio({ session, card, head, chat }: { session: SessionMeta; c
             fase={fases.find((f) => f.id === vista)!}
             siguiendo={!elegida}
             arriba={
-              vista === 'entrega' &&
-              (card.produce === 'presentacion' || card.produce === 'imagen' || card.produce === 'articulo' ? (
-                <EntregaPieza session={session} card={card} carpeta={avance.carpeta} archivos={entrega} />
-              ) : (
-                <Final session={session} card={card} carpeta={avance.carpeta} finales={finales} />
-              ))
+              <>
+                {avance.fuente && <ProgresoFuente f={avance.fuente} />}
+                {vista === 'entrega' &&
+                  (card.produce === 'presentacion' || card.produce === 'imagen' || card.produce === 'articulo' ? (
+                    <EntregaPieza session={session} card={card} carpeta={avance.carpeta} archivos={entrega} />
+                  ) : (
+                    <Final session={session} card={card} carpeta={avance.carpeta} finales={finales} />
+                  ))}
+              </>
             }
           />
         )
@@ -259,6 +262,24 @@ function FaseCentro({ sessionId, p, fase, siguiendo, arriba }: { sessionId: stri
           </section>
         ))}
       </div>
+    </div>
+  )
+}
+
+/** La fuente que baja o transcribe (`fuente.py` de video-base): su % en vivo encima de las etapas, como el render en el monitor. */
+function ProgresoFuente({ f }: { f: NonNullable<Avance['fuente']> }) {
+  const pct = typeof f.porcentaje === 'number' ? Math.max(0, Math.min(100, f.porcentaje)) : undefined
+  return (
+    <div className="fuente-progreso">
+      <div className="fuente-progreso-fila">
+        <span className="spinner" />
+        <span className="fuente-progreso-txt">
+          {f.fase === 'transcribiendo' ? 'Transcribiendo el video' : 'Descargando el video'}
+          {pct !== undefined && ` · ${Math.round(pct)}%`}
+        </span>
+        {f.detalle && <span className="muted small fuente-progreso-detalle">{f.detalle}</span>}
+      </div>
+      {pct !== undefined && <div className="fuente-progreso-barra"><i style={{ width: `${pct}%` }} /></div>}
     </div>
   )
 }

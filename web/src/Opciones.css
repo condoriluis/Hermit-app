@@ -39,6 +39,7 @@
 .fila-nombre { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .fila-nombre strong { font-size: 13.5px; font-weight: 600; }
 .beta { margin-left: 7px; padding: 1px 6px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: 10.5px; }
+.gratis { margin-left: 7px; padding: 1px 6px; border-radius: 999px; background: var(--ok-soft); color: var(--ok); font-size: 10.5px; }
 .fila-nombre > span { color: var(--muted); font-size: 12px; }
 .fila-nombre > span.falta { color: var(--warn); }
 .una-linea { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

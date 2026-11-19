@@ -10,7 +10,7 @@ const ES_MAC = /Mac/.test(navigator.platform) || /Mac OS X/.test(navigator.userA
 
 /**
  * La cabecera fija (40px): a la izquierda la marca, plegar la barra y atrás/adelante; en el centro, Buscar (Ctrl+K);
- * a la derecha, la actualización de los agentes, los créditos de Flow, Opciones, la cuenta y —solo en Windows y
+ * a la derecha, las actualizaciones (agentes y app), los créditos de Flow, la comunidad, Opciones y —solo en Windows y
  * Linux, donde la barra de título está oculta— los controles de ventana. En la app también se puede arrastrar.
  */
 export function Cabecera({
@@ -78,12 +78,9 @@ export function Cabecera({
         )}
       </label>
       <div className="topbar-der">
-        <ActualizarHermit />
         <AvisoAgentes />
+        <ActualizarHermit />
         <CreditosFlow />
-        <button className={`topbar-btn${enOpciones ? ' on' : ''}`} title="Opciones" aria-label="Opciones" aria-current={enOpciones || undefined} onClick={onOpciones}>
-          <Icono de="ajustes" />
-        </button>
         <button
           className="topbar-btn"
           title={avisosComunidad ? `Comunidad · ${avisosComunidad} ${avisosComunidad === 1 ? 'aviso' : 'avisos'} sin leer` : 'Comunidad'}
@@ -92,6 +89,9 @@ export function Cabecera({
         >
           <Icono de="personas" />
           {avisosComunidad > 0 && <span className="topbar-cuenta">{avisosComunidad > 99 ? '99+' : avisosComunidad}</span>}
+        </button>
+        <button className={`topbar-btn${enOpciones ? ' on' : ''}`} title="Opciones" aria-label="Opciones" aria-current={enOpciones || undefined} onClick={onOpciones}>
+          <Icono de="ajustes" />
         </button>
         {!ES_MAC && <VentanaControles />}
       </div>

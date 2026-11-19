@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { createContext, type ReactNode, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { GastoFlow, Model } from '../../shared/types'
 import { proveedorDe, type Proveedor } from '../../shared/providers'
 import { imageUrl, Thumbs, type Attached } from './Images'
@@ -334,6 +334,9 @@ function Uso({ used, max, proveedor, flow, onCompactar }: { used: number; max: n
  * (el compositor suele vivir abajo), salvo que arriba no quepa: en «Nuevo chat» el compositor está cerca del borde.
  * Se cierra al elegir, al hacer clic fuera o con Escape. También lo usa Opciones → Redes.
  */
+/** Un selector de la barra avisa al composer cuando su menú se abre o cierra. */
+const MenusContexto = createContext<((abierto: boolean) => void) | null>(null)
+
 export function Picker(props: {
   label: ReactNode
   className?: string
@@ -351,6 +354,13 @@ export function Picker(props: {
   const [place, setPlace] = useState({ down: false, max: 360, left: 0, edge: 0, width: 280 })
   const root = useRef<HTMLDivElement>(null)
   const menu = useRef<HTMLDivElement>(null)
+  const avisar = useContext(MenusContexto)
+  const estaba = useRef(false)
+  useEffect(() => {
+    avisar?.(open)
+    estaba.current = open
+  }, [open, avisar])
+  useEffect(() => () => void (estaba.current && avisar?.(false)), [avisar])
 
   const toggle = () => {
     if (!open && root.current) {
@@ -432,6 +442,9 @@ export function Picker(props: {
                   className={`picker-option ${o.value === props.value ? 'on' : ''}`}
                   onClick={() => {
                     setOpen(false)
+                    // El foco vuelve al trigger: si se queda en la opción, al desmontarse el menú cae a body
+                    // y el composer pierde :focus-within (las opciones del estilo se esconderían).
+                    root.current?.querySelector<HTMLButtonElement>('.picker-trigger')?.focus()
                     if (o.value !== props.value) props.onChange(o.value)
                   }}
                 >
@@ -501,8 +514,11 @@ export function Composer(props: {
   const [error, setError] = useState('')
   const [dragging, setDragging] = useState(false)
   const [elegir, setElegir] = useState(false)
+  const [enfocado, setEnfocado] = useState(false)
+  const [menus, setMenus] = useState(0)
   const box = useRef<HTMLDivElement>(null)
   const picker = useRef<HTMLInputElement>(null)
+  const avisarMenu = useCallback((abierto: boolean) => setMenus((n) => Math.max(0, n + (abierto ? 1 : -1))), [])
 
   useEffect(() => {
     if (!own && props.initial) setChoice(props.initial)
@@ -598,7 +614,11 @@ export function Composer(props: {
   const model = props.models.find((m) => m.id === choice?.model)
 
   const empty = !props.vacio && !text.trim() && !images.length
+  const tieneAlgo = !!text.trim() || images.length > 0
   const trabajando = props.running || props.background
+  // Las opciones del estilo (serie, formato, voz…) se muestran mientras el composer está en uso:
+  // con el foco dentro, con un selector abierto o con algo escrito. Lo decide este estado, no el CSS.
+  const extraVisible = enfocado || menus > 0 || tieneAlgo
 
   async function submit() {
     if (empty || !choice || busy || uploading || props.bloqueo) return
@@ -682,8 +702,13 @@ export function Composer(props: {
   }
 
   return (
+    <MenusContexto.Provider value={avisarMenu}>
     <div
       className={`composer ${dragging ? 'dragging' : ''}`}
+      onFocus={() => setEnfocado(true)}
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setEnfocado(false)
+      }}
       onDragOver={(e) => (e.preventDefault(), setDragging(true))}
       onDragLeave={() => setDragging(false)}
       onDrop={(e) => {
@@ -701,7 +726,7 @@ export function Composer(props: {
         }}
       />
       <div className="editor">
-        {!text && !images.some((i) => i.chip) && (
+        {!text.trim() && !images.some((i) => i.chip) && (
           <span className="placeholder">{props.running ? 'Enter le llega ya, en mitad del turno' : props.placeholder}</span>
         )}
         <div
@@ -775,7 +800,7 @@ export function Composer(props: {
         )}
           </>
         )}
-        {props.extra}
+        {props.extra != null && <div className={`composer-extra ${extraVisible ? 'visible' : ''}`}>{props.extra}</div>}
         <span className="spacer" />
         {props.context && <Uso {...props.context} proveedor={proveedorDe(choice?.model ?? '')} flow={props.flow} onCompactar={props.onCompactar} />}
         {uploading > 0 && <span className="muted small">Subiendo…</span>}
@@ -798,5 +823,6 @@ export function Composer(props: {
       </div>
       {elegir && <ElegirImagen onCerrar={() => setElegir(false)} onAdjuntar={(p) => (setElegir(false), adjuntarServidor(p))} />}
     </div>
+    </MenusContexto.Provider>
   )
 }

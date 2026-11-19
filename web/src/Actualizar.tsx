@@ -79,13 +79,13 @@ export function AvisoAgentes() {
   if (a?.actualizando)
     return (
       <button className="topbar-btn" disabled title={a.actualizando} aria-label={a.actualizando}>
-        <Icono de="reabrir" />
+        <Icono de="descargar" />
       </button>
     )
   if (!a?.nuevos.length)
     return a?.error ? (
       <button className="topbar-btn mal" title={a.error} aria-label={a.error}>
-        <Icono de="reabrir" />
+        <Icono de="descargar" />
       </button>
     ) : null
   const nombres = a.nuevos.map((n) => n.nombre)
@@ -94,7 +94,7 @@ export function AvisoAgentes() {
   return (
     <>
       <button className="topbar-btn aviso" title={`${titulo}\n${versiones}`} aria-label={titulo} onClick={() => setPreguntar(true)}>
-        <Icono de="reabrir" />
+        <Icono de="descargar" />
         <span className="punto-aviso" />
       </button>
       {preguntar && (

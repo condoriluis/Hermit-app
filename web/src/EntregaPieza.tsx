@@ -23,7 +23,6 @@ const CAMBIOS_PRESENTACION: Config['cambios'] = [
   { texto: 'Hazla más corta', pide: 'Hazla más corta: quita las diapositivas que sobren y deja lo esencial, sin perder el mensaje ni el cierre.' },
   { texto: 'Más visual', pide: 'Hazla más visual: más imágenes y menos texto por diapositiva, con el mismo contenido.' },
   { texto: 'Cambia el estilo', pide: 'Cambia el estilo visual: otros colores, tipografía y distribución, manteniendo el contenido y las imágenes que sirvan.' },
-  { texto: 'Reescribe el guion', pide: 'Reescribe el guion: mismo tema, mejor estructura y textos más claros y contundentes.' }
 ]
 
 const CAMBIOS_IMAGEN: Config['cambios'] = [
@@ -39,8 +38,7 @@ const CAMBIOS_ARTICULO: Config['cambios'] = [
 
 const BOTONES_PRESENTACION: Record<string, Boton> = {
   '.pptx': { texto: 'Descargar PowerPoint', descarga: true, principal: true },
-  '.pdf': { texto: 'Descargar PDF', descarga: true },
-  '.html': { texto: 'Ver la vista previa', descarga: false }
+  '.pdf': { texto: 'Descargar PDF', descarga: true }
 }
 
 const BOTONES_IMAGEN: Record<string, Boton> = {
@@ -50,9 +48,7 @@ const BOTONES_IMAGEN: Record<string, Boton> = {
   '.webp': { texto: 'Descargar imagen', descarga: true }
 }
 
-const BOTONES_ARTICULO: Record<string, Boton> = {
-  '.html': { texto: 'Ver la vista previa', descarga: false }
-}
+const BOTONES_ARTICULO: Record<string, Boton> = {}
 
 /** No pisa la actual: el servidor pasa el hilo a una carpeta nueva y se lo dice al agente (`otraVersion` en etapas.ts). */
 const VERSION = 'Haz otra versión'
@@ -136,23 +132,7 @@ export function EntregaPieza({ session, card, carpeta, archivos }: { session: Se
               </svg>
               {b.texto}
             </a>
-          ) : ext(a.ruta) === '.html' ? (
-            // La vista previa se abre como archivo, con la app del sistema: un enlace a `/api/…` es localhost y la
-            // seguridad de Hermit lo bloquea fuera de su ventana.
-            <button key={a.ruta} className={`final-boton ${esPrincipal ? 'principal' : ''}`} onClick={() => abrir(`${carpeta}/${a.ruta}`, true)} title="Abrirla en el navegador">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14 4h6v6M20 4 10 14M9 5H5a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1h13a1 1 0 0 0 1-1v-4" />
-              </svg>
-              {b.texto}
-            </button>
-          ) : (
-            <a key={a.ruta} className="final-boton" href={src(a)} target="_blank" rel="noreferrer" title="Abrirla en una pestaña nueva">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14 4h6v6M20 4 10 14M9 5H5a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1h13a1 1 0 0 0 1-1v-4" />
-              </svg>
-              {b.texto}
-            </a>
-          )
+          ) : null
         })}
         {card.produce === 'articulo' && publicado && (
           <a className="final-boton principal" href={publicado} target="_blank" rel="noreferrer" title="Abrir el artículo en tu blog">

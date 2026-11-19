@@ -7,6 +7,7 @@ import { NOMBRE_AGENTE, proveedorDe } from '../../shared/providers'
 import { AvisoVideos } from './AvisoVideos'
 import { VENTA } from '../../shared/venta'
 import { Ideas } from './Ideas' // ideas
+import { Clips } from './Clips' // clips
 import { textoAHtml } from './markdown'
 import { CuentaClaude, Opciones, Requisitos, useCuentasConectadas, useSinClaude } from './Opciones'
 import { api } from './api'
@@ -35,7 +36,7 @@ import { MisPresentaciones } from './MisPresentaciones'
 import { Modelos3D } from './Modelos3D' // modelos 3D
 import { abrirPublicacion, Comunidad } from './Comunidad' // comunidad
 import { PedirMejora } from './PedirMejora' // comunidad
-import { Icono } from './Iconos'
+import { Icono, type NombreIcono } from './Iconos'
 import { Bienvenida } from './Bienvenida'
 import { Novedades } from './Novedades'
 import { MarcaAgente } from './Logos'
@@ -61,12 +62,32 @@ type View =
   | { kind: 'session'; id: string }
   | { kind: 'opciones' }
   | { kind: 'ideas'; canalId?: string }
+  | { kind: 'clips' } // clips de videos ajenos o propios
   | { kind: 'galeria'; tipo: TipoPieza; estilo?: string }
   | { kind: 'modelos3d' } // modelos 3D
   | { kind: 'comunidad' } // comunidad
 
 /** La ruta de cada galería en el hash. Su `tipo` es el `produce` de las cards que la llenan. */
 const RUTA_GALERIA: Record<TipoPieza, string> = { video: 'mis-videos', imagen: 'mis-imagenes', articulo: 'mis-articulos', presentacion: 'mis-presentaciones' }
+
+/** Una opción del selector de formato: lo que se guarda, cómo se nombra y su icono (clase de `.formato-ico`). */
+type FormatoOpcion = { valor: string; nombre: string; detalle: string; ico: string }
+/** Video y presentaciones: solo los dos encuadres que sus pipelines componen (`FORMATOS_VIDEO` en shared/flow.ts). */
+const FORMATOS_ENCUEADRE: FormatoOpcion[] = [
+  { valor: 'vertical', nombre: 'Vertical', detalle: '9:16 · TikTok, Shorts', ico: 'vertical' },
+  { valor: 'horizontal', nombre: 'Horizontal', detalle: '16:9 · YouTube', ico: 'horizontal' }
+]
+/** Imágenes: las cinco proporciones que `generar_imagen` compone nativas (`FORMATOS_IMAGEN` en shared/flow.ts). */
+const FORMATOS_IMAGEN: FormatoOpcion[] = [
+  { valor: '9:16', nombre: 'Vertical', detalle: '9:16 · TikTok, Shorts', ico: 'vertical' },
+  { valor: '16:9', nombre: 'Horizontal', detalle: '16:9 · YouTube', ico: 'horizontal' },
+  { valor: '1:1', nombre: 'Cuadrada', detalle: '1:1 · feed, posts', ico: 'cuadrada' },
+  { valor: '4:3', nombre: '4:3', detalle: '4:3 · foto clásica', ico: 'cuatro-tres' },
+  { valor: '3:4', nombre: '3:4', detalle: '3:4 · retrato', ico: 'tres-cuartos' }
+]
+/** Los nombres de antes y los de la idea escrita (`Formato: vertical`, `cuadrada`) en la proporción que equivalen. */
+const formatoReal = (f: string, imagen: boolean) =>
+  imagen ? (({ vertical: '9:16', horizontal: '16:9', cuadrada: '1:1' } as Record<string, string>)[f] ?? f) : f
 
 /** Lo que se escribió en un hilo nuevo sin mandarlo. Vive en localStorage hasta que se manda o se borra. */
 type Saved = Draft & { cardId: string; at: number }
@@ -83,6 +104,7 @@ function readHash(): View {
   if (kind === 'd' && id) return { kind: 'draft', id }
   if (kind === 'opciones') return { kind: 'opciones' }
   if (kind === 'ideas') return { kind: 'ideas', canalId: id || undefined }
+  if (kind === 'clips') return { kind: 'clips' }
   if (kind === 'mis-videos') return { kind: 'galeria', tipo: 'video', estilo: id || undefined }
   if (kind === 'mis-imagenes') return { kind: 'galeria', tipo: 'imagen' }
   if (kind === 'mis-articulos') return { kind: 'galeria', tipo: 'articulo' }
@@ -102,6 +124,8 @@ function go(view: View) {
           ? '/opciones'
           : view.kind === 'ideas'
             ? `/ideas${view.canalId ? `/${view.canalId}` : ''}`
+            : view.kind === 'clips'
+              ? '/clips'
             : view.kind === 'galeria'
               ? `/${RUTA_GALERIA[view.tipo]}${view.tipo === 'video' && view.estilo ? `/${view.estilo}` : ''}`
               : view.kind === 'modelos3d' // modelos 3D
@@ -516,6 +540,14 @@ export function App() {
             Ideas
           </button>
         )}
+        {!VENTA && (
+          <button className={`new-chat${view.kind === 'clips' ? ' active' : ''}`} onClick={() => go({ kind: 'clips' })} title={plegada ? 'Clips' : undefined}>
+            <span className="new-chat-icon">
+              <Icono de="tramo" />
+            </span>{' '}
+            Clips
+          </button>
+        )}
         <button
           className={`new-chat${view.kind === 'galeria' && view.tipo === 'video' ? ' active' : ''}`}
           onClick={() => go({ kind: 'galeria', tipo: 'video' })}
@@ -669,6 +701,7 @@ export function App() {
             }}
           />
         )}
+        {!VENTA && view.kind === 'clips' && <Clips sessions={sessions} models={models} onHilo={(id) => go({ kind: 'session', id })} />}
         {view.kind === 'modelos3d' && <Modelos3D />} {/* modelos 3D */}
         {view.kind === 'comunidad' && <Comunidad />}
         {/* comunidad: «Pedir una mejora», que abre el símbolo del agente de cualquier hilo y la publica en Mejoras. */}
@@ -898,11 +931,26 @@ function NewSession(props: {
   const lote = !!card.lote && enlaces.length > 1 && !!porEnlace[card.id]
   // Todo estilo de video hace los dos formatos (skills/video-base/FORMATO.md): la skill hace solo el elegido. La card
   // recuerda el último; una idea de YouTube ya lo trae escrito en el mensaje (`Formato: horizontal`), y ese manda.
-  const [formatos, setFormatos] = useStored<Record<string, 'vertical' | 'horizontal'>>('formato', {})
-  const formatoEscrito = /^Formato: (vertical|horizontal)\s*$/m.exec(props.draft?.text ?? '')?.[1] as 'vertical' | 'horizontal' | undefined
-  const formatoPorDefecto = card.id === 'articulo-blog' ? 'horizontal' : 'vertical'
-  const formato = formatoEscrito ?? formatos[card.id] ?? formatoPorDefecto
-  const conFormato = !!card.etapas
+  // La card de imágenes ofrece además las otras proporciones que Nano Banana compone (`FORMATOS_IMAGEN`); el mensaje
+  // lleva la proporción tal cual (`Formato: 1:1`).
+  const esImagen = card.produce === 'imagen'
+  const formatoOpciones = esImagen ? FORMATOS_IMAGEN : FORMATOS_ENCUEADRE
+  const tokensFormato = esImagen ? [...formatoOpciones.map((o) => o.valor), 'vertical', 'horizontal', 'cuadrada'] : formatoOpciones.map((o) => o.valor)
+  const [formatos, setFormatos] = useStored<Record<string, string>>('formato', {})
+  const formatoEscrito = new RegExp(`^Formato: (${tokensFormato.join('|')})\\s*$`, 'm').exec(props.draft?.text ?? '')?.[1]
+  // Las presentaciones son 16:9 por defecto (skills/presentaciones); las imágenes, 9:16; el video, vertical.
+  const formatoPorDefecto = card.produce === 'presentacion' ? 'horizontal' : esImagen ? '9:16' : 'vertical'
+  const formato = formatoReal(formatoEscrito ?? formatos[card.id] ?? formatoPorDefecto, esImagen)
+  const formatoActual = formatoOpciones.find((o) => o.valor === formato) ?? formatoOpciones[0]
+  // Los controles del compositor los decide lo que produce la card (`produce`), no sus etapas: el video lleva
+  // formato, duración, voz, música e imágenes; las imágenes y las presentaciones llevan formato e imágenes (la
+  // proporción de las diapositivas o de cada imagen); el artículo solo el motor de su portada.
+  const conVideo = card.produce === 'video'
+  const conFormato = conVideo || card.produce === 'imagen' || card.produce === 'presentacion'
+  const conImagenes = !!card.produce
+  // Solo las cards con `clips` (las novelas y minidrama, que se arman con clips de Flow) reparten la duración en
+  // clips de 8 s; las demás la toman como la duración total del video (`video-base/DURACION.md`).
+  const conClips = !!card.clips
   // Cuánto dura el video. Sin elegir, la que pida el mensaje; la skill reparte los clips de 8 s para llegar
   // (`skills/video-base/DURACION.md`), y el montaje recorta a lo exacto.
   const [duraciones, setDuraciones] = useStored<Record<string, string>>('duracion', {})
@@ -932,31 +980,6 @@ function NewSession(props: {
 
   // Lo que hacen los carteles, siempre las mismas funciones (van memorizados) y con lo de ahora.
   const alCartel = useRef<AccionesCartel>(null as never)
-  // .new-top: la página de arriba (cabecera y estante de estilos), que scrollea sola detrás del chat.
-  const arriba = useRef<HTMLDivElement>(null)
-  const abajo = useRef<HTMLDivElement>(null)
-  // La rueda sobre el chat también mueve la página de arriba: .new-top es hermano y no ancestro del chat,
-  // así que el encadenado nativo no llega hasta él — se le pasa el delta cuando el scroll interno
-  // (.new-antes, o el composer en ventanas bajas) ya no puede consumirlo. Listener nativo: el composer
-  // es un contentEditable y cualquier cosa en medio no debe poder tragarse el gesto.
-  useEffect(() => {
-    const el = abajo.current, top = arriba.current
-    if (!el || !top) return
-    const onWheel = (e: WheelEvent) => {
-      const interno = (e.target as Element).closest('.new-antes, .composer')
-      // Solo cuenta como consumidor un scroller de verdad (overflow auto/scroll): con `visible`
-      // scrollHeight puede pasar de clientHeight sin que el bloque pueda moverse — ahí el delta
-      // siempre pasa a la página de arriba.
-      const oy = interno ? getComputedStyle(interno).overflowY : ''
-      if (interno && (oy === 'auto' || oy === 'scroll')) {
-        const puede = e.deltaY < 0 ? interno.scrollTop > 0 : interno.scrollTop + interno.clientHeight < interno.scrollHeight - 1
-        if (puede) return
-      }
-      top.scrollTop += e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY
-    }
-    el.addEventListener('wheel', onWheel, { passive: true })
-    return () => el.removeEventListener('wheel', onWheel)
-  }, [])
   alCartel.current = {
     // Sin videos terminados (sin previa) solo se elige: su galería saldría vacía.
     elegir: (c) => (props.onPick(c), setEnEstilo(esDeVideo(c) && !!previas[c.id])),
@@ -969,7 +992,6 @@ function NewSession(props: {
       <Composer
         models={models}
         choice={choice}
-        autoFocus
         draft={props.draft}
         onDraft={props.onDraft}
         bloqueo={sinCuenta ? 'Primero conecta tu cuenta (arriba)' : undefined}
@@ -1012,47 +1034,33 @@ function NewSession(props: {
                 className="formato-picker"
                 label={
                   <span className="formato-trigger">
-                    <span className={`formato-ico ${formato}`} />
-                    {formato === 'vertical' ? 'Vertical' : 'Horizontal'}
+                    <span className={`formato-ico ${formatoActual.ico}`} />
+                    {formatoActual.nombre}
                   </span>
                 }
                 value={formato}
                 disabled={!!formatoEscrito}
                 groups={[
                   {
-                    label: formatoEscrito ? 'Lo trae la idea' : 'Para TikTok o para YouTube',
-                    options: [
-                      {
-                        value: 'vertical',
-                        label: (
-                          <span className="formato-op">
-                            <span className="formato-ico vertical" />
-                            <span className="formato-txt">
-                              <b>Vertical</b>
-                              <small>9:16 · TikTok, Shorts</small>
-                            </span>
+                    label: formatoEscrito ? 'Lo trae la idea' : esImagen ? 'La proporción de cada imagen' : 'Para TikTok o para YouTube',
+                    options: formatoOpciones.map((o) => ({
+                      value: o.valor,
+                      label: (
+                        <span className="formato-op">
+                          <span className={`formato-ico ${o.ico}`} />
+                          <span className="formato-txt">
+                            <b>{o.nombre}</b>
+                            <small>{o.detalle}</small>
                           </span>
-                        )
-                      },
-                      {
-                        value: 'horizontal',
-                        label: (
-                          <span className="formato-op">
-                            <span className="formato-ico horizontal" />
-                            <span className="formato-txt">
-                              <b>Horizontal</b>
-                              <small>16:9 · YouTube</small>
-                            </span>
-                          </span>
-                        )
-                      }
-                    ]
+                        </span>
+                      )
+                    }))
                   }
                 ]}
-                onChange={(f) => setFormatos({ ...formatos, [card.id]: f as 'vertical' | 'horizontal' })}
+                onChange={(f) => setFormatos({ ...formatos, [card.id]: f })}
               />
             )}
-            {conFormato && (
+            {conVideo && (
               <Picker
                 flotante
                 label={duracion ? `Duración: ${duracion}` : 'Duración: la que pida el mensaje'}
@@ -1075,9 +1083,9 @@ function NewSession(props: {
                 onChange={(d) => setDuraciones({ ...duraciones, [card.id]: d })}
               />
             )}
-            {conFormato && <SelectorVoz card={card} voz={voz} valor={vozElegida} musica={{ encendida: musica, onCambio: (m) => setMusicas({ ...musicas, [card.id]: m }) }} onCambio={(v) => setVoces({ ...voces, [card.id]: v })} />}
-            {conFormato && <SelectorImagenes valor={imagenElegida} hayChatGPT={hayChatGPT} voz={voz} flow={flow} onCambio={setImagenes} />}
-            {conFormato && <SelectorClips valor={clipsElegidos} onCambio={(c) => setClips({ ...clips, [card.id]: c })} />}
+            {conVideo && <SelectorVoz card={card} voz={voz} valor={vozElegida} musica={{ encendida: musica, onCambio: (m) => setMusicas({ ...musicas, [card.id]: m }) }} onCambio={(v) => setVoces({ ...voces, [card.id]: v })} />}
+            {conImagenes && <SelectorImagenes valor={imagenElegida} hayChatGPT={hayChatGPT} voz={voz} flow={flow} onCambio={setImagenes} />}
+            {conClips && <SelectorClips valor={clipsElegidos} onCambio={(c) => setClips({ ...clips, [card.id]: c })} />}
             {card.lote && enlaces.length > 1 && (
               <Segmento
                 label="Lote"
@@ -1107,11 +1115,13 @@ function NewSession(props: {
             laSerie && `Serie: ${laSerie.nombre} (${laSerie.archivo}; cómo se usa, en video-base/SERIES.md)${text ? '' : '. Elige tú el tema.'}`,
             laMarca && `Marca: ${laMarca}`,
             conFormato && !formatoEscrito && `Formato: ${formato}`,
-            conFormato && duracion && `Duración: ${duracion} (reparte los clips de 8 s y recorta al final; video-base/DURACION.md)`,
-            conFormato && lineaVoz(card, vozElegida, nombreDeVoz(voz.estado, vozElegida)),
-            conFormato && lineaMusica(card, musica),
-            conFormato && lineaImagenes(imagenElegida),
-            conFormato && clipsElegidos && lineaClips(clipsElegidos),
+            conVideo && duracion && (card.clips
+              ? `Duración: ${duracion} (reparte los clips de 8 s y recorta al final; video-base/DURACION.md)`
+              : `Duración: ${duracion} (la duración total del video; cómo la usa tu estilo, en video-base/DURACION.md)`),
+            conVideo && lineaVoz(card, vozElegida, nombreDeVoz(voz.estado, vozElegida)),
+            conVideo && lineaMusica(card, musica),
+            conImagenes && lineaImagenes(imagenElegida),
+            conClips && clipsElegidos && lineaClips(clipsElegidos),
             // El modelo de cada subagente: lo medido, o lo que elegiste en «Avanzado». La skill lo lee aquí.
             lineaSubagentes(tareas)
           ]
@@ -1131,7 +1141,7 @@ function NewSession(props: {
       {soltar.aviso}
       {/* Arriba las skills (o, con un estilo elegido, sus videos), que hacen scroll solas con la cabecera;
           abajo la skill elegida y el compositor, que no se mueven de su sitio. */}
-      <div className="new-top" ref={arriba}>
+      <div className="new-top">
         <header className="new-session-head">
           <div>
             <h1>Nuevo chat</h1>
@@ -1168,7 +1178,7 @@ function NewSession(props: {
           </section>
         )}
       </div>
-      <div className="new-bottom" ref={abajo}>
+      <div className="new-bottom">
         {/* En ventanas bajas (una laptop pequeña) esto hace scroll interno: el compositor nunca se va con él. */}
         <div className="new-antes">
           <div className="new-head">
@@ -1177,6 +1187,7 @@ function NewSession(props: {
               <h1>{card.title}</h1>
             </div>
             <p>{card.description}</p>
+            {card.clips && <p className="small warn">Se hace con clips de Google Flow: gasta créditos de tus cuentas.</p>}
             <TusCambios card={card} clave={hilos.map((s) => s.id + s.updatedAt).join()} />
           </div>
           {/* Hasta saber qué cuentas hay no sale: el aviso de Claude no se asoma a quien solo tiene ChatGPT u OpenCode. */}
@@ -1220,15 +1231,15 @@ type AccionesCartel = { elegir(c: Card): void; duplicar(c: Card): void; borrar(c
  * cuánto se usa. Memorizado: escribir en el compositor de abajo no las vuelve a dibujar (ni a sus videos de fondo).
  */
 /** Los grupos del estante, en orden: lo que produce cada card y, al final, las que no producen nada (herramientas). */
-const GRUPOS: { titulo: string; produce?: Produce }[] = [
-  { titulo: 'Videos', produce: 'video' },
-  { titulo: 'Artículos', produce: 'articulo' },
-  { titulo: 'Imágenes', produce: 'imagen' },
-  { titulo: 'Presentaciones', produce: 'presentacion' },
-  { titulo: 'Herramientas' }
+const GRUPOS: { titulo: string; icono: NombreIcono; produce?: Produce }[] = [
+  { titulo: 'Videos', icono: 'video', produce: 'video' },
+  { titulo: 'Artículos', icono: 'documento', produce: 'articulo' },
+  { titulo: 'Imágenes', icono: 'imagen', produce: 'imagen' },
+  { titulo: 'Presentaciones', icono: 'diapositivas', produce: 'presentacion' },
+  { titulo: 'Herramientas', icono: 'lapiz' }
 ]
 
-/** El estante: un grupo a la vez, elegido en una fila de pestañas; se recuerda el último. */
+/** El estante: una fila de botones centrada elige el grupo; debajo, solo su parrilla. Se recuerda el último grupo. */
 const Carteles = memo(function Carteles({ cards, activa, previas, sessions, acciones }: { cards: Card[]; activa: string; previas: Record<string, Previa>; sessions: SessionMeta[]; acciones: AccionesCartel }) {
   // Al desplazarlas, las que pasan bajo el cursor no arrancan su video.
   const rejilla = useRef<HTMLDivElement>(null)
@@ -1240,31 +1251,33 @@ const Carteles = memo(function Carteles({ cards, activa, previas, sessions, acci
   // Si el grupo guardado ya no existe, abre el de la card elegida (o el primero). Un grupo es su `produce` o «herramientas».
   const activo = grupos.find(([g]) => (g.produce ?? 'herramientas') === grupo) ?? grupos.find(([g]) => (g.produce ?? 'herramientas') === grupoActiva) ?? grupos[0]
   const claveActiva = activo ? (activo[0].produce ?? 'herramientas') : ''
-  // Al cambiar de grupo, sus cards empiezan arriba.
+  // Al cambiar de grupo, el estante vuelve arriba (quien scrollea es .new-top).
   useEffect(() => {
-    rejilla.current?.scrollTo({ top: 0 })
+    rejilla.current?.closest('.new-top')?.scrollTo({ top: 0 })
   }, [claveActiva])
   if (!activo) return null
   return (
-    <>
+    <div className="estantes" ref={rejilla}>
       {grupos.length > 1 && (
-        <div className="cards-tabs" role="group" aria-label="Tipo de estilo">
+        <div className="estantes-filtro" role="group" aria-label="Tipo de estilo">
           {grupos.map(([g, lista]) => {
             const clave = g.produce ?? 'herramientas'
             return (
-              <button key={g.titulo} className="cards-tab" aria-pressed={clave === claveActiva} onClick={() => setGrupo(clave)}>
-                {g.titulo}<span className="cuenta">{lista.length}</span>
+              <button key={g.titulo} className={`estante-filtro${clave === claveActiva ? ' on' : ''}`} aria-pressed={clave === claveActiva} onClick={() => setGrupo(clave)}>
+                <Icono de={g.icono} />
+                {g.titulo}
+                <span className="cuenta">{lista.length}</span>
               </button>
             )
           })}
         </div>
       )}
-      <div className="cards" ref={rejilla} role="region" aria-label={`Estilos de ${activo[0].titulo}`}>
+      <div className="cards" role="region" aria-label={`Estilos de ${activo[0].titulo}`}>
         {activo[1].map((c) => (
           <Cartel key={c.id} c={c} activa={c.id === activa} previa={previas[c.id]} hilos={sessions.filter((s) => s.cardId === c.id && !s.archived)} acciones={acciones} />
         ))}
       </div>
-    </>
+    </div>
   )
 })
 
@@ -1290,6 +1303,12 @@ function Cartel({ c, activa, previa, hilos, acciones }: { c: Card; activa: boole
         <span className="card-fondo">
           <span className="card-icon"><Icon icon={c.icon ?? '✦'} /></span>
           <span className="card-desc">{c.description}</span>
+        </span>
+      )}
+      {/* Los estilos que se arman con clips de Flow gastan créditos de Google: se avisa con una cinta en la esquina. */}
+      {c.clips && (
+        <span className="card-cinta" title="Se hace con clips de Google Flow: gasta créditos de tus cuentas de Google">
+          <span>Créditos</span>
         </span>
       )}
       {/* En la app que se vende, las cards de Hermit ni se duplican ni se borran; las de tus estilos se borran. */}

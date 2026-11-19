@@ -106,7 +106,7 @@ function main() {
       `pad=${w}:${h}:(ow-iw)/2:(oh-ih)/2`
     ]
     celdas.forEach((c, i) => {
-      const rotulo = `drawbox=x=0:y=0:w=iw:h=${letra + 10}:color=black@0.85:t=fill,drawtext=fontfile='${FUENTE}':text='${texto(c.etiqueta)}':x=6:y=5:fontsize=${letra}:fontcolor=yellow`
+      const rotulo = `drawbox=x=0:y=0:w=iw:h=${letra + 10}:color=black@0.85:t=fill,drawtext=fontfile='${FUENTE}':expansion=none:text='${texto(c.etiqueta)}':x=6:y=5:fontsize=${letra}:fontcolor=yellow`
       ffmpeg(['-v', 'error', ...(c.t !== undefined ? ['-ss', String(c.t)] : []), '-i', c.archivo, '-frames:v', '1', '-update', '1',
         '-vf', [...filtros, rotulo].join(','), join(tmp, `c${String(i).padStart(4, '0')}.png`)])
     })

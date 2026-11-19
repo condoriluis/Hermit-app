@@ -57,6 +57,16 @@ Tarda cerca de un minuto. Si no acabó en 40 s, la herramienta te da un id: sigu
 `estado_flow`. Lo que no depende de lo anterior pídelo seguido: Hermit lo pone en fila y lo genera con calma (con
 varias cuentas, hasta tres a la vez), para que Google no lo vea como actividad rara.
 
+**Varias imágenes del mismo sujeto, en una sola llamada.** Cuando necesites un set —poses del mismo
+personaje, expresiones, escenas de una serie, ángulos de un objeto— no pidas una imagen por variante:
+pide **hojas de contacto** (una imagen con 4 paneles 2×2, cada panel descrito por separado, sin que el
+sujeto cruce los límites) y divídelas en local con
+`python <base>/scripts/dividir_contacto.py <hoja.jpg> <salida/> <nombre1> <nombre2> <nombre3> <nombre4>`
+(los nombres van en el orden: arriba-izquierda, arriba-derecha, abajo-izquierda, abajo-derecha). 4
+variantes = 1 llamada en vez de 4: las imágenes no gastan créditos, pero cada llamada cuenta para el
+límite de ritmo de Flow, y las ráfagas seguidas son lo que hace que Google frene las cuentas. Con sets
+grandes, una hoja por cada 4 variantes.
+
 ## La voz de cada personaje
 
 Veo pone la voz de quien habla dentro de cada clip, y **cada clip es una generación aparte**: sin nada que la fije, un

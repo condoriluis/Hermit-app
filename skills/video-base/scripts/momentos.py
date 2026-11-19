@@ -229,3 +229,45 @@ def pares(a: Path, b: Path, carpeta: Path, cada: float = 2, columnas: int = 4, a
                     f"[a][b]hstack=inputs=2:shortest=1,pad=iw+12:ih+12:6:6:white,tile={columnas}x3:padding=3",
                     "-q:v", "4", str(carpeta / "par-%d.jpg")], check=True)
     return sorted(carpeta.glob("par-*.jpg"), key=lambda p: int(p.stem.split("-")[1]))
+
+
+def texto_guion(raiz: Path) -> str:
+    """Lo que se dice en `guion.md`, sin títulos ni las líneas en negrita (textos en pantalla, no narración)."""
+    lineas = []
+    for l in (raiz / "guion.md").read_text(encoding="utf-8-sig").splitlines():
+        s = l.strip()
+        if not s or s.startswith("#") or s.startswith("**") or s.lower().startswith("corte de datos"):
+            continue
+        lineas.append(s)
+    return " ".join(lineas)
+
+
+def tiempos_de_escenas(escenas: list[dict], segmentos: list[dict], total: float, de: str = "escenas.json") -> list[dict]:
+    """
+    El segundo en que entra cada escena, según lo que la voz dijo de verdad: las palabras de la transcripción
+    reparten el tiempo de su segmento (lo mismo que hacen los subtítulos), y `anclar` ubica cada `palabra`.
+    La primera escena entra en 0; cada siguiente, en la palabra que la voz dijo. Sale con `t0`/`t1` puestos.
+    """
+    dichas, tiempos = [], []
+    for s in segmentos:
+        ws = palabras_de(s.get("text", ""))
+        n = len(ws)
+        if not n:
+            continue
+        paso_seg = (s["end"] - s["start"]) / n
+        for j, w in enumerate(ws):
+            dichas.append(w)
+            tiempos.append(s["start"] + paso_seg * j)
+    indices, errores = anclar(escenas, dichas, "la voz")
+    if errores:
+        sys.exit(f"✗ {de}:\n  " + "\n  ".join(errores)
+                 + "\n  La voz dijo: " + " ".join(dichas)[:400])
+    salida = []
+    for k, e in enumerate(escenas):
+        t0 = 0.0 if k == 0 else min(max(tiempos[indices[k]], 0.0), total)
+        salida.append({**e, "t0": t0})
+    for k, e in enumerate(salida):
+        e["t1"] = salida[k + 1]["t0"] if k + 1 < len(salida) else total
+        if e["t1"] - e["t0"] < 0.3:
+            e["t1"] = e["t0"] + 0.3
+    return salida

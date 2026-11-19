@@ -13,10 +13,10 @@ mientras se dice— y los quema sobre el vídeo. Deja el `.ass` al lado de la sa
 empiece la narración. El audio del vídeo no se toca, salvo que no tenga pista y sí `--voz`: entonces la voz entra como
 audio de la salida.
 
-Los tres estilos:
-- `minimal` (motivacional): blanco puro, contorno fino, palabra activa en blanco cálido apenas más cálido. Sobrio.
-- `crimen`: blanco con contorno marcado y palabra activa en ámbar, como las fechas y sellos de un expediente.
-- `top`: blanco en Arial Black grande, palabra activa en amarillo puro. El golpe de cuenta regresiva.
+Los tres estilos (cada uno con su tipografía de `../assets/fonts`, quemada con `fontsdir`, no con la del sistema):
+- `minimal` (motivacional): Bebas Neue, blanco puro, palabra activa en blanco cálido apenas más cálido.
+- `crimen`: Courier Prime, blanco con contorno marcado y palabra activa en ámbar, como las fechas y sellos de un expediente.
+- `top`: Anton, blanco grande, palabra activa en amarillo puro. El golpe de cuenta regresiva.
 """
 
 import json
@@ -32,11 +32,13 @@ sys.path.insert(0, str(BASE))
 from hermit import encoder_video, transcribir  # el Python de Hermit y Whisper, y el encoder de video, de video-base
 
 FORMATOS = {"vertical": (1080, 1920), "horizontal": (1920, 1080)}
-# Palabras por línea y color de la palabra activa (ASS: &HAABBGGRR). `minimal` apenas calienta el blanco.
+# Palabras por línea, tipografía propia (`archivo` en assets/fonts, `fuente` es el nombre de familia ASS) y color de la
+# palabra activa (ASS: &HAABBGGRR). `tam_v`/`tam_h` son la altura de la letra como fracción del ancho, por formato.
+FUENTES = BASE.parent / "assets" / "fonts"
 ESTILOS = {
-    "minimal": {"palabras": 4, "fuente": "Arial", "negrita": 0, "acento": "&H00E6F4FF", "tinta": "&H00FFFFFF", "espaciado": 1, "contorno": 0.10, "sombra": 0.04},
-    "crimen": {"palabras": 3, "fuente": "Arial Black", "negrita": -1, "acento": "&H0042B0FF", "tinta": "&H00FFFFFF", "espaciado": 0, "contorno": 0.14, "sombra": 0.08},
-    "top": {"palabras": 3, "fuente": "Arial Black", "negrita": -1, "acento": "&H0000FFFF", "tinta": "&H00FFFFFF", "espaciado": 0, "contorno": 0.12, "sombra": 0.06},
+    "minimal": {"palabras": 4, "fuente": "Bebas Neue", "archivo": "BebasNeue-Regular.ttf", "negrita": -1, "acento": "&H00E6F4FF", "tinta": "&H00FFFFFF", "espaciado": 1, "contorno": 0.10, "sombra": 0.04, "tam_v": 0.072, "tam_h": 0.044},
+    "crimen": {"palabras": 3, "fuente": "Courier Prime", "archivo": "CourierPrime-Bold.ttf", "negrita": -1, "acento": "&H0042B0FF", "tinta": "&H00FFFFFF", "espaciado": 0, "contorno": 0.14, "sombra": 0.08, "tam_v": 0.062, "tam_h": 0.037},
+    "top": {"palabras": 3, "fuente": "Anton", "archivo": "Anton-Regular.ttf", "negrita": -1, "acento": "&H0000FFFF", "tinta": "&H00FFFFFF", "espaciado": 0, "contorno": 0.12, "sombra": 0.06, "tam_v": 0.070, "tam_h": 0.042},
 }
 
 
@@ -84,7 +86,7 @@ def linea(texto: str) -> str:
 def ass(palabras: list[tuple[float, float, str]], estilo: dict, ancho: int, alto: int) -> str:
     """Un Dialogue por grupo de palabras; dentro, `{\\k}` por palabra: el karaoke las pinta en el acento al decirlas."""
     vertical = alto > ancho
-    letra = round(ancho * (0.068 if vertical else 0.040)) if estilo["fuente"] == "Arial Black" else round(ancho * (0.056 if vertical else 0.034))
+    letra = round(ancho * (estilo["tam_v"] if vertical else estilo["tam_h"]))
     margen = round(alto * (0.21 if vertical else 0.10))
     contorno = max(round(letra * estilo["contorno"]), 1)
     sombra = max(round(letra * estilo["sombra"]), 1)
@@ -128,6 +130,7 @@ def main() -> None:
     video, salida = Path(args[0]), Path(args[1])
     formato = "vertical"
     estilo = "minimal"
+    acento = None
     voz = None
     offset = 0.0
     i = 1
@@ -138,6 +141,9 @@ def main() -> None:
             i += 1
         elif a == "--estilo":
             estilo = sys.argv[i + 1]
+            i += 1
+        elif a == "--acento":
+            acento = sys.argv[i + 1]
             i += 1
         elif a == "--voz":
             voz = Path(sys.argv[i + 1])
@@ -150,6 +156,12 @@ def main() -> None:
         sys.exit('--formato es "vertical" u "horizontal".')
     if estilo not in ESTILOS:
         sys.exit(f'--estilo es uno de: {", ".join(ESTILOS)}.')
+    estilo_sub = dict(ESTILOS[estilo])
+    if acento is not None:
+        if not re.fullmatch(r"#[0-9a-fA-F]{6}", acento):
+            sys.exit('--acento es un color #RRGGBB (por ejemplo #ffe600).')
+        # ASS guarda &HAABBGGRR: el #RRGGBB se da la vuelta.
+        estilo_sub["acento"] = "&H00" + acento[5:7] + acento[3:5] + acento[1:3]
     if not video.is_file():
         sys.exit(f"No existe {video}.")
 
@@ -170,9 +182,11 @@ def main() -> None:
     segmentos = datos.get("segmentos", [])
     if not segmentos:
         sys.exit("El Whisper no oyó voz: sin tiempos no hay subtítulos.")
-    ass_path.write_text(ass(palabras_tiempo(segmentos, offset), ESTILOS[estilo], ancho, alto), encoding="utf-8-sig", newline="\n")
+    ass_path.write_text(ass(palabras_tiempo(segmentos, offset), estilo_sub, ancho, alto), encoding="utf-8-sig", newline="\n")
 
-    # Desde la carpeta de salida: la ruta absoluta de `subtitles` en Windows (C:\…) rompe su sintaxis.
+    # Desde la carpeta de salida: la ruta absoluta de `subtitles` en Windows (C:\…) rompe su sintaxis. `fontsdir` va
+    # entre comillas y con los dos puntos escapados (C\:) para que el parser del filtro no lo parta.
+    fuentes = "'" + FUENTES.as_posix().replace(":", "\\:") + "'"
     entradas = ["-i", video.name]
     maps = ["-map", "0:v"]
     if voz is not None and not tiene_audio(video):
@@ -182,7 +196,7 @@ def main() -> None:
         maps += ["-map", "0:a?"]
     subprocess.run(
         ["ffmpeg", "-nostdin", "-y", "-v", "error", *entradas, *maps,
-         "-vf", f"subtitles={ass_path.name}:charenc=UTF-8",
+         "-vf", f"subtitles={ass_path.name}:fontsdir={fuentes}:charenc=UTF-8",
          *encoder_video(18),
          "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", salida.name],
         cwd=salida.parent, check=True,

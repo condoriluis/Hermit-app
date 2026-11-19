@@ -19,10 +19,12 @@ import json
 import os
 import re
 import shutil
+import subprocess
 import sys
+import time
 from pathlib import Path
 
-from hermit import MODELOS, PROCESOS, proceso, hermit, turno_youtube, wav16k
+from hermit import BANDERAS, MODELOS, PROCESOS, python_hermit, proceso, turno_youtube, wav16k
 
 YOUTUBE = re.compile(r"(?:youtube\.com/(?:watch\?(?:.*&)?v=|shorts/|live/|embed/)|youtu\.be/)([\w-]{11})")
 # Donde dejan sus fuentes los vídeos: los de las cards de Hermit (`<app>/trabajo/<card>/<vídeo>`, la app de PROCESOS).
@@ -63,18 +65,61 @@ def enlazar(origen: Path, carpeta: Path, archivos: tuple[str, ...]) -> None:
     print(f"-- {', '.join(archivos)}: ya estaba en {origen} --")
 
 
+# El progreso de la descarga para el estudio: yt-dlp suelta una línea `FUENTE ...` por plantilla y aquí se guarda el
+# último estado en `_progreso.json` de la carpeta de la fuente (lo lee `avance()` de etapas.ts, como `_render.progreso`).
+PLANTILLA = "FUENTE %(progress._percent_str)s %(progress._total_bytes_str)s %(progress.downloaded_bytes)s %(progress._speed_str)s %(progress._eta_str)s"
+_PROGRESO = re.compile(r"FUENTE\s+([\d.]+)%\s+(\S+)\s+(\d+)\s+(\S+)\s+(\S+)")
+
+
+def _progreso(carpeta: Path, datos: dict | None) -> None:
+    """Escribe (o borra, con None) el `_progreso.json` que el estudio muestra mientras la fuente trabaja."""
+    f = carpeta / "_progreso.json"
+    if datos is None:
+        f.unlink(missing_ok=True)
+    else:
+        f.write_text(json.dumps(datos, ensure_ascii=False), encoding="utf8")
+
+
+def ytdlp(carpeta: Path, *args: str) -> int:
+    """yt-dlp como módulo (el .exe de uv del Python de Hermit no arranca), con su salida en vivo: las líneas de la
+    plantilla de progreso actualizan `_progreso.json`; el resto se imprime igual que antes."""
+    cmd = [str(python_hermit()), *BANDERAS, "-m", "yt_dlp", "--newline", "--progress-template", PLANTILLA, *args]
+    p = subprocess.Popen(cmd, cwd=carpeta, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                         text=True, encoding="utf-8", errors="replace")
+    ultimo = 0.0
+    mb_max = 0.0
+    for linea in p.stdout:
+        m = _PROGRESO.match(linea)
+        if m:
+            ahora = time.time()
+            if ahora - ultimo >= 0.5 or float(m.group(1)) >= 100:
+                ultimo = ahora
+                # En fragmentados (HLS) el total es N/A: se muestran los MB bajados; si se sabe, el total.
+                total, bajados = m.group(2), max(mb_max, int(m.group(3)) / 1048576)
+                mb_max = bajados
+                detalle = (f"{total} · {m.group(4)} · quedan {m.group(5)}" if total not in ("N/A", "NA", "")
+                           else f"{bajados:.0f} MB · {m.group(4)} · quedan {m.group(5)}")
+                _progreso(carpeta, {"fase": "descargando", "porcentaje": float(m.group(1)), "detalle": detalle})
+        else:
+            print(linea, end="")
+    return p.wait()
+
+
 def bajar(url: str, carpeta: Path) -> None:
-    # yt-dlp como módulo: el .exe de uv del Python de Hermit no arranca.
+    formato = ["-f", "bv*[height<=1080][ext=mp4]+ba[ext=m4a]/b[ext=mp4]/b", "--merge-output-format",
+               "mp4", "-o", "video.mp4", "--write-info-json"]
     with turno_youtube():
-        r = hermit("-m", "yt_dlp", "-f", "bv*[height<=1080][ext=mp4]+ba[ext=m4a]/b[ext=mp4]/b", "--merge-output-format",
-                  "mp4", "-o", "video.mp4", "--write-info-json", "--no-progress", url, cwd=carpeta)
+        _progreso(carpeta, {"fase": "descargando", "porcentaje": 0, "detalle": "Empezando"})
+        r = ytdlp(carpeta, *formato, url)
         for cliente in REINTENTOS:
-            if r.returncode == 0:
+            if r == 0:
+                _progreso(carpeta, None)
                 return
             print(f"\n-- reintento con el cliente {cliente} de YouTube --")
-            r = hermit("-m", "yt_dlp", "--extractor-args", f"youtube:player_client={cliente}", "-f", "bv*[height<=1080]+ba/b",
-                      "--merge-output-format", "mp4", "-o", "video.mp4", "--write-info-json", "--no-progress", url, cwd=carpeta)
-    if r.returncode:
+            r = ytdlp(carpeta, "--extractor-args", f"youtube:player_client={cliente}", "-f", "bv*[height<=1080]+ba/b",
+                      "--merge-output-format", "mp4", "-o", "video.mp4", "--write-info-json", url)
+    _progreso(carpeta, None)
+    if r:
         sys.exit("yt-dlp no pudo bajar el video (arriba dice por qué).")
 
 
@@ -107,7 +152,11 @@ def main() -> None:
     if not voz.exists():
         wav16k(video, voz)
     if not t.exists():
-        d = proceso("transcribir-ajeno.py", [str(voz)], {"modelos": str(MODELOS)})
+        _progreso(carpeta, {"fase": "transcribiendo", "detalle": "Whisper palabra a palabra sobre la voz"})
+        try:
+            d = proceso("transcribir-ajeno.py", [str(voz)], {"modelos": str(MODELOS)})
+        finally:
+            _progreso(carpeta, None)
         t.write_text(json.dumps(d, ensure_ascii=False, indent=1), encoding="utf8")
     d = json.loads(t.read_text(encoding="utf8"))
     lineas = [f"[{int(s['start'] // 60)}:{s['start'] % 60:04.1f}] {s['text']}" for s in d["segmentos"]]

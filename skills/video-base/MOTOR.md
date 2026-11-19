@@ -40,3 +40,7 @@ movimiento) y `pares` (el antes y el después lado a lado).
 | Qué pone un momento | `cosa` 3D, `tarjeta`, `pose`, `camara` | `ve` (material real), `forma`, `entra`, `grande` | `fuente` y `cita`, `clip`, `meme`, `diagrama`, `titular`; encima, `rotulo`, `logo`, `sello`, `ovalo` |
 | De dónde sale lo que se ve | la biblioteca de modelos 3D y fotos | internet: `buscar.py` y las URL, que baja `material.py` | la página de cada cita (`capturar.mjs`), logos, memes y recortes, que baja `hacer.py` |
 | Su director | `plantilla/src/director` (React) | `components/director.py` (los dispositivos medidos) | `scripts/director.py`, que escribe `guion.json` para la plantilla |
+
+Política sigue el mismo contrato con `montaje.json` en vez de `momentos.json`: cada escena es una imagen con la
+`palabra` del guion donde entra y su `titular` opcional, y su `hacer.py` es también el director (paneo Ken Burns
+y subtítulos `.ass`, sin plantilla Remotion). La voz ya viene dada en `public/voz.wav`, como en el documental.

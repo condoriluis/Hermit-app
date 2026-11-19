@@ -1,7 +1,6 @@
 """
-Une los clips de una novela (frutinovela, animalnovela, devnovela, minidrama) en el video final. Lo corren las skills
-de esos estilos con `--estilo <nombre>`; se corre desde la raíz del proyecto (o con `--en <carpeta>`, la ruta de
-`Carpeta:`):
+Une los clips de una novela (frutinovela, animalnovela, devnovela, minidrama — el proceso común está en NOVELA.md)
+en el video final. Se corre desde la raíz del proyecto (o con `--en <carpeta>`, la ruta de `Carpeta:`):
 
     python <base>/scripts/unir.py <nombre> --estilo <estilo> [--en <carpeta>] [--formato vertical|horizontal]
         [--duracion 30|45|1:30|2 min] [--sin-subtitulos] [--sin-recortar] [--forzar]

@@ -9,6 +9,8 @@ Uso:
               vídeo puede ir una imagen (.png, .jpg): un cuadro de la revisión, para tener la portada antes del render.
 --fuente      la letra del estilo (.ttf, .otf, .woff o .woff2); sin ella, Arial Black.
 --color       el color del título (por defecto, blanco); el contorno es negro.
+--resaltar    una palabra o frase del título que va en --color mientras el resto queda blanco
+              (el recurso viral: un solo golpe de color). Sin --color, el golpe es #ffe600.
 --horizontal  la miniatura de YouTube de un vídeo horizontal: 1280x720, el título en la mitad izquierda. Va al final.
 
 Deja un PNG de 1080x1920. Después, como siempre: node portada.mjs <video.mp4> <portada.png>.
@@ -45,6 +47,15 @@ try {
   ffmpeg([...(imagen ? [] : ['-ss', String(t)]), '-i', video,'-frames:v', '1', '-vf', `scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H}`, '-q:v', '2', cuadro])
   const fuente = o.fuente && existsSync(resolve(o.fuente)) ? pathToFileURL(resolve(o.fuente)).href : null
   const escapar = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c])
+  // --resaltar: solo esas palabras van en el color; el resto del título queda blanco.
+  const resaltar = typeof o.resaltar === 'string' ? o.resaltar.trim() : ''
+  const color = typeof o.color === 'string' ? o.color : '#fff'
+  const golpe = resaltar ? (typeof o.color === 'string' ? o.color : '#ffe600') : color
+  let tituloHtml = escapar(o.titulo.trim())
+  const i = resaltar ? o.titulo.toLowerCase().indexOf(resaltar.toLowerCase()) : -1
+  if (i >= 0) {
+    tituloHtml = `${escapar(o.titulo.slice(0, i))}<span class="acento">${escapar(o.titulo.slice(i, i + resaltar.length))}</span>${escapar(o.titulo.slice(i + resaltar.length))}`
+  }
   const html = `<!doctype html><meta charset="utf-8"><style>
 ${fuente ? `@font-face { font-family: Estilo; src: url("${fuente}"); }` : ''}
 html, body { margin: 0; width: ${W}px; height: ${H}px; overflow: hidden; background: #000; }
@@ -54,10 +65,11 @@ body { background: url("data:image/jpeg;base64,${readFileSync(cuadro).toString('
   position: absolute; left: ${ZONA.izquierda}px; width: ${ZONA.derecha - ZONA.izquierda}px; top: ${ZONA.arriba}px;
   height: ${ZONA.abajo - ZONA.arriba}px; display: flex; align-items: center; justify-content: center; text-align: center;
   font-family: ${fuente ? 'Estilo, ' : ''}'Arial Black', Impact, sans-serif; font-weight: 900; line-height: 1.02;
-  color: ${typeof o.color === 'string' ? o.color : '#fff'}; -webkit-text-stroke: 0.09em #000; paint-order: stroke fill;
+  color: ${resaltar ? '#fff' : color}; -webkit-text-stroke: 0.09em #000; paint-order: stroke fill;
   text-shadow: 0 0.06em 0.12em rgba(0,0,0,.6); overflow-wrap: break-word;
 }
-</style><div class="sombra"></div><div class="titulo"><span id="t">${escapar(o.titulo.trim())}</span></div>`
+.acento { color: ${golpe}; }
+</style><div class="sombra"></div><div class="titulo"><span id="t">${tituloHtml}</span></div>`
   writeFileSync(join(temporal, 'portada.html'), html)
 
   const chrome = await abrirChrome({ ancho: W, alto: H })

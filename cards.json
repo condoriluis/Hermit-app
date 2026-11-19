@@ -261,8 +261,8 @@
     "etapas": [
       {
         "nombre": "Fuentes",
-        "listo": "fuentes/tema/transcripcion.txt",
-        "muestra": "fuentes/tema/video.mp4",
+        "listo": "{fuentes/tema/transcripcion.txt,fuentes/tema/*.mp4,public/clip.mp4}",
+        "muestra": "{fuentes/tema/*.mp4,public/clip.mp4}",
         "fase": "idea"
       },
       {
@@ -553,6 +553,37 @@
     ]
   },
   {
+    "id": "video-clips",
+    "title": "Clips",
+    "description": "Momentos de un video largo, propios o con permiso: cada clip es un corte exacto en borde de palabra, con su tarjeta de gancho, reencuadre a 9:16 u 16:9 y subtítulos karaoke palabra a palabra, listo para TikTok, Reels, Shorts o YouTube.",
+    "skill": "video-clips",
+    "produce": "video",
+    "icon": "tramo",
+    "etapas": [
+      {
+        "nombre": "Fuente",
+        "listo": "{public/video.mp4,video.mp4,fuentes/**/video.mp4}",
+        "fase": "idea"
+      },
+      {
+        "nombre": "Cortes",
+                "listo": "cortes.json",
+        "muestra": "{guion.md,cortes.json}",
+        "fase": "guion"
+      },
+      {
+        "nombre": "Hojas",
+        "listo": "revision/hoja-*.png",
+        "fase": "video"
+      },
+      {
+        "nombre": "Video",
+        "listo": "out/redes/*.mp4",
+        "fase": "video"
+      }
+    ]
+  },
+  {
     "id": "video-politica",
     "title": "Política sin filtro",
     "description": "Análisis político y económico sin concesiones: qué decidieron, cuánto costó y a quién perjudicó. Respaldado con datos duros, documentos oficiales, subtítulos de impacto y remate de debate para TikTok, Shorts y YouTube.",
@@ -574,6 +605,11 @@
       {
         "nombre": "Guion",
         "listo": "guion.md",
+        "fase": "guion"
+      },
+      {
+        "nombre": "Montaje",
+        "listo": "montaje.json",
         "fase": "guion"
       },
       {
@@ -604,6 +640,46 @@
     ]
   },
   {
+    "id": "video-propio",
+    "title": "Video con tu material",
+    "description": "Sube tus fotos y videos —viajes, eventos, familia, producto, lo que sea— y el agente arma un video profesional: collage animado, paneos, clips recortados, títulos cinéticos y música.",
+    "skill": "video-propio",
+    "produce": "video",
+    "icon": "escena",
+    "voz": {
+      "propia": "Sin narración"
+    },
+    "etapas": [
+      {
+        "nombre": "Material",
+        "listo": "fuentes/*",
+        "muestra": "fuentes/*.{jpg,jpeg,png,webp,bmp,tif,tiff,heic,heif,avif,mp4,mov,mkv,avi,webm,m4v,3gp,mts,m4a,mp3,wav}",
+        "fase": "idea"
+      },
+      {
+        "nombre": "Plan",
+        "listo": "plan.json",
+        "muestra": "{plan.md,plan.json}",
+        "fase": "guion"
+      },
+      {
+        "nombre": "Revisión",
+        "listo": "revision/hoja.png",
+        "fase": "video"
+      },
+      {
+        "nombre": "Video",
+        "listo": "out/final.mp4",
+        "fase": "video"
+      },
+      {
+        "nombre": "Portada",
+        "listo": "{portada.png,portada/*.png}",
+        "fase": "entrega"
+      }
+    ]
+  },
+  {
     "id": "frutinovela",
     "title": "Frutinovela",
     "description": "Una telenovela de frutas en 3D que hablan con sus propias voces: los mismos personajes en cada escena, drama de traición o familia y un final que pide la siguiente parte. Se hace en Google Flow con tus cuentas de Google.",
@@ -611,6 +687,7 @@
     "produce": "video",
     "icon": "fruta",
     "voz": false,
+    "clips": true,
     "etapas": [
       {
         "nombre": "Guion",
@@ -647,6 +724,7 @@
     "produce": "video",
     "icon": "huella",
     "voz": false,
+    "clips": true,
     "etapas": [
       {
         "nombre": "Guion",
@@ -683,6 +761,7 @@
     "produce": "video",
     "icon": "codigo",
     "voz": false,
+    "clips": true,
     "etapas": [
       {
         "nombre": "Guion",
@@ -719,6 +798,7 @@
     "produce": "video",
     "icon": "teatro",
     "voz": false,
+    "clips": true,
     "etapas": [
       {
         "nombre": "Guion",
@@ -807,8 +887,8 @@
       },
       {
         "nombre": "Diseño",
-        "listo": "diapositivas/*.png",
-        "muestra": "diapositivas/*.png",
+        "listo": "diapositivas/*.{png,jpg,jpeg,webp}",
+        "muestra": "diapositivas/*.{png,jpg,jpeg,webp}",
         "fase": "guion"
       },
       {

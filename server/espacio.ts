@@ -292,7 +292,7 @@ export function regenerables(carpeta: string): string[] {
       if (st.isDirectory()) {
         if (n === '_bundle_rev' || (n === 'partes' && (dir === out || dir === join(out, 'redes')))) hallados.push(ruta)
         else if (n !== 'node_modules' && nivel < 3) mirar(ruta, nivel + 1)
-      } else if (/^_(render|viejo)-/.test(n) || n === 'borrador.mp4' || n.endsWith('.remotion-in-progress')) hallados.push(ruta)
+      } else if (/^_(render|viejo|corte)-/.test(n) || n === 'borrador.mp4' || n.endsWith('.remotion-in-progress')) hallados.push(ruta)
     }
   }
   if (esCarpeta(out)) mirar(out, 0)

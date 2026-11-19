@@ -274,6 +274,9 @@ export function useMonitor({ sessionId, avance, p, visible, onVer }: PropsDeVide
   /** Cambia de render (el episodio en la otra forma, un corte), desde el principio. */
   function elegirRender(ruta: string) {
     pausa()
+    // El `pause` del video no siempre dispara al cambiar de src: el estado se baja a mano, o el botón queda
+    // mostrando pausa sobre un clip parado y no hay forma de darle al play.
+    setPlaying(false)
     ir(0)
     setCual(ruta)
     setPide('render')
@@ -285,6 +288,7 @@ export function useMonitor({ sessionId, avance, p, visible, onVer }: PropsDeVide
     onVer,
     modo,
     motor,
+    progresoRender: avance.progresoRender,
     url,
     render,
     renders,
@@ -340,7 +344,7 @@ export function Monitor({ m, escena, antes, despues, vertical, label, children }
       <div className="escenario">
         <div className="monitor-caja">
           <div className="monitor" style={{ '--ratio': ratio } as React.CSSProperties} onClick={modo === 'render' ? m.toggle : undefined}>
-            {render && <video ref={m.video} src={`/api/sessions/${m.sessionId}/archivo?ruta=${encodeURIComponent(render.ruta)}&t=${Math.round(render.t)}`} preload="metadata" hidden={modo !== 'render'} {...m.eventos} />}
+            {render && <video key={render.ruta} ref={m.video} src={`/api/sessions/${m.sessionId}/archivo?ruta=${encodeURIComponent(render.ruta)}&t=${Math.round(render.t)}`} preload="metadata" hidden={modo !== 'render'} {...m.eventos} />}
             {/* El marco que se ve y, detrás, el nuevo que carga. Atienden ellos sus clics: elegir o pausar. */}
             {m.montado &&
               modo === 'vivo' &&
@@ -367,6 +371,12 @@ export function Monitor({ m, escena, antes, despues, vertical, label, children }
               <span className="monitor-aviso">
                 <span className="spinner" /> Actualizando
               </span>
+            )}
+            {/* El render del estilo en curso: el borde del marco se llena con su %, como en CapCut. */}
+            {m.progresoRender !== undefined && (
+              <div className="monitor-progreso" style={{ '--p': m.progresoRender } as React.CSSProperties}>
+                <span className="monitor-progreso-pct">{m.progresoRender}%</span>
+              </div>
             )}
           </div>
         </div>

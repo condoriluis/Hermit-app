@@ -363,7 +363,11 @@ export function videosDe(card: Card, sessions: Sessions): VideoHecho[] {
       const h = huella(file)
       if (!h || vistos.has(h)) continue
       vistos.add(h)
-      const portada = one(folder, 'portada.png') ?? one(folder, 'portada.jpg')
+      // La portada de un proyecto de varios videos (los clips de `out/redes/`): `portada/<nombre del mp4>` antes
+      // que la compartida de la raíz, como manda PORTADA.md para piezas múltiples.
+      const stem = basename(a.ruta).replace(/\.[^.]+$/, '')
+      const portada = one(folder, `portada/${stem}.png`) ?? one(folder, `portada/${stem}.jpg`)
+        ?? one(folder, 'portada.png') ?? one(folder, 'portada.jpg')
       videos.push({
         src: `/api/piezas/archivo?ruta=${encodeURIComponent(file)}&t=${Math.round(a.t)}`,
         titulo: hilo?.title ?? basename(folder),
@@ -580,7 +584,7 @@ function rendersDe(etapas: Avance['etapas'], folder: string): Render[] {
   return etapas
     .filter((e) => e.fase === 'video')
     .reverse()
-    .flatMap((e) => e.archivos.filter((a) => /\.(mp4|webm)$/i.test(a.ruta)).reverse())
+    .flatMap((e) => e.archivos.filter((a) => /\.(mp4|webm)$/i.test(a.ruta) && !basename(a.ruta).startsWith('_')).reverse())
     .map((a) => ({ ...a, vertical: a.ruta.endsWith('.mp4') ? esVertical(join(folder, a.ruta), a.t) : undefined }))
 }
 
@@ -895,10 +899,34 @@ export async function etapasApi(
     const finales = conEtapas ? finalesDe(meta, conEtapas, folder) : undefined
     // Episodio terminado: una muestra más para «Tu equipo» (una por estado del episodio, ver telemetria.ts).
     if (conEtapas && finales?.length) anotar(conEtapas, meta, folder, etapas)
+    // El % del render en curso: lo escribe el script del estilo en out/_render.progreso (terminar.py de
+    // video-propio). Mientras esté fresco y no llegue a 100, se re-avisa para que el monitor lo vea llenarse.
+    let progresoRender: number | undefined
+    try {
+      const st = statSync(join(folder, 'out', '_render.progreso'), { throwIfNoEntry: false })
+      if (st?.isFile() && Date.now() - st.mtimeMs < 30 * 60_000) {
+        const n = parseInt(readFileSync(join(folder, 'out', '_render.progreso'), 'utf8'), 10)
+        if (n >= 0 && n <= 100) progresoRender = n
+      }
+    } catch {}
+    if (progresoRender !== undefined && progresoRender < 100) reavisar(meta.id, Date.now() + 1500, avisar)
+    // La fuente de un clip que baja o transcribe (`fuente.py` de video-base): el `_progreso.json` más reciente de sus
+    // `fuentes/`, mientras esté fresco. Se re-avisa cada 2 s para que el % se vea llenarse.
+    let fuente: Avance['fuente']
+    try {
+      const pf = globSync('fuentes/*/_progreso.json', { cwd: folder })
+        .map((r) => ({ r, st: statSync(join(folder, r), { throwIfNoEntry: false }) }))
+        .filter((x) => x.st?.isFile() && Date.now() - x.st.mtimeMs < 30 * 60_000)
+        .sort((a, b) => (b.st?.mtimeMs ?? 0) - (a.st?.mtimeMs ?? 0))[0]
+      if (pf) fuente = JSON.parse(readFileSync(join(folder, pf.r), 'utf8'))
+    } catch {}
+    if (fuente) reavisar(meta.id, Date.now() + 2000, avisar)
     const avance: Avance = {
       carpeta: folder,
       etapas,
       editor,
+      progresoRender,
+      fuente,
       monitor: conEtapas && monitorDe(meta.id, conEtapas, folder, etapas, () => avisarCarpeta(folder)),
       finales
     }

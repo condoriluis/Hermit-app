@@ -1267,6 +1267,54 @@ export interface FeedComunidad {
   mas: boolean
 }
 
+/**
+ * Una frase de la transcripción en vivo de Clips (`server/en-vivo.ts`): `start`/`end` en segundos desde que
+ * empezó a grabar el live. Llega por `envivo-texto`, en el orden en que se dijo.
+ */
+export interface VivoSegmento {
+  start: number
+  end: number
+  text: string
+}
+
+/** Un clip pedido sobre el live: en cola, renderizando, listo (con su `archivo`, ruta absoluta en `out/redes/`) o fallido. */
+export interface VivoClip {
+  id: string
+  nombre: string
+  estado: 'cola' | 'renderizando' | 'listo' | 'error'
+  archivo?: string
+  error?: string
+  /** Lo último que contó `hacer.py`, para la fila del clip. */
+  detalle?: string
+  /** El formato pedido, para enseñarlo en su tarjeta. */
+  formato?: 'vertical' | 'horizontal'
+  t: number
+}
+
+/**
+ * El live de Clips que el servidor tiene abierto (`server/en-vivo.ts`), como lo ve la página: el estado del
+ * proceso, la dirección del stream para previsualizarlo (un m3u8, `null` si la plataforma no lo suelta) y los
+ * clips pedidos. La transcripción no va aquí: llega aparte por `envivo-texto` y `GET /api/en-vivo` la devuelve
+ * entera en `texto`.
+ */
+export interface VivoEstado {
+  id: string
+  url: string
+  titulo: string
+  canal?: string
+  estado: 'conectando' | 'en-vivo' | 'terminado' | 'error' | 'cerrado'
+  error?: string
+  /** El m3u8 de la emisión para `hls.js`; `null` si el live no deja previsualizarlo aquí. */
+  stream: { url: string; headers?: Record<string, string> } | null
+  /** Si la transcripción rolling va (Whisper/Parakeet del Python de Hermit). */
+  voz: boolean
+  /** Trozos de voz esperando turno o en transcripción: dice si la transcripción va al día o con retraso. */
+  vozPendientes?: number
+  /** Cuántos segmentos del buffer caben (~10 min): lo que hay detrás para cortar. */
+  minutos: number
+  clips: VivoClip[]
+}
+
 /** Lo que el servidor empuja por el WebSocket. */
 export type ServerPush =
   | { type: 'events'; sessionId: string; from: number; events: AgentEvent[] }
@@ -1286,6 +1334,10 @@ export type ServerPush =
   | { type: 'redes'; aviso: AvisoRedes; acabo?: TandaRedes }
   /** Comunidad: se publicó algo desde esta computadora fuera de la sección (desde un hilo, o el agente). */
   | { type: 'comunidad' }
+  /** Clips en vivo: cambió el estado del live (se conectó, falló, terminó, cerró) o un clip. */
+  | { type: 'envivo'; vivo: VivoEstado | null }
+  /** Clips en vivo: frases nuevas de la transcripción, desde el índice `desde` de la lista. */
+  | { type: 'envivo-texto'; desde: number; segmentos: VivoSegmento[] }
 
 /**
  * Una fuente del radar (`server/radar/fuentes.ts`), como se guarda en `data/radar/fuentes.json`. `pagina` es una página
@@ -1397,6 +1449,12 @@ export const NAVEGADOR_REDES = 'redes'
  * Google del usuario en su propio perfil: tampoco la tienen los agentes.
  */
 export const NAVEGADOR_VOZ = 'voz'
+
+/**
+ * La página del navegador integrado de la sección Clips → En vivo: el enlace del directo la abre para ver la
+ * emisión en la propia app (investigar el chat, el canal…) sin salir de Hermit. Va con el perfil del usuario.
+ */
+export const NAVEGADOR_CLIPS = 'clips-live'
 
 /** Una voz de AI Studio: su nombre allí (`Fola`), cómo suena y el grupo en que la pone la página (`Podcast`). */
 export interface VozStudio {

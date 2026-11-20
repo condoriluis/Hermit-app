@@ -54,16 +54,38 @@ def hoja(video: Path, muestras: list, salida: Path, ancho: int, alto: int) -> No
 
 def main() -> None:
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    p.add_argument("video", type=Path)
+    p.add_argument("video", type=Path, nargs="?", help="el video a medir (o nada, con --una)")
     p.add_argument("--desde", type=float, default=0)
     p.add_argument("--hasta", type=float, default=0, help="0 = hasta el final")
     p.add_argument("--fps", type=float, default=3, help="muestras por segundo (2–4 gastan poco y bastan)")
     p.add_argument("--conf", type=float, default=0.6, help="score mínimo de la cara")
     p.add_argument("--lado", type=int, default=640, help="lado máximo del frame que ve el detector")
     p.add_argument("--hoja", type=Path, help="PNG de muestras con las cajas dibujadas")
+    p.add_argument("--una", type=Path, help="una foto (JPG/PNG): detecta sus caras y escribe el JSON por stdout")
     a = p.parse_args()
 
     import cv2
+
+    if a.una:
+        img = cv2.imread(str(a.una))
+        if img is None:
+            sys.exit(f"No pude abrir {a.una}")
+        alto, ancho = img.shape[:2]
+        escala = min(1.0, a.lado / max(ancho, alto))
+        det = cv2.FaceDetectorYN.create(str(MODELO), "", (max(32, round(ancho * escala)), max(32, round(alto * escala))), a.conf)
+        if escala < 1:
+            img = cv2.resize(img, (round(ancho * escala), round(alto * escala)))
+        _, caras = det.detect(img)
+        lista = []
+        if caras is not None:
+            for c in caras:
+                x, y, w, h = (float(v) for v in c[:4])
+                lista.append({"x": round(x / escala, 1), "y": round(y / escala, 1),
+                              "w": round(w / escala, 1), "h": round(h / escala, 1), "score": round(float(c[14]), 3)})
+        print(json.dumps({"ancho": ancho, "alto": alto, "caras": lista}))
+        return
+    if not a.video:
+        sys.exit(__doc__)
 
     cap = cv2.VideoCapture(str(a.video))
     if not cap.isOpened():

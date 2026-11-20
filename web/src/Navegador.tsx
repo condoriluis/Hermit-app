@@ -84,6 +84,18 @@ function nuevaPestana(hilo: string, url?: string) {
   if (url) puente?.ir(id, url)
 }
 
+/**
+ * Abre el navegador de `hilo` en `url`: navega la pestaña activa o crea una si no hay. Para páginas que no
+ * son de un hilo (el live de Clips se investiga en el navegador de la app).
+ */
+export function verEnNavegador(hilo: string, url: string) {
+  if (!puente || !/^https?:\/\//i.test(url)) return
+  abrirNavegador(hilo, true)
+  const { activa } = pestanasDe(hilo)
+  if (activa) puente.ir(activa, url)
+  else nuevaPestana(hilo, url)
+}
+
 function cerrarPestana(hilo: string, id: string) {
   puente?.hacer(id, 'cerrar')
   estados.delete(id)

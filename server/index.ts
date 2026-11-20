@@ -33,6 +33,7 @@ import { guardarMeta, guardarYoutube, opciones } from './opciones.ts'
 import { previas } from './previas.ts' // previas de las cards
 import { radar } from './radar/index.ts' // radar
 import { comunidad, llaveDelCreador } from './comunidad.ts' // comunidad
+import { enVivo } from './en-vivo.ts' // clips en vivo
 import { redes } from './redes/index.ts' // redes
 import { voz } from './voz/index.ts' // voz de AI Studio
 import { flow } from './flow/index.ts' // Google Flow
@@ -216,6 +217,8 @@ const comunidadApi = comunidad(APP, {
   cuadro,
   avisar: broadcast
 }) // comunidad
+// El live de la página Clips: buffer circular, transcripción rolling y clips con el hacer.py de la card.
+const enVivoApi = enVivo(APP, broadcast) // clips en vivo
 // En qué fase va cada video y cuántas etapas lleva, para la barra lateral.
 avance = avances(sessions, cards, broadcast)
 // Opciones → Espacio en disco: lo que dejan los videos y ya no hace falta. Lo seguro lo borra solo, cada 6 horas.
@@ -247,12 +250,14 @@ function ocupado(): string | null {
   if (narrar.ocupado()) return narrar.ocupado() // voz de AI Studio: una a medias
   if (generarFlow.ocupado()) return generarFlow.ocupado() // Google Flow: un pedido a medias
   if (acciones3d.ocupado()) return acciones3d.ocupado() // modelos 3D: una importación a medias
+  if (enVivoApi.ocupado()) return enVivoApi.ocupado() // clips en vivo: el live grabando o un clip renderizando
   return maquina.ocupado() ?? instalandoAlgo() ?? bajandoAgente() ?? conectando() ?? conectandoCodex() ?? conectandoOpenCode() ?? conectandoOtro()
 }
 
 /** Vuelve a levantar el servidor (lo hace scripts/start.mjs), con lo que haya cambiado. Los agentes se retoman al volver. */
 function reiniciar() {
   sessions.closeAll()
+  enVivoApi.cerrar() // el live de Clips: su ffmpeg y su transcriptor no quedan huérfanos
   process.exit(RESTART)
 }
 
@@ -401,6 +406,7 @@ async function api(req: IncomingMessage, res: ServerResponse, url: URL): Promise
   if (await narrar.api(req, res, path)) return true // voz de AI Studio
   if (await generarFlow.api(req, res, path)) return true // Google Flow
   if (await blog.api(req, res, path)) return true // artículos: la config del blog
+  if (await enVivoApi.api(req, res, path)) return true // clips en vivo
 
   if (path === '/api/opciones' && method === 'GET') {
     send(res, 200, opciones())

@@ -79,7 +79,10 @@
 .logo-ffmpeg { background: #007808; box-shadow: none; }
 .logo-paquetes { background: #3775a9; box-shadow: none; }
 .logo-instagram { background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285aeb 90%); box-shadow: none; }
-.logo.chico:is(.logo-claude, .logo-codex, .logo-opencode, .logo-deepseek, .logo-cursor, .logo-grok, .logo-muse, .logo-ffmpeg, .logo-paquetes, .logo-instagram) { box-shadow: 0 0 0 2px var(--panel-2); }
+.logo-twitch { background: #9146ff; box-shadow: none; }
+.logo-kick { background: #53fc18; box-shadow: none; }
+.logo-facebook { background: #1877f2; box-shadow: none; }
+.logo.chico:is(.logo-claude, .logo-codex, .logo-opencode, .logo-deepseek, .logo-cursor, .logo-grok, .logo-muse, .logo-ffmpeg, .logo-paquetes, .logo-instagram, .logo-twitch, .logo-kick, .logo-facebook) { box-shadow: 0 0 0 2px var(--panel-2); }
 
 /* La línea de debajo del nombre cuando se abre (las herramientas) o despliega (la cuenta de Claude). */
 .resumen, .sub .picker-trigger { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; height: auto; margin-left: -6px; padding: 1px 6px; border-radius: 6px; color: var(--muted); font-size: 12px; transition: color 0.15s, background 0.15s; }

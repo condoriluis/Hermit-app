@@ -16,7 +16,7 @@ test('AGENTS.md no pasa de 1.000 palabras: entra en cada hilo que programa Hermi
  * Los iconos son de trazo (`web/src/Iconos.tsx`), nunca emojis. Las flechas (↗) son texto y valen. Lo que ya había es
  * deuda: no crece, y al quitarlo se quita también de aquí.
  */
-const DEUDA: Record<string, string> = { 'Ideas.tsx': '💡💬🔎📺📅🎙🧭⏸⚠⚙🎬', 'Redes.tsx': '⚙', 'Timeline.tsx': '⚙' }
+const DEUDA: Record<string, string> = { 'Ideas.tsx': '💬', 'IdeasInvestigacion.tsx': '⚙🔎📺📅💬🎙🧭⏸⚠', 'IdeasPropuestas.tsx': '🎙🎬⚠', 'Redes.tsx': '⚙', 'Timeline.tsx': '⚙' }
 
 test('la interfaz no suma emojis', () => {
   const web = join(REPO, 'web', 'src')

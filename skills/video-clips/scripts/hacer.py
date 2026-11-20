@@ -23,8 +23,9 @@ Lo que el agente deja en el proyecto:
   slug del archivo (`out/redes/1-el-remate.mp4`); si falta, el número del corte. `gancho` es el texto que se
   lee los primeros segundos sobre el video (opcional, hasta 80 caracteres). `portada_titulo` es el título de
   la portada en vertical (opcional, 2 a 5 palabras; sin él, la portada usa el gancho limpio). `subtitulos` es el estilo karaoke:
-  `minimal` (Bebas Neue, el de omisión), `top` (Anton, palabra activa amarilla), `crimen` (Courier Prime,
-  ámbar) o `ninguno` (la fuente ya trae sus subtítulos: no se queman los nuestros). `formato` del JSON manda sobre `--formato`.
+  `minimal` (Bebas Neue, el de omisión), `top` (Anton, palabra activa amarilla), `centro` (el minimal
+  en el centro del cuadro), `crimen` (Courier Prime, ámbar) o `ninguno` (la fuente ya trae sus
+  subtítulos: no se queman los nuestros). `formato` del JSON manda sobre `--formato`.
   `acento` (opcional) es el golpe de color del clip: `amarillo`, `rojo`, `naranja`, `verde`, `cyan`, `azul`,
   `morado`, `rosa` o un #RRGGBB — pinta la palabra activa de los subtítulos y, con `portada_resaltar`, la
   palabra o frase elegida del título de la portada (el resto queda blanco). `portada_fuente` (opcional) es
@@ -62,7 +63,7 @@ PROYECTO = Path(_en).resolve() if _en else Path.cwd()
 if PROYECTO == SKILL.parent or SKILL.parent in PROYECTO.parents:
     sys.exit(f"{PROYECTO} es la carpeta de las skills: pasa la ruta completa de la línea `Carpeta:`.")
 FORMATOS = {"vertical": (1080, 1920), "horizontal": (1920, 1080)}
-SUBTITULOS = {"minimal", "top", "crimen", "ninguno"}
+SUBTITULOS = {"minimal", "top", "centro", "crimen", "ninguno"}
 # El acento del clip (`acento` en cortes.json): nombre de la paleta o #RRGGBB. Pinta la palabra
 # destacada de la portada y la palabra activa de los subtítulos karaoke — el mismo golpe de color
 # en todo el clip. Sin `acento`, la portada queda blanca y los subtítulos con el color del estilo.
@@ -183,11 +184,38 @@ def trayectoria_persona(fuente: Path, desde: float, hasta: float, ancho: int, al
         return None
 
 
-def asegurar_caras(fuente: Path, cortes: list[dict], reloj) -> None:
+def medidas(video: Path) -> tuple[int, int]:
+    """Ancho y alto del vídeo, con ffprobe: la misma fuente puede venir en vertical, horizontal o cuadrada."""
+    r = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries",
+                        "stream=width,height", "-of", "csv=p=0:s=x", str(video)],
+                       capture_output=True, text=True)
+    try:
+        w, h = r.stdout.strip().split("x")
+        return int(w), int(h)
+    except ValueError:
+        return 0, 0
+
+
+def hay_recorte(fuente: Path, formato: str) -> bool:
+    """Si la ventana del formato puede desplazarse dentro de la fuente. Cuando el aspecto ya es el del clip
+    (un live vertical a clip vertical), la ventana cubre todo: no hay nada que seguir y `detectar.py` sería
+    medir caras para un reencuadre imposible — se ahorra su pasada entera."""
+    dst_w, dst_h = FORMATOS.get(formato, FORMATOS["vertical"])
+    sw, sh = medidas(fuente)
+    if not sw or not sh:
+        return True  # sin medidas no se arriesga: se detecta como siempre
+    cw, ch, _ = encuadre.ventana(sw, sh, dst_w, dst_h)
+    return sw - cw > 0 or sh - ch > 0
+
+
+def asegurar_caras(fuente: Path, cortes: list[dict], reloj, formato: str = "vertical") -> None:
     """Una pasada de `detectar.py` sobre el tramo que cubren los cortes «persona», si falta o la fuente es más
     nueva. Sin cv2 (Python sin opencv) o si la detección falla, los cortes salen `centrado` y se avisa una vez."""
     suyos = [c for c in cortes if str(c.get("reencuadre") or "") in ("persona", "auto")]
     if not suyos:
+        return
+    # Si ningún formato pedido puede desplazar la ventana sobre la fuente, las caras no deciden nada.
+    if not any(hay_recorte(fuente, str(c.get("formato") or formato)) for c in suyos):
         return
     caras = fuente.with_suffix(".caras.json")
     desde = min(float(c["desde"]) for c in suyos) - 0.5
@@ -306,7 +334,7 @@ def main() -> None:
     out_dir = PROYECTO / "out" / "redes"
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    asegurar_caras(fuente, cortes, reloj)
+    asegurar_caras(fuente, cortes, reloj, formato)
 
     hechos = []
     for k, c in enumerate(cortes):
@@ -328,7 +356,16 @@ def main() -> None:
         # El norm va en out/redes/ con `_` delante: subtitulos.py corre ffmpeg con cwd=salida.parent y la entrada
         # debe estar junto a la salida; con `_` no cuenta como video terminado ni lo recoge la cola de redes.
         voz_wav = revision / "cortes" / f"corte-{k + 1:02d}-voz.wav"
-        subprocess.run(["node", str(BASE / "masterizar.mjs"), str(base), str(voz_wav)], check=True)
+        # masterizar.mjs escribe el WAV y DESPUÉS exige −14 LUFS ±0,5 con pico ≤ −1 dBTP: en mezclas muy
+        # dinámicas (música en vivo, público) puede quedar a ~0,6 LU y salir con error aunque el audio ya
+        # esté masterizado. Si el WAV existe, el clip sigue con ese audio; solo cae si no se escribió nada.
+        r_master = subprocess.run(["node", str(BASE / "masterizar.mjs"), str(base), str(voz_wav)],
+                                  capture_output=True, text=True, encoding="utf-8", errors="replace")
+        if r_master.returncode:
+            if not voz_wav.is_file():
+                sys.stderr.write(r_master.stdout + r_master.stderr)
+                sys.exit(f"masterizar.mjs falló en el corte {k + 1} ({slug})")
+            print(f"  {slug}: el master quedó a ~0,5 LU del objetivo (mezcla muy dinámica) — sale con ese audio")
         norm = out_dir / f"_corte-{k + 1:02d}-{slug}.mp4"
         ffmpeg("-i", str(base), "-i", str(voz_wav), "-map", "0:v", "-map", "1:a",
                "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", str(norm))

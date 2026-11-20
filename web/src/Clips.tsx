@@ -5,6 +5,7 @@ import { Icono } from './Iconos'
 import { Logo } from './Logos'
 import { gruposModelos, Picker } from './Composer'
 import { Fila } from './Modelos'
+import { ClipsEnVivo } from './ClipsEnVivo'
 import './Clips.css'
 
 /**
@@ -71,6 +72,8 @@ function hace(t: number): string {
 }
 
 export function Clips(props: { sessions: SessionMeta[]; models: Model[]; onHilo(id: string): void }) {
+  // «Video»: el lote de siempre (URL → hilo → el agente corta los mejores momentos). «En vivo»: el live, al momento.
+  const [vista, setVista] = useState<'video' | 'en-vivo'>('video')
   const [url, setUrl] = useState('')
   const [permiso, setPermiso] = useState('')
   const [conPermiso, setConPermiso] = useState(false)
@@ -140,17 +143,33 @@ export function Clips(props: { sessions: SessionMeta[]; models: Model[]; onHilo(
   return (
     <div className="clips">
       <div className="clips-dentro">
+        {/* En «En vivo» no hay cabecera: la pestaña es un espacio de trabajo como el estudio del hilo.
+            El botón «Volver» vive dentro del panel de la URL, en su esquina superior derecha. */}
+        {vista === 'video' && (
         <header className="clips-head galeria-head">
           <div>
             <h1>Clips</h1>
-            <p>
-              Pega la URL de un video — el tuyo o uno con permiso — y el agente lo baja, lo transcribe y te propone los
-              momentos. Tú eliges cuáles cortar: cada clip sale con su tarjeta de gancho y subtítulos karaoke, y entra
-              solo a la cola de TikTok, Reels, Shorts y YouTube.
-            </p>
+            <p>Pega la URL de un video y el agente lo corta en clips listos para redes.</p>
+          </div>
+          <div className="clips-pestanas" role="tablist">
+            {(
+              [
+                { v: 'video', nombre: 'Video' },
+                { v: 'en-vivo', nombre: 'En vivo' }
+              ] as const
+            ).map((t) => (
+              <button key={t.v} role="tab" aria-selected={vista === t.v} className={`clips-pestana ${vista === t.v ? 'on' : ''}`} onClick={() => setVista(t.v)}>
+                {t.nombre}
+              </button>
+            ))}
           </div>
         </header>
+        )}
 
+        {vista === 'en-vivo' ? (
+          <ClipsEnVivo onVolver={() => setVista('video')} />
+        ) : (
+        <>
         <section className="clips-panel">
           {/* La URL, con su plataforma y el pegado de un toque. */}
           <div className={`clips-url ${tocada && !limpia ? 'mal' : ''} ${limpia ? 'bien' : ''}`}>
@@ -183,7 +202,8 @@ export function Clips(props: { sessions: SessionMeta[]; models: Model[]; onHilo(
                 : 'YouTube, TikTok, Instagram… o el archivo de tu equipo'}
           </p>
 
-          {/* Formato y agente en dos columnas; el permiso va debajo del agente. */}
+          {/* Tres columnas parejas: formato, agente y permiso en el mismo renglón; el botón va abajo
+              a todo lo ancho, como el CTA del live. */}
           <div className="clips-opciones">
             <div className="clips-grupo">
               <span className="clips-grupo-titulo">Formato</span>
@@ -212,9 +232,8 @@ export function Clips(props: { sessions: SessionMeta[]; models: Model[]; onHilo(
               </div>
             </div>
 
-            <div className="clips-lateral">
-              <div className="clips-grupo">
-                <span className="clips-grupo-titulo">Agente</span>
+            <div className="clips-grupo">
+              <span className="clips-grupo-titulo">Agente</span>
                 <div ref={agenteRef} className={`picker modelos-selector clips-agente${agenteOpen ? ' open' : ''}`}>
                   <button
                     type="button"
@@ -277,8 +296,9 @@ export function Clips(props: { sessions: SessionMeta[]; models: Model[]; onHilo(
                 </div>
               </div>
 
-              {/* El permiso, solo si hace falta decirlo. */}
+              {/* El permiso es la tercera columna del mismo renglón: solo si hace falta decirlo. */}
               <div className="clips-permiso">
+                <span className="clips-grupo-titulo">Permiso</span>
                 <button
                   className={`clips-permiso-toggle ${conPermiso ? 'on' : ''}`}
                   onClick={() => setConPermiso(!conPermiso)}
@@ -301,7 +321,6 @@ export function Clips(props: { sessions: SessionMeta[]; models: Model[]; onHilo(
                 )}
               </div>
             </div>
-          </div>
 
           <div className="clips-acciones">
             {error && <p className="bad small">{error}</p>}
@@ -326,6 +345,8 @@ export function Clips(props: { sessions: SessionMeta[]; models: Model[]; onHilo(
               </button>
             ))}
           </section>
+        )}
+        </>
         )}
       </div>
     </div>

@@ -13,8 +13,9 @@ mientras se dice— y los quema sobre el vídeo. Deja el `.ass` al lado de la sa
 empiece la narración. El audio del vídeo no se toca, salvo que no tenga pista y sí `--voz`: entonces la voz entra como
 audio de la salida.
 
-Los tres estilos (cada uno con su tipografía de `../assets/fonts`, quemada con `fontsdir`, no con la del sistema):
+Los estilos (cada uno con su tipografía de `../assets/fonts`, quemada con `fontsdir`, no con la del sistema):
 - `minimal` (motivacional): Bebas Neue, blanco puro, palabra activa en blanco cálido apenas más cálido.
+- `centro`: el mismo minimal, pero la línea va en el centro del cuadro (Alignment 5), para talks a cámara.
 - `crimen`: Courier Prime, blanco con contorno marcado y palabra activa en ámbar, como las fechas y sellos de un expediente.
 - `top`: Anton, blanco grande, palabra activa en amarillo puro. El golpe de cuenta regresiva.
 """
@@ -37,6 +38,8 @@ FORMATOS = {"vertical": (1080, 1920), "horizontal": (1920, 1080)}
 FUENTES = BASE.parent / "assets" / "fonts"
 ESTILOS = {
     "minimal": {"palabras": 4, "fuente": "Bebas Neue", "archivo": "BebasNeue-Regular.ttf", "negrita": -1, "acento": "&H00E6F4FF", "tinta": "&H00FFFFFF", "espaciado": 1, "contorno": 0.10, "sombra": 0.04, "tam_v": 0.072, "tam_h": 0.044},
+    # `centro` es minimal en posición: ASS Alignment 5 (medio-centro) en vez del 2 (abajo) de los demás.
+    "centro": {"palabras": 4, "fuente": "Bebas Neue", "archivo": "BebasNeue-Regular.ttf", "negrita": -1, "acento": "&H00E6F4FF", "tinta": "&H00FFFFFF", "espaciado": 1, "contorno": 0.10, "sombra": 0.04, "tam_v": 0.072, "tam_h": 0.044, "alineacion": 5},
     "crimen": {"palabras": 3, "fuente": "Courier Prime", "archivo": "CourierPrime-Bold.ttf", "negrita": -1, "acento": "&H0042B0FF", "tinta": "&H00FFFFFF", "espaciado": 0, "contorno": 0.14, "sombra": 0.08, "tam_v": 0.062, "tam_h": 0.037},
     "top": {"palabras": 3, "fuente": "Anton", "archivo": "Anton-Regular.ttf", "negrita": -1, "acento": "&H0000FFFF", "tinta": "&H00FFFFFF", "espaciado": 0, "contorno": 0.12, "sombra": 0.06, "tam_v": 0.070, "tam_h": 0.042},
 }
@@ -94,7 +97,7 @@ def ass(palabras: list[tuple[float, float, str]], estilo: dict, ancho: int, alto
         "[Script Info]\nScriptType: v4.00+\n"
         f"PlayResX: {ancho}\nPlayResY: {alto}\nWrapStyle: 0\nScaledBorderAndShadow: yes\n\n"
         "[V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\n"
-        f"Style: Sub,{estilo['fuente']},{letra},{estilo['tinta']},{estilo['acento']},&H00000000,&H96000000,{estilo['negrita']},0,0,0,100,100,{estilo['espaciado']},0,1,{contorno},{sombra},2,60,60,{margen},1\n\n"
+        f"Style: Sub,{estilo['fuente']},{letra},{estilo['tinta']},{estilo['acento']},&H00000000,&H96000000,{estilo['negrita']},0,0,0,100,100,{estilo['espaciado']},0,1,{contorno},{sombra},{estilo.get('alineacion', 2)},60,60,{margen},1\n\n"
         "[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n"
     )
 

@@ -32,6 +32,7 @@
     "@opencode/client": "2.2.1",
     "@playwright/mcp": "0.0.83",
     "@vitejs/plugin-react": "^6.1.2",
+    "hls.js": "^1.7.4",
     "marked": "^18.1.0",
     "playwright-core": "^1.64.0",
     "react": "^19.3.0",

@@ -42,6 +42,14 @@
 
   --media-bg: #000;
 
+  /* Los colores por defecto del pipeline de video, no de la paleta de la app: el acento karaoke de cada
+     estilo de subtítulo (skills/video-base/scripts/subtitulos.py) y el golpe por defecto de la portada
+     (portada_sin_ia.mjs). La vista previa de clips los usa cuando no se elige acento. */
+  --sub-acento-minimal: #fff4e6;
+  --sub-acento-crimen: #ffb042;
+  --sub-acento-top: #ffff00;
+  --portada-golpe: #ffe600;
+
   --radio: 10px;
   --mono: 'JetBrains Mono', 'Cascadia Code', Consolas, monospace;
 }

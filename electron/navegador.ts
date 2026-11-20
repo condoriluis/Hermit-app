@@ -382,6 +382,10 @@ function colocar(h: Hoja) {
   const visible = !!ventana && vista?.hilo === h.hilo && !!e.url && !e.error && !e.google
   // Con Hermit minimizada o escondida tampoco la ve nadie: la vista sigue puesta, pero la página puede descansar.
   h.actividad.ver(visible && ventana!.isVisible() && !ventana!.isMinimized())
+  // Lo que no se ve no suena: la página sigue viva (pestañas, sesión, el agente), pero muda. Las de los
+  // perfiles (redes, voz) ya nacen mudas y lo siguen.
+  const suena = visible && ventana!.isVisible() && !ventana!.isMinimized() && !PERFILES[h.hilo]
+  v.webContents.setAudioMuted(!suena)
   if (!visible || !ventana || !vista) return v.setVisible(false)
   // La caja llega en píxeles de la interfaz: con zoom, no son los de la ventana.
   const z = ventana.webContents.getZoomFactor()

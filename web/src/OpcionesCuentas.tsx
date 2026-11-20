@@ -1,0 +1,886 @@
+import { type ReactNode, useEffect, useRef, useState } from 'react'
+import { type CuentaClaude as Cuenta, type EstadoAgente, type LimitesClaude, type Model, type VersionClaude } from '../../shared/types'
+import { type Proveedor, proveedorDe } from '../../shared/providers'
+import { api } from './api'
+import { Arranque } from './Arranque'
+import { Interruptor } from './OpcionesBase'
+import { Picker } from './Composer'
+import { Logo } from './Logos'
+import { Segmento } from './Segmento'
+
+/**
+ * La cuenta de Claude con la que trabaja Hermit (la de Claude Code en esta computadora). «Conectar con Claude» abre el
+ * navegador para autorizarla; si no se abrió, el enlace de respaldo da un código que se pega aquí. Sirve también para
+ * cambiar de cuenta: vuelve a autorizar.
+ */
+function useCuenta(fresco = false, proveedor = 'claude') {
+  const [cuenta, setCuenta] = useState<Cuenta | null>(null)
+  const [ocupado, setOcupado] = useState(false)
+  const [error, setError] = useState('')
+
+  // El servidor recuerda la cuenta conectada; `fresco` (Opciones) le pide mirarla otra vez.
+  const leer = (de = '') => api<Cuenta>(`/api/${proveedor}/cuenta${de}`).then(setCuenta, (e) => setError(e.message))
+  useEffect(() => void leer(fresco ? '?fresco' : ''), [])
+
+  // Mientras autorizas en el navegador, se mira cada dos segundos si ya entraste.
+  const conectando = !!cuenta?.conectando
+  useEffect(() => {
+    if (!conectando) return
+    const id = setInterval(() => leer(), 2000)
+    return () => clearInterval(id)
+  }, [conectando])
+  // Al entrar, el inicio vuelve a mirar qué cuentas hay (`useSoloChatGPT`).
+  const antes = useRef<boolean>(undefined)
+  useEffect(() => {
+    if (!cuenta) return
+    if (antes.current === false && cuenta.conectada) dispatchEvent(new Event(CUENTA_CONECTADA))
+    antes.current = cuenta.conectada
+  }, [cuenta?.conectada])
+
+  function pedir(ruta: string, datos: unknown) {
+    setOcupado(true)
+    setError('')
+    return api<Cuenta>(ruta, datos)
+      .then((cuenta) => { setCuenta(cuenta); return cuenta })
+      .catch((e) => setError(e.message))
+      .finally(() => setOcupado(false))
+  }
+
+  return { cuenta, ocupado, error: error || cuenta?.error, conectar: () => pedir(`/api/${proveedor}/conectar`, {}), pedir }
+}
+
+type UsoCuenta = ReturnType<typeof useCuenta>
+
+/**
+ * Mientras autorizas: qué hacer. El código de respaldo se pega en la ventana de Claude Code, no aquí: el inicio de sesión
+ * es todo de Anthropic (ver `server/cuenta.ts`).
+ */
+function Autorizando({ c }: { c: UsoCuenta }) {
+  if (!c.cuenta?.conectando) return null
+  return (
+    <div className="fila-extra">
+      <p className="small">Autoriza a Claude Code en la pestaña que se abrió. Al terminar, esto se actualiza solo.</p>
+      <p className="muted small">¿No se abrió el navegador? Sigue lo que dice la ventana de Claude Code: ahí mismo te da el enlace y te pide el código.</p>
+    </div>
+  )
+}
+
+/**
+ * Dónde se sacan las llaves de API de cada agente, dónde se ve lo que gastan y qué pasa con los hilos al cambiar: los de
+ * Codex siguen con lo que empezaron (`SessionMeta.conLlave`).
+ */
+const API = {
+  claude: {
+    marca: 'Anthropic',
+    llaves: 'https://console.anthropic.com/settings/keys',
+    uso: 'https://console.anthropic.com/usage',
+    hilos: 'Los hilos que trabajan ahora siguen como empezaron; los demás cambian con su siguiente mensaje.'
+  },
+  codex: {
+    marca: 'OpenAI',
+    llaves: 'https://platform.openai.com/api-keys',
+    uso: 'https://platform.openai.com/usage',
+    hilos: 'Cada hilo de Codex sigue con lo que empezó, cuenta o llave; los nuevos usan lo que elijas.'
+  }
+}
+
+/**
+ * Pagar con una llave de API en vez de con la suscripción (`server/acceso.ts`): en Opciones, `selector`, a la vista
+ * bajo cada agente; en los avisos, `boton`; y el campo donde se pega la llave. La llave se queda guardada al volver a la
+ * suscripción, para cambiar sin pegarla otra vez.
+ */
+function useLlave(c: UsoCuenta, proveedor: 'claude' | 'codex') {
+  const [pegando, setPegando] = useState(false)
+  const [llave, setLlave] = useState('')
+  const l = c.cuenta?.llave
+  const a = API[proveedor]
+  const cambiar = (api: boolean, nueva?: string | null) =>
+    c.pedir(`/api/${proveedor}/acceso`, { api, llave: nueva }).then((cuenta) => cuenta && (setPegando(false), setLlave('')))
+  // Con la llave, el menú de la cuenta lleva a lo que se gasta; lo demás está en `selector`.
+  const menu = l?.activa ? [{ label: 'Llave de API', options: [{ value: 'uso-api', label: 'Ver lo que gastas ↗' }] }] : []
+  /** Lo que toca hacer con lo elegido en el menú; `false` si no es de la llave. */
+  const elegir = (que: string) => que === 'uso-api' && (window.open(a.uso, '_blank', 'noreferrer'), true)
+  /** Elegir la llave sin ninguna guardada abre el campo; volver a la suscripción lo cierra. */
+  const elegirPago = (pago: 'cuenta' | 'api') => {
+    if (pago === 'cuenta') {
+      setPegando(false)
+      if (l?.activa) void cambiar(false)
+    } else if (!l) setPegando(true)
+    else if (!l.activa) void cambiar(true)
+  }
+  const selector = (
+    <div className="fila-extra pago">
+      <span className="muted small">Paga con</span>
+      <Segmento
+        label="Cómo paga"
+        valor={pegando || l?.activa ? 'api' : 'cuenta'}
+        opciones={[
+          { id: 'cuenta', texto: 'Tu suscripción', disabled: c.ocupado },
+          { id: 'api', texto: l ? `Llave de API …${l.final}` : 'Llave de API', disabled: c.ocupado },
+        ]}
+        onCambio={elegirPago}
+      />
+      {l && !pegando && (
+        <>
+          <button className="ghost small" disabled={c.ocupado} onClick={() => setPegando(true)}>
+            Cambiar de llave
+          </button>
+          <button className="ghost small" disabled={c.ocupado} onClick={() => void cambiar(false, null)}>
+            Quitar
+          </button>
+        </>
+      )}
+    </div>
+  )
+  const boton = !pegando && (
+    <button className="ghost" disabled={c.ocupado} onClick={() => (l ? void cambiar(true) : setPegando(true))}>
+      Usar llave de API
+    </button>
+  )
+  const formulario = pegando && (
+    <form className="fila-extra" onSubmit={(e) => (e.preventDefault(), llave.trim() && void cambiar(true, llave))}>
+      <div className="opcion-fila">
+        <input type="password" autoFocus placeholder={`Pega tu llave de ${a.marca}`} value={llave} onChange={(e) => setLlave(e.target.value)} autoComplete="off" />
+        <button className="primary" disabled={c.ocupado || !llave.trim()}>
+          {c.ocupado ? 'Probando…' : 'Guardar'}
+        </button>
+        <button type="button" className="ghost" onClick={() => (setPegando(false), setLlave(''))}>
+          Cancelar
+        </button>
+      </div>
+      <p className="muted small">
+        Se cobra por uso en tu cuenta de{' '}
+        <a href={a.llaves} target="_blank" rel="noreferrer">
+          {a.marca}
+        </a>
+        , no en tu plan. Se guarda solo en Hermit, en esta computadora. {a.hilos}
+      </p>
+    </form>
+  )
+  return { activa: !!l?.activa, menu, elegir, selector, boton, formulario }
+}
+
+/**
+ * Lo que ve quien abre la app sin cuenta de Claude: encima del compositor, y solo entonces. `onFalta` dice si falta
+ * (`undefined` mientras no se sabe), para no dejar mandar un video que no va a poder empezar.
+ */
+export function CuentaClaude({ model, onFalta }: { model?: string; onFalta?(falta?: boolean): void }) {
+  const p = proveedorDe(model ?? '')
+  if ((OTROS_AGENTES as readonly string[]).includes(p)) return <CuentaAgente key={p} p={p as OtroAgente} aviso onFalta={onFalta} />
+  return p === 'codex' ? <CuentaCodex aviso onFalta={onFalta} /> : p === 'opencode' ? <CuentaOpenCode aviso onFalta={onFalta} /> : <AvisoClaude onFalta={onFalta} />
+}
+
+const CUENTA_CONECTADA = 'hermit-cuenta-conectada'
+
+/**
+ * Información sobre qué proveedores tienen cuenta conectada.
+ */
+export interface CuentasConectadas {
+  conectados: Proveedor[]
+  cargando: boolean
+  activo: Proveedor | null
+}
+
+export function useCuentasConectadas(models: Model[] = []): CuentasConectadas {
+  const [conectados, setConectados] = useState<Proveedor[]>([])
+  const [cargando, setCargando] = useState(true)
+
+  useEffect(() => {
+    let vivo = true
+    const leer = async () => {
+      try {
+        const [claude, codex, opencode] = await Promise.all([
+          api<Cuenta>('/api/claude/cuenta').catch(() => null),
+          api<Cuenta>('/api/codex/cuenta').catch(() => null),
+          api<Cuenta>('/api/opencode/cuenta').catch(() => null)
+        ])
+        if (!vivo) return
+        const lista: Proveedor[] = []
+        if (claude?.conectada) lista.push('claude')
+        if (codex?.conectada) lista.push('codex')
+        if (opencode?.conectada) lista.push('opencode')
+
+        // Chequear otros agentes si tienen modelos disponibles
+        for (const o of OTROS_AGENTES) {
+          if (models.some((m) => proveedorDe(m.id) === o)) {
+            lista.push(o)
+          }
+        }
+        setConectados(lista)
+      } finally {
+        if (vivo) setCargando(false)
+      }
+    }
+    void leer()
+    addEventListener(CUENTA_CONECTADA, leer)
+    return () => {
+      vivo = false
+      removeEventListener(CUENTA_CONECTADA, leer)
+    }
+  }, [models])
+
+  // Proveedor prioritario activo: claude si está, si no codex, si no opencode, si no el primero disponible
+  const activo = conectados.includes('claude')
+    ? 'claude'
+    : conectados.includes('codex')
+      ? 'codex'
+      : conectados.includes('opencode')
+        ? 'opencode'
+        : (conectados[0] ?? null)
+
+  return { conectados, cargando, activo }
+}
+
+/**
+ * Con qué va un hilo nuevo si no está la cuenta de Claude (`undefined` mientras no se sabe; `false`, con Claude o sin
+ * ninguno): con ChatGPT si está su cuenta, con OpenCode si está la suya y, si no, con el primero de los demás agentes que
+ * tenga modelos (solo los tiene con su cuenta). «Optimizado» se midió con Claude y no podría empezar. Se vuelve a mirar
+ * al conectar una cuenta.
+ */
+export function useSinClaude(models: Model[] = []) {
+  const { conectados, cargando, activo } = useCuentasConectadas(models)
+  if (cargando) return undefined
+  if (conectados.includes('claude')) return false
+  return activo ?? false
+}
+
+/**
+ * Si el programa de cada agente ya se bajó (`server/agentes.ts`). Mientras se baja alguno, o con `vigilar` (se está
+ * conectando una cuenta, que lo baja antes), se mira cada dos segundos. Al acabar, avisa como al conectar una cuenta.
+ */
+function useAgentes(vigilar = false) {
+  const [agentes, setAgentes] = useState<Record<Proveedor, EstadoAgente>>()
+  const [error, setError] = useState('')
+  const leer = () => api<Record<Proveedor, EstadoAgente>>('/api/agentes').then(setAgentes, (e) => setError(e.message))
+  useEffect(() => void leer(), [])
+  const bajando = !!agentes && Object.values(agentes).some((a) => a.instalando)
+  useEffect(() => {
+    if (!bajando && !vigilar) return
+    const id = setInterval(() => void leer(), 2000)
+    return () => clearInterval(id)
+  }, [bajando, vigilar])
+  const antes = useRef(bajando)
+  useEffect(() => {
+    if (antes.current && !bajando) dispatchEvent(new Event(CUENTA_CONECTADA))
+    antes.current = bajando
+  }, [bajando])
+  const bajar = (p: Proveedor) => {
+    setError('')
+    return api<Record<Proveedor, EstadoAgente>>(`/api/${p}/descargar`, {}).then(setAgentes, (e) => setError(e.message))
+  }
+  return { agentes, error, bajar }
+}
+
+/** «Descargando Claude Code (290 MB)…», mientras se baja el programa del agente; si no, nada. */
+function Bajando({ a }: { a?: EstadoAgente }) {
+  return a?.instalando ? <span className="estado moviendo">Descargando {a.nombre} ({a.pesa})…</span> : null
+}
+
+/**
+ * OpenCode, la versión gratis: con la cuenta de OpenCode de cada quien, que se crea gratis (`server/cuenta-opencode.ts`).
+ * Sus modelos gratis no cobran nada; los de pago, del saldo que se le ponga en opencode.ai. Como las de Claude y ChatGPT,
+ * se conecta en el navegador, y su menú cambia de cuenta. Lo que hay que saber de los gratis va siempre a la vista, no en
+ * letra chica: son gratis por un tiempo, y algunos usan lo que les mandas. `aviso`: encima del compositor y en la
+ * bienvenida, solo mientras falte la cuenta.
+ */
+export function CuentaOpenCode({ aviso = false, onFalta }: { aviso?: boolean; onFalta?(falta?: boolean): void }) {
+  const c = useCuenta(true, 'opencode')
+  const { agentes, error } = useAgentes(c.ocupado)
+  const a = agentes?.opencode
+  const version = useVersion('opencode', !aviso, a?.instalado)
+  const cuenta = c.cuenta
+  const falta = cuenta ? !cuenta.conectada : undefined
+  useEffect(() => onFalta?.(falta), [falta])
+  if (aviso && !falta) return null
+  const espera = cuenta?.conectando
+  const conectar = () => {
+    // Como con ChatGPT, la pestaña se abre en el clic para que no la bloquee; si antes hay que bajar OpenCode, tarda
+    // minutos, y la página se abre al llegar el código.
+    const ventana = a?.instalado ? window.open('about:blank', '_blank') : null
+    if (ventana) ventana.opener = null
+    void c.conectar().then((cuenta) => {
+      const url = cuenta?.conectando?.url
+      if (ventana && url) ventana.location.href = url
+      else if (url) window.open(url, '_blank', 'noreferrer')
+      else ventana?.close()
+    })
+  }
+  const elegir = (que: string) => {
+    const [accion, id] = que.split(':')
+    if (accion === 'saldo') window.open(cuenta?.uso ?? 'https://opencode.ai/auth', '_blank', 'noreferrer')
+    else if (accion === 'otra') conectar()
+    else void c.pedir(`/api/opencode/${accion}`, { id })
+  }
+  const activa = cuenta?.cuentas?.find((x) => x.activa)
+  const otras = cuenta?.cuentas?.filter((x) => !x.activa) ?? []
+  const contenido = (
+    <div className="item">
+      <div className="fila">
+        <Logo de="opencode" />
+        <div className="fila-nombre">
+          <strong>
+            OpenCode <span className="gratis">Gratis con tope</span>
+          </strong>
+          {cuenta?.conectada ? (
+            <Picker
+              className="sub"
+              label={cuenta.quien || 'Cuenta conectada'}
+              value=""
+              disabled={c.ocupado}
+              groups={[
+                {
+                  label: 'Cuenta',
+                  options: [
+                    { value: 'saldo', label: 'Ver tu saldo y tu uso ↗' },
+                    { value: 'otra', label: 'Conectar otra cuenta' },
+                    ...(activa ? [{ value: `quitar:${activa.id}`, label: 'Quitar esta cuenta' }] : []),
+                  ],
+                },
+                ...(otras.length ? [{ label: 'Cambiar a', options: otras.map((x) => ({ value: `usar:${x.id}`, label: x.quien })) }] : []),
+              ]}
+              onChange={elegir}
+            />
+          ) : (
+            <span>
+              Hermit trabaja con tu cuenta de OpenCode, que se crea gratis en su página. Sus modelos gratis no te cobran nada; si
+              le pones saldo, también puedes usar los de pago. Pueden equivocarse más que Claude o ChatGPT, y no hacen imágenes
+              (portadas ni personajes nuevos).
+            </span>
+          )}
+        </div>
+        {a?.instalando ? <Bajando a={a} /> : a?.instalado && !aviso ? version.estado : null}
+        {a?.instalando ? null : espera ? (
+          <>
+            <span className="estado moviendo">Esperando al navegador…</span>
+            <button className="ghost small" disabled={c.ocupado} onClick={() => void c.pedir('/api/opencode/cancelar', {})}>
+              Cancelar
+            </button>
+          </>
+        ) : (
+          cuenta &&
+          !cuenta.conectada && (
+            <button className="primary" disabled={c.ocupado} onClick={conectar}>
+              {c.ocupado ? 'Conectando…' : 'Conectar con OpenCode'}
+            </button>
+          )
+        )}
+      </div>
+      {espera?.url && (
+        <p className="fila-extra small">
+          En la página de OpenCode, entra o crea tu cuenta gratis y confirma el código <b>{espera.codigo}</b>. Al terminar, esto
+          se actualiza solo.{' '}
+          <a href={espera.url} target="_blank" rel="noreferrer">
+            Abrir la página de OpenCode ↗
+          </a>
+        </p>
+      )}
+      {!aviso && cuenta?.conectada && <Limites proveedor="opencode" />}
+      <div className="fila-extra small">
+        <p>
+          <b>Antes de usarlo:</b> los modelos gratis lo son por tiempo limitado, a veces se saturan y tu uso gratis tiene un
+          tope que OpenCode no publica. Ese tope es de tu computadora, no de tu cuenta: cambiar de cuenta no lo repone; al
+          acabarse, vuelve solo en unas horas. Algunos (como Big Pickle)
+          usan lo que les mandas para mejorar el modelo, y otros lo guardan unos días: no les mandes datos personales ni
+          privados.{' '}
+          <a href="https://opencode.ai/docs/zen" target="_blank" rel="noreferrer">
+            Qué hace cada modelo con tus datos ↗
+          </a>
+        </p>
+      </div>
+      {(c.error || error || a?.error) && <p className="bad small fila-extra">{c.error || error || a?.error}</p>}
+      {version.aviso}
+    </div>
+  )
+  return aviso ? <section className="panel cuenta-aviso">{contenido}</section> : contenido
+}
+
+/** Los agentes que llegaron después de Claude, Codex y OpenCode (`server/proveedores.ts`), en el orden de Opciones. */
+export const OTROS_AGENTES = ['deepseek', 'grok', 'antigravity', 'gemini', 'cursor', 'muse', 'pi', 'devin'] as const satisfies readonly Proveedor[]
+type OtroAgente = (typeof OTROS_AGENTES)[number]
+
+/**
+ * Cómo se conecta cada uno y qué hay que saber antes, a la vista. `ventana`: el agente abre su propia ventana para
+ * iniciar sesión; `navegador`: da un enlace que se autoriza en el navegador; `llave`: se pega una llave de API.
+ */
+/** `salir`: el de ventana que sabe cerrar su sesión (los de navegador y llave siempre pueden). */
+const OTROS: Record<OtroAgente, { titulo: string; logo: string; como: 'ventana' | 'navegador' | 'llave'; texto: ReactNode; ayuda?: ReactNode; uso?: string; abreSolo?: string; beta?: boolean; gratis?: string; salir?: true }> = {
+  deepseek: {
+    titulo: 'DeepSeek · con tu llave de API',
+    logo: 'deepseek',
+    como: 'llave',
+    beta: true,
+    texto: 'Trabaja en el mismo Claude Code de Hermit, con los modelos de DeepSeek: las skills, los subagentes y el navegador van igual que con Claude. Se cobra por uso, del saldo de tu cuenta de DeepSeek.',
+    ayuda: (
+      <>
+        Créala en{' '}
+        <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noreferrer">
+          platform.deepseek.com
+        </a>{' '}
+        y ponle saldo. Se guarda solo en Hermit, en esta computadora.
+      </>
+    )
+  },
+  grok: {
+    titulo: 'Grok · xAI',
+    logo: 'grok',
+    como: 'ventana',
+    beta: true,
+    gratis: 'Gratis con cupo',
+    texto: 'Hermit trabaja con tu cuenta de Grok. Al conectar se abre una ventana de Grok que te lleva a autorizarla en el navegador.',
+    uso: 'https://grok.com',
+    salir: true
+  },
+  antigravity: {
+    titulo: 'Antigravity · Google',
+    logo: 'antigravity',
+    como: 'navegador',
+    beta: true,
+    abreSolo: 'Abriendo Antigravity: al terminar se abre sola la página de Google',
+    gratis: 'Gratis con cupo semanal',
+    texto: 'Hermit trabaja con tu cuenta de Google en Antigravity, con sus modelos de Gemini. La cuenta se autoriza en el navegador.'
+  },
+  gemini: {
+    titulo: 'Gemini · con tu llave de API',
+    logo: 'gemini',
+    como: 'llave',
+    beta: true,
+    gratis: 'Gratis para probar',
+    texto: 'Trabaja con Gemini CLI y tu llave de AI Studio: no con tu cuenta ni tu plan de Google, que Gemini CLI ya no acepta. La llave gratis alcanza para probar; para trabajar, actívale la facturación.',
+    ayuda: (
+      <>
+        Créala en{' '}
+        <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer">
+          aistudio.google.com
+        </a>
+        . Se guarda solo en Hermit, en esta computadora.
+      </>
+    )
+  },
+  cursor: {
+    titulo: 'Cursor',
+    logo: 'cursor',
+    como: 'navegador',
+    texto: 'Hermit trabaja con tu cuenta de Cursor, que pide un plan de pago para su agente. La cuenta se autoriza en el navegador.'
+  },
+  muse: {
+    titulo: 'Muse Code · Meta',
+    logo: 'muse',
+    como: 'ventana',
+    texto: 'Hermit trabaja con tu cuenta de Meta. Al conectar se abre una ventana de Muse Code que te lleva a autorizarla.'
+  },
+  pi: {
+    titulo: 'Pi',
+    logo: 'pi',
+    como: 'ventana',
+    beta: true,
+    texto: 'Pi trabaja con el proveedor que conectes en él: tu plan de Claude, de ChatGPT o de Copilot, Gemini o una llave de API (DeepSeek, OpenRouter…).',
+    ayuda: (
+      <>
+        En la ventana de Pi, elige tu proveedor y sigue sus pasos: se cierra sola al terminar. Pi también usa las llaves de API que tengas en las variables
+        de tu usuario, pero no las que guardaste en Hermit, salvo que se lo elijas aquí.
+      </>
+    )
+  },
+  devin: {
+    titulo: 'Devin · Cognition',
+    logo: 'devin',
+    como: 'navegador',
+    beta: true,
+    texto: 'Hermit trabaja con tu cuenta de Devin (la de Cognition: la misma con la que entras en Devin o en Windsurf). La cuenta se autoriza en el navegador; si ya tienes sesión ahí, entra sola.',
+    uso: 'https://app.devin.ai',
+    salir: true
+  }
+}
+
+/**
+ * Un agente de los demás: su cuenta, su versión y el botón para conectarla, según cómo se conecta. `aviso`: encima del
+ * compositor y en la bienvenida, solo mientras falte la cuenta.
+ */
+export function CuentaAgente({ p, aviso = false, onFalta }: { p: OtroAgente; aviso?: boolean; onFalta?(falta?: boolean): void }) {
+  const o = OTROS[p]
+  const c = useCuenta(true, p)
+  const { agentes, error } = useAgentes(c.ocupado || !!c.cuenta?.conectando)
+  const a = agentes?.[p]
+  const version = useVersion(p, !aviso, a?.instalado)
+  const [pegando, setPegando] = useState(false)
+  const [llave, setLlave] = useState('')
+  const cuenta = c.cuenta
+  const falta = cuenta ? !cuenta.conectada : undefined
+  useEffect(() => onFalta?.(falta), [falta])
+  if (aviso && !falta) return null
+  const espera = cuenta?.conectando
+  const guardarLlave = (nueva: string | null) =>
+    c.pedir(`/api/${p}/acceso`, { api: !!nueva, llave: nueva }).then((x) => x && (setPegando(false), setLlave('')))
+  const conectar = () => {
+    if (o.como === 'llave') return setPegando(true)
+    if (o.como === 'ventana') return void c.conectar()
+    if (o.abreSolo) return void c.conectar()
+    // En el navegador: la pestaña se abre en el clic para que no la bloqueen, y va al enlace cuando llega.
+    const ventana = window.open('about:blank', '_blank')
+    if (ventana) ventana.opener = null
+    void c.conectar().then((x) => {
+      const url = x?.conectando?.url
+      if (ventana && url) ventana.location.href = url
+      else ventana?.close()
+    })
+  }
+  const elegir = (que: string) => {
+    if (que === 'uso') window.open(cuenta?.uso ?? o.uso, '_blank', 'noreferrer')
+    else if (que === 'cambiar') o.como === 'llave' ? setPegando(true) : conectar()
+    else if (que === 'quitar') void (o.como === 'llave' ? guardarLlave(null) : c.pedir(`/api/${p}/salir`, {}))
+  }
+  const contenido = (
+    <div className="item">
+      <div className="fila">
+        <Logo de={o.logo} nombre={o.titulo} />
+        <div className="fila-nombre">
+          <strong>
+            {o.titulo}
+            {o.beta && <span className="beta">Beta</span>}
+            {o.gratis && <span className="gratis">{o.gratis}</span>}
+          </strong>
+          {cuenta?.conectada ? (
+            <Picker
+              className="sub"
+              label={cuenta.quien || 'Cuenta conectada'}
+              value=""
+              disabled={c.ocupado}
+              groups={[
+                {
+                  label: o.como === 'llave' ? 'Llave' : 'Cuenta',
+                  options: [
+                    ...(cuenta.uso || o.uso ? [{ value: 'uso', label: o.como === 'llave' ? 'Ver tu saldo ↗' : 'Ver tu uso ↗' }] : []),
+                    { value: 'cambiar', label: o.como === 'llave' ? 'Cambiar de llave' : 'Cambiar de cuenta' },
+                    ...(o.como !== 'ventana' || o.salir ? [{ value: 'quitar', label: o.como === 'llave' ? 'Quitar la llave' : 'Cerrar sesión' }] : []),
+                  ],
+                },
+              ]}
+              onChange={elegir}
+            />
+          ) : (
+            <span>{o.texto}</span>
+          )}
+        </div>
+        {a?.instalando ? <Bajando a={a} /> : a?.instalado && !aviso ? version.estado : null}
+        {a?.instalando ? null : espera ? (
+          <>
+            <span className="estado moviendo">{o.como === 'ventana' ? 'Esperando a la ventana…' : 'Esperando al navegador…'}</span>
+            {o.como === 'navegador' && (
+              <button className="ghost small" disabled={c.ocupado} onClick={() => void c.pedir(`/api/${p}/cancelar`, {})}>
+                Cancelar
+              </button>
+            )}
+          </>
+        ) : (
+          cuenta &&
+          !cuenta.conectada &&
+          !pegando && (
+            <button className="primary" disabled={c.ocupado} onClick={conectar}>
+              {c.ocupado ? 'Conectando…' : o.como === 'llave' ? 'Añadir llave' : `Conectar con ${o.titulo.split(' ·')[0]}`}
+            </button>
+          )
+        )}
+      </div>
+      {o.beta && <p className="fila-extra muted small">Está en beta: puedes probarlo, pero puede tener errores. Si te topas con uno, repórtalo en la Comunidad, en Ayuda.</p>}
+      {pegando && (
+        <form className="fila-extra" onSubmit={(e) => (e.preventDefault(), llave.trim() && void guardarLlave(llave.trim()))}>
+          <div className="opcion-fila">
+            <input type="password" autoFocus placeholder="Pega tu llave de API" value={llave} onChange={(e) => setLlave(e.target.value)} autoComplete="off" />
+            <button className="primary" disabled={c.ocupado || !llave.trim()}>
+              {c.ocupado ? 'Probando…' : 'Guardar'}
+            </button>
+            <button type="button" className="ghost" onClick={() => (setPegando(false), setLlave(''))}>
+              Cancelar
+            </button>
+          </div>
+          {o.ayuda && <p className="muted small">{o.ayuda}</p>}
+        </form>
+      )}
+      {espera && o.como === 'ventana' && <p className="fila-extra small"><span>{o.ayuda ?? `Sigue lo que dice la ventana de ${o.titulo.split(' ·')[0]}. Al cerrarla, esto se actualiza solo.`}</span></p>}
+      {espera && !espera.url && o.abreSolo && <div className="fila-extra small">{espera.arranque ? <Arranque texto={o.abreSolo} {...espera.arranque} /> : o.abreSolo}</div>}
+      {espera?.url && (
+        <p className="fila-extra small">
+          Autoriza la cuenta en la pestaña que se abrió. Al terminar, esto se actualiza solo.{' '}
+          <a href={espera.url} target="_blank" rel="noreferrer">
+            Abrir la página de inicio de sesión ↗
+          </a>
+        </p>
+      )}
+      {!cuenta?.conectada && !espera && !pegando && o.como === 'ventana' && o.ayuda && !aviso && <p className="fila-extra muted small"><span>{o.ayuda}</span></p>}
+      {cuenta?.llavesHermit && !!cuenta.llavesHermit.de.length && !aviso && (
+        <div className="fila-extra pago">
+          <span className="muted small">
+            Tienes en Hermit llaves de {cuenta.llavesHermit.de.join(', ')}.{' '}
+            {cuenta.llavesHermit.usar ? `${o.titulo} las usa, y lo que hagas con esos modelos se cobra por uso en ellas.` : `${o.titulo} no las ve: así no cobra en ellas sin que lo elijas.`}
+          </span>
+          <Interruptor on={cuenta.llavesHermit.usar} disabled={c.ocupado} onCambiar={(usar) => void c.pedir(`/api/${p}/llaves`, { usar })} etiqueta="Usarlas en Pi" />
+        </div>
+      )}
+      {(c.error || error || a?.error) && <p className="bad small fila-extra">{c.error || error || a?.error}</p>}
+      {version.aviso}
+    </div>
+  )
+  return aviso ? <section className="panel cuenta-aviso">{contenido}</section> : contenido
+}
+
+/** La cuenta de ChatGPT, solo si falta, como la de Claude: en la bienvenida. */
+export const CuentaChatGPT = ({ onFalta }: { onFalta?(falta?: boolean): void }) => <CuentaCodex aviso onFalta={onFalta} />
+
+function AvisoClaude({ onFalta }: { onFalta?(falta?: boolean): void }) {
+  const c = useCuenta()
+  const { agentes } = useAgentes(!!c.cuenta?.conectando)
+  const llave = useLlave(c, 'claude')
+  const falta = c.cuenta ? !c.cuenta.conectada : undefined
+  useEffect(() => onFalta?.(falta), [falta])
+  if (!c.cuenta || !falta) return null
+  return (
+    <section className="panel cuenta-aviso">
+      <div className="item">
+        <div className="fila">
+          <Logo de="claude" />
+          <div className="fila-nombre">
+            <strong>Conecta tu cuenta de Claude</strong>
+            {!c.cuenta.conectando && <span>Hermit trabaja con tu plan de pago de Claude (Pro o Max), o con una llave de API. La cuenta se autoriza una sola vez en el navegador.</span>}
+          </div>
+          {agentes?.claude.instalando ? (
+            <Bajando a={agentes.claude} />
+          ) : c.cuenta.conectando ? (
+            <span className="estado moviendo">Esperando al navegador…</span>
+          ) : (
+            <>
+              {llave.boton}
+              <button className="primary" disabled={c.ocupado} onClick={c.conectar}>
+                {c.ocupado ? 'Abriendo el navegador…' : 'Conectar con Claude'}
+              </button>
+            </>
+          )}
+        </div>
+        {llave.formulario}
+        <Autorizando c={c} />
+        {c.error && <p className="bad small fila-extra">{c.error}</p>}
+      </div>
+    </section>
+  )
+}
+
+/**
+ * La misma cuenta de ChatGPT que usa Codex en esta computadora. El navegador termina la autorización. En Opciones se ve
+ * como Claude Code: la cuenta con su menú, la versión y los límites del plan.
+ */
+export function CuentaCodex({ aviso = false, onFalta }: { aviso?: boolean; onFalta?(falta?: boolean): void }) {
+  const c = useCuenta(true, 'codex')
+  const { agentes } = useAgentes(c.ocupado)
+  const llave = useLlave(c, 'codex')
+  const version = useVersion('codex', !aviso, agentes?.codex.instalado)
+  const falta = c.cuenta ? !c.cuenta.conectada : undefined
+  useEffect(() => onFalta?.(falta), [falta])
+  if (aviso && !falta) return null
+  const cuenta = c.cuenta
+  const url = cuenta?.conectando?.url
+  const conectar = () => {
+    // Se abre en el clic para que el navegador no bloquee la pestaña mientras llega la URL.
+    const ventana = window.open('about:blank', '_blank')
+    if (ventana) ventana.opener = null
+    void c.conectar().then((cuenta) => {
+      if (ventana && cuenta?.conectando?.url) ventana.location.href = cuenta.conectando.url
+      else ventana?.close()
+    })
+  }
+  const contenido = (
+    <div className="item">
+      <div className="fila">
+        <Logo de="codex" />
+        <div className="fila-nombre">
+          <strong>
+            Codex · ChatGPT
+            {cuenta?.conectada && !llave.activa && cuenta.plan?.toLowerCase() === 'free' && <span className="gratis">Gratis con cupo</span>}
+          </strong>
+          {cuenta?.conectada ? (
+            <Picker
+              className="sub"
+              label={[cuenta.quien, conMayuscula(cuenta.plan)].filter(Boolean).join(' · ') || 'Cuenta conectada'}
+              value=""
+              disabled={c.ocupado}
+              groups={[
+                ...(llave.activa
+                  ? []
+                  : [
+                      {
+                        label: 'Cuenta',
+                        options: [
+                          { value: 'uso', label: 'Ver tu uso ↗' },
+                          { value: 'cambiar', label: 'Cambiar de cuenta' },
+                        ],
+                      },
+                    ]),
+                ...llave.menu,
+              ]}
+              onChange={(que) => llave.elegir(que) || (que === 'uso' ? window.open('https://chatgpt.com/codex/settings/usage', '_blank', 'noreferrer') : conectar())}
+            />
+          ) : (
+            <span>Hermit trabaja con tu cuenta de ChatGPT — el plan gratis tiene cupo limitado — o con una llave de API, y con ella hace las imágenes de los videos: portadas y personajes. La cuenta se autoriza en el navegador.</span>
+          )}
+        </div>
+        {agentes?.codex.instalando ? <Bajando a={agentes.codex} /> : version.estado}
+        {agentes?.codex.instalando ? null : cuenta?.conectando ? (
+          <span className="estado moviendo">Esperando al navegador…</span>
+        ) : (
+          cuenta &&
+          !cuenta.conectada && (
+            <>
+              {aviso && llave.boton}
+              <button className="primary" disabled={c.ocupado} onClick={conectar}>
+                {c.ocupado ? 'Conectando…' : 'Conectar con ChatGPT'}
+              </button>
+            </>
+          )
+        )}
+      </div>
+      {!aviso && cuenta && llave.selector}
+      {llave.formulario}
+      {url && <p className="fila-extra small"><a href={url} target="_blank" rel="noreferrer">Abrir inicio de sesión de ChatGPT ↗</a>. Vuelve aquí después de autorizar.</p>}
+      {!aviso && cuenta?.conectada && <Limites proveedor="codex" />}
+      {c.error && <p className="bad small fila-extra">{c.error}</p>}
+      {version.aviso}
+    </div>
+  )
+  return aviso ? <section className="panel cuenta-aviso">{contenido}</section> : contenido
+}
+
+/** `plus` → `Plus`: el plan como lo escribe su marca. */
+const conMayuscula = (s?: string) => s && s[0].toUpperCase() + s.slice(1)
+
+/**
+ * La versión de un agente (`estado`, a la derecha de su fila), la que trae Hermit: llega al día con cada versión de Hermit.
+ * `aviso`, debajo, si no se pudo leer.
+ */
+function useVersion(de: Proveedor, mirar = true, instalado?: boolean) {
+  const [p, setVersion] = useState<VersionClaude | null>(null)
+  const [error, setError] = useState('')
+
+  // Se vuelve a preguntar al terminar de bajarse el agente: si no, seguiría diciendo «No está instalado».
+  useEffect(() => {
+    if (mirar) void api<VersionClaude>(`/api/${de}/version`).then(setVersion, (e) => setError(e.message))
+  }, [instalado])
+
+  let estado: ReactNode
+  if (!mirar) estado = null
+  else if (!p) estado = <span className="muted small">{error ? '' : 'Buscando versión…'}</span>
+  else if (!p.instalada) estado = <span className="estado apagado">No está instalado</span>
+  else estado = <span className="estado">{p.instalada}</span>
+  const aviso = error && <p className="bad small fila-extra">{error}</p>
+  return { estado, aviso }
+}
+
+/** Claude Code: con qué cuenta trabaja y qué versión tiene. */
+export function Agentes() {
+  const c = useCuenta(true)
+  const { agentes } = useAgentes(!!c.cuenta?.conectando)
+  const llave = useLlave(c, 'claude')
+  const version = useVersion('claude', true, agentes?.claude.instalado)
+  const cuenta = c.cuenta
+  return (
+    <>
+      <div className="item">
+        <div className="fila">
+          <Logo de="claude" />
+          <div className="fila-nombre">
+            <strong>Claude Code</strong>
+            {!cuenta ? (
+              <span>{c.error ? 'No se pudo ver la cuenta' : 'Mirando la cuenta…'}</span>
+            ) : cuenta.conectada ? (
+              <Picker
+                className="sub"
+                label={[cuenta.quien, conMayuscula(cuenta.plan)].filter(Boolean).join(' · ')}
+                value=""
+                disabled={c.ocupado}
+                groups={[
+                  ...(llave.activa
+                    ? []
+                    : [
+                        {
+                          label: 'Cuenta',
+                          options: [
+                            { value: 'uso', label: 'Ver tu uso ↗' },
+                            { value: 'cambiar', label: 'Cambiar de cuenta' },
+                          ],
+                        },
+                      ]),
+                  ...llave.menu,
+                ]}
+                onChange={(que) => llave.elegir(que) || (que === 'uso' ? window.open('https://claude.ai/settings/usage', '_blank', 'noreferrer') : c.conectar())}
+              />
+            ) : cuenta.conectando ? (
+              <span className="falta">Esperando al navegador…</span>
+            ) : (
+              <span className="falta">Sin cuenta: Hermit trabaja con tu plan de pago de Claude (Pro o Max) o con una llave de API</span>
+            )}
+          </div>
+          {agentes?.claude.instalando ? <Bajando a={agentes.claude} /> : version.estado}
+          {cuenta && !cuenta.conectada && !cuenta.conectando && (
+            <button className="primary" disabled={c.ocupado} onClick={c.conectar}>
+              {c.ocupado ? 'Abriendo el navegador…' : 'Conectar con Claude'}
+            </button>
+          )}
+        </div>
+        {cuenta && llave.selector}
+        {llave.formulario}
+        <Autorizando c={c} />
+        {/* Con una llave de API no hay plan ni límites: se paga por uso. */}
+        {cuenta?.conectada && cuenta.plan && <Limites proveedor="claude" />}
+        {c.error && <p className="bad small fila-extra">{c.error}</p>}
+        {version.aviso}
+      </div>
+    </>
+  )
+}
+
+/**
+ * Cuánto va de los límites del plan de Claude o de ChatGPT, debajo de la cuenta: una barra por ventana, verde con holgura,
+ * menta si se acerca y roja casi al tope, con cuándo vuelve a cero. Preguntarlo abre Claude Code (o Codex): solo aquí, y
+ * el servidor lo guarda un minuto.
+ */
+function Limites({ proveedor }: { proveedor: Proveedor }) {
+  const [limites, setLimites] = useState<LimitesClaude | null>(null)
+  const [fallo, setFallo] = useState(false)
+  useEffect(() => void api<LimitesClaude>(`/api/${proveedor}/limites`).then(setLimites, () => setFallo(true)), [])
+  if (fallo) return <p className="muted small fila-extra">No se pudo ver cuánto llevas de los límites del plan.</p>
+  if (!limites) return <p className="muted small fila-extra">Mirando los límites del plan…</p>
+  if (!limites.ventanas.length) return null
+  return (
+    <div className="fila-extra limites">
+      {limites.ventanas.map((v) => (
+        <div key={v.nombre} className="limite">
+          <div className="limite-nombre">
+            <span>{v.nombre}</span>
+            <span>{Math.round(v.uso)} %</span>
+          </div>
+          <div className={`limite-barra${v.uso >= 90 ? ' lleno' : v.uso >= 70 ? ' alto' : ''}`} role="meter" aria-label={v.nombre} aria-valuenow={Math.round(v.uso)} aria-valuemin={0} aria-valuemax={100}>
+            <span style={{ width: `${Math.min(v.uso, 100)}%` }} />
+          </div>
+          {v.reinicia && (
+            <span className="muted" title={new Date(v.reinicia).toLocaleString('es-MX', { dateStyle: 'full', timeStyle: 'short' })}>
+              Se reinicia {cuandoReinicia(new Date(v.reinicia))}
+            </span>
+          )}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado']
+const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
+
+/** Cuándo vuelve a cero un límite, dicho en llano: «hoy a las 21:09», «mañana a la 1:30», «el miércoles 14», «el jueves 4 de diciembre». */
+function cuandoReinicia(d: Date) {
+  const hora = `${d.getHours() === 1 ? 'la' : 'las'} ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`
+  const ahora = new Date()
+  const manana = new Date()
+  manana.setDate(manana.getDate() + 1)
+  if (d.toDateString() === ahora.toDateString()) return `hoy a ${hora}`
+  if (d.toDateString() === manana.toDateString()) return `mañana a ${hora}`
+  // El mes, solo cuando no es el de ahora: sin él, «el viernes 4» parecía un día de este mes.
+  const mes = d.getMonth() === ahora.getMonth() && d.getFullYear() === ahora.getFullYear() ? '' : ` de ${MESES[d.getMonth()]}`
+  return `el ${DIAS[d.getDay()]} ${d.getDate()}${mes}`
+}

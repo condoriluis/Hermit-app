@@ -101,7 +101,7 @@ export function refDe(cabecera: string | null): string | null {
 async function anotar(req: Request, env: Env, ses: string, tipo: 'pagina' | 'descarga', ruta: string | null, so: string | null): Promise<void> {
   const cf = cfDe(req)
   await env.DB.prepare('INSERT INTO visitas (ts, sesion, tipo, ruta, ref, pais, ciudad, so, disp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
-    .bind(new Date().toISOString(), ses, tipo, ruta, refDe(req.headers.get('referer')), cf.country ?? null, cf.city ?? null, so, dispDe(agente(req)))
+    .bind(new Date().toISOString(), ses, tipo, ruta, refDe(req.headers.get('referer')), cf.country ?? null, cf.city ?? null, so ?? soDe(agente(req)), dispDe(agente(req)))
     .run()
 }
 

@@ -19,9 +19,12 @@ test('la descripción respeta los bytes de YouTube y solo enlaza fuentes verific
 test('acepta recomendaciones de varios videos, ejecuta dos a la vez y continúa aunque falle uno', async (t) => {
   const base = resolve('data'); mkdirSync(base, { recursive: true })
   const app = mkdtempSync(join(base, 'prueba-youtube-cola-'))
+  // Sin tu carpeta de trabajo real: las investigaciones de Ideas no deben colarse en la prueba.
+  process.env.HERMIT_TRABAJO = join(app, 'trabajo')
   let servicio: ReturnType<typeof recomendacionesYoutube> | undefined
   const liberar = new Map<string, () => void>()
   t.after(async () => {
+    delete process.env.HERMIT_TRABAJO
     for (const ok of liberar.values()) ok()
     const fin = Date.now() + 10_000
     while (servicio?.ocupado() && Date.now() < fin) { for (const ok of liberar.values()) ok(); await new Promise((ok) => setTimeout(ok, 20)) }
@@ -84,7 +87,8 @@ test('acepta recomendaciones de varios videos, ejecuta dos a la vez y continúa 
 test('retoma la cola guardada al abrir Hermit y rechaza versiones que cambiaron mientras esperaban', async (t) => {
   const base = resolve('data'); mkdirSync(base, { recursive: true })
   const app = mkdtempSync(join(base, 'prueba-youtube-retomar-'))
-  t.after(() => { assert.ok(app.startsWith(base + sep)); rmSync(app, { recursive: true, force: true }) })
+  process.env.HERMIT_TRABAJO = join(app, 'trabajo')
+  t.after(() => { delete process.env.HERMIT_TRABAJO; assert.ok(app.startsWith(base + sep)); rmSync(app, { recursive: true, force: true }) })
   mkdirSync(join(app, 'data', 'youtube'), { recursive: true })
   guardar(join(app, 'video-a.mp4'), 'Archivo de prueba a')
   guardar(join(app, 'video-b.mp4'), 'Archivo de prueba b')
@@ -123,7 +127,8 @@ test('rechaza referencias inventadas y títulos demasiado largos, conservando m�
 test('el análisis adjunta fotogramas y miniaturas reales, conserva su resultado y no modifica borradores', async (t) => {
   const base = resolve('data'); mkdirSync(base, { recursive: true })
   const app = mkdtempSync(join(base, 'prueba-youtube-analisis-'))
-  t.after(() => { assert.ok(app.startsWith(base + sep)); rmSync(app, { recursive: true, force: true }) })
+  process.env.HERMIT_TRABAJO = join(app, 'trabajo')
+  t.after(() => { delete process.env.HERMIT_TRABAJO; assert.ok(app.startsWith(base + sep)); rmSync(app, { recursive: true, force: true }) })
   const folder = join(app, 'episodio'); mkdirSync(folder)
   const ruta = join(folder, 'video.mp4')
   execFileSync('ffmpeg', ['-nostdin', '-v', 'error', '-f', 'lavfi', '-i', 'color=c=gray:s=320x180:d=2', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', ruta], { windowsHide: true })

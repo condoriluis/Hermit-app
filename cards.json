@@ -555,6 +555,7 @@
   {
     "id": "video-clips",
     "title": "Clips",
+    "soloCreador": true,
     "description": "Momentos de un video largo, propios o con permiso: cada clip es un corte exacto en borde de palabra, con su tarjeta de gancho, reencuadre a 9:16 u 16:9 y subtítulos karaoke palabra a palabra, listo para TikTok, Reels, Shorts o YouTube.",
     "skill": "video-clips",
     "produce": "video",
@@ -645,6 +646,7 @@
     "description": "Sube tus fotos y videos —viajes, eventos, familia, producto, lo que sea— y el agente arma un video profesional: collage animado, paneos, clips recortados, títulos cinéticos y música.",
     "skill": "video-propio",
     "produce": "video",
+    "musica": true,
     "icon": "escena",
     "voz": {
       "propia": "Sin narración"
@@ -830,6 +832,7 @@
   {
     "id": "articulo-blog",
     "title": "Artículo para tu blog",
+    "soloCreador": true,
     "description": "Redacta artículos de alta calidad técnica y SEO con imagen de portada editorial generada con IA, categoría y tags, y los publica en el blog que conectes en Opciones → Artículos.",
     "skill": "articulo-blog",
     "produce": "articulo",

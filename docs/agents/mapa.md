@@ -109,6 +109,8 @@ Este es el mapa:
   cuentas desechables (`data/investigacion/perfil`, nunca las que publican) y mide Instagram con la API de Meta.
   «Proponer» abre `ideas-youtube` o `ideas-vertical` (con
   `mcp.ts`); «Hacer con…», un borrador de un estilo con la línea `Idea: <canal>/<idea>`.
+  En la app que se vende solo la abre la copia del creador, por su llave de publicar (`server/permisos.ts`,
+  capacidad `ideas`); la página Clips (`clips`, con `/api/en-vivo`) y las cards `soloCreador` (`privadas`) igual.
 - `server/radar/`: buscador propio de noticias tech, cada 5 minutos (`POST /api/radar/buscar`).
 - La comunidad (`web/src/Comunidad.tsx`, `server/comunidad.ts`): un feed como el de Skool que vive en el Worker del cobro
   (`licencias/src/comunidad.ts`); cada quien entra con su cuenta gratis (o la clave de su apoyo) y tú, como creador, con la llave de `publicar.txt`.

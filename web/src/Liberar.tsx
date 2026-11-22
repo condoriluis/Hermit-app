@@ -67,7 +67,7 @@ export function Liberar({ onAnunciar }: { onAnunciar(version: string): void }) {
           }}
           onClose={() => setPreguntar(false)}
         >
-          Quien no apoya la recibe ahora, sin esperar al {cuando}. No se puede deshacer: en cuanto alguien la baja, ya la tiene.
+          Quien no apoya recibe ahora la última versión de la app, sin esperar al {cuando}: todo lo que traiga, incluidas las páginas de creador que abra (Ideas, Clips, artículos). No se puede deshacer: en cuanto alguien la baja, ya la tiene.
         </Confirm>
       )}
     </div>

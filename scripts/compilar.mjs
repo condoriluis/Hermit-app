@@ -7,7 +7,8 @@
 // `--sin-instalador` la deja lista para abrir, sin instalar, en dist/instalador. Lleva su propio Node, la interfaz y el
 // servidor ya armados, y solo las skills de sus
 // cards. No lleva lo que solo sirve aquí: tus datos (`data/`, `trabajo/`, y tus huellas, tus poses y tus modelos 3D en
-// las skills) ni Ideas. Lo que se esconde en el código depende de `VENTA` (`shared/venta.ts`).
+// las skills). Lo que se esconde en el código depende de `VENTA` (`shared/venta.ts`); Ideas viaja pero solo la abre
+// la copia del creador (`server/permisos.ts`).
 import { execFileSync, execSync } from 'node:child_process'
 import { cpSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import { basename, dirname, join } from 'node:path'
@@ -48,6 +49,8 @@ const NOVEDAD = readFileSync(join(REPO, 'novedad.txt'), 'utf8').split(/\r?\n/)[0
 
 /** Además de las de cada card: la base común de los estilos y la biblioteca de modelos 3D. */
 const SKILLS_BASE = ['video-base', 'modelos-3d']
+/** Las de Ideas: viajan para que la copia del creador las use (`server/permisos.ts`); a los demás no les sirven de nada. */
+const SKILLS_CREADOR = ['ideas-youtube', 'ideas-vertical']
 /**
  * Los paquetes que el servidor carga o lanza. Lo demás ya va dentro de server/index.mjs o de la interfaz. De los agentes
  * van solo su SDK y su lanzador: su programa (cientos de MB cada uno) se baja al elegirlo (`server/agentes.ts`).
@@ -69,9 +72,7 @@ const esBanco = (ruta) => basename(ruta) === 'banco' && basename(dirname(ruta)) 
 const MODELOS = join(REPO, 'skills', 'modelos-3d', 'modelos')
 const limpio = (ruta) => !BASURA.has(basename(ruta)) && !TUYO.includes(ruta) && !esBanco(ruta) && dirname(ruta) !== MODELOS
 
-/** Ideas no se vende: `VENTA` nunca la abre, y aquí su código se cambia por nada para que no viaje en la app. */
-const IDEAS = /[\\/](server[\\/]ideas[\\/](index|mcp)\.ts|web[\\/]src[\\/]Ideas\.tsx)$/
-const SIN_IDEAS = 'export const Ideas = null, ideas = null, herramientasIdeas = () => ({})'
+// Ideas sí viaja en la app: solo la abre la copia del creador, por su llave de publicar (`server/permisos.ts`).
 
 const paso = (texto) => console.log(`\n· ${texto}`)
 // Compilada desde un hilo de Hermit, heredaría el `development` de su Vite, y React saldría en modo desarrollo.
@@ -96,7 +97,7 @@ await vite({
   configFile: false,
   mode: 'production',
   logLevel: 'warn',
-  plugins: [react(), { name: 'sin-ideas', enforce: 'pre', load: (id) => (IDEAS.test(id) ? SIN_IDEAS : undefined) }],
+  plugins: [react()],
   define: { __VENTA__: 'true' },
   build: { outDir: join(APP, 'web'), emptyOutDir: true, chunkSizeWarningLimit: 4000 }
 })
@@ -118,7 +119,6 @@ const { metafile } = await esbuild({
   packages: 'external',
   define: { __VENTA__: 'true', __NUBE__: JSON.stringify(nube.outputFiles[0].text) },
   minifySyntax: true,
-  plugins: [{ name: 'sin-ideas', setup: (b) => b.onLoad({ filter: IDEAS }, () => ({ contents: SIN_IDEAS, loader: 'js' })) }],
   metafile: true,
   logLevel: 'warning'
 })
@@ -160,7 +160,7 @@ for (const f of readdirSync(join(APP, 'node_modules'), { recursive: true, withFi
 paso('Copiando las cards, sus skills y los procesos de Python')
 const cards = JSON.parse(readFileSync(join(REPO, 'cards.json'), 'utf8'))
 cpSync(join(REPO, 'cards.json'), join(APP, 'cards.json'))
-const skills = [...new Set([...SKILLS_BASE, ...cards.flatMap((c) => (c.skill ? [c.skill] : []))])]
+const skills = [...new Set([...SKILLS_BASE, ...SKILLS_CREADOR, ...cards.flatMap((c) => (c.skill ? [c.skill] : []))])]
 for (const s of skills) cpSync(join(REPO, 'skills', s), join(SALIDA, 'skills', s), { recursive: true, filter: limpio })
 cpSync(join(REPO, 'python', 'procesos'), join(APP, 'python', 'procesos'), { recursive: true, filter: limpio })
 cpSync(join(REPO, 'scripts', 'start.mjs'), join(APP, 'scripts', 'start.mjs'))

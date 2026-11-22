@@ -23,7 +23,8 @@ Ahí están los repos, los comandos y cómo verificar cada despliegue. Si algo v
   `skills/`. Un solo test: `node --import tsx --test <archivo>`.
 - La app que se vende es de Electron (`electron/main.ts`, ADR 0004) y sale de `npm run compilar`, para Windows, Mac y
   Linux (ADR 0006: lo de un sistema lleva su par en los otros); lo que solo sirve aquí
-  se esconde con `VENTA` (`shared/venta.ts`). Es gratis; el apoyo mensual es opcional (`server/licencia.ts`) y lo cobra
+  se esconde con `VENTA` (`shared/venta.ts`); lo que en la venta es solo tuyo (Ideas, cards `soloCreador`) lo abre tu
+  llave de publicar, en `server/permisos.ts`. Es gratis; el apoyo mensual es opcional (`server/licencia.ts`) y lo cobra
   `licencias/`, un Worker con PayPal. Las instrucciones de publicación están en
   `docs/agents/publicacion.md`.
 - Escribe los JSON con `guardar()` de `server/disco.ts` (temporal y reemplazo), no con `writeFileSync`.

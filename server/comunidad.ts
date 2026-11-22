@@ -9,6 +9,7 @@ import { query } from '@anthropic-ai/claude-agent-sdk'
 import { NOMBRE_AGENTE, proveedorDe } from '../shared/providers.ts'
 import type { AdjuntoComunidad, AyudaMejora, OrigenMejora, PublicacionComunidad, ServerPush, VideoHecho } from '../shared/types.ts'
 import { bytes, cuerpo, json as enviar } from './http.ts'
+import { llaveDePublicar } from './permisos.ts'
 import { COBRO } from './licencia.ts'
 import type { Sessions } from './sessions.ts'
 import { redactarCodexYoutube } from './youtube-redactor.ts'
@@ -323,12 +324,8 @@ export function comunidad(app: string, o: Opciones) {
 
 /** La llave del creador: la de `npm run publicar`, en el repo y en su copia instalada. Sin ella (otra computadora), no entra como creador. */
 export function llaveDelCreador(): Credencial | undefined {
-  try {
-    const llave = (process.env.PUBLICAR || readFileSync(join(process.env.APPDATA ?? '', 'hermit', 'licencias', 'publicar.txt'), 'utf8')).trim()
-    return llave ? { llave } : undefined
-  } catch {
-    return
-  }
+  const llave = llaveDePublicar()
+  return llave ? { llave } : undefined
 }
 
 

@@ -31,20 +31,20 @@ export { Requisitos } from './OpcionesRequisitos'
  * puesta (a veces se abre para cambiarla); a la derecha su estado, verde si está bien, menta si te toca hacer algo, y
  * lo que se puede hacer con ella, en un botón o en un desplegable.
  */
-export function Opciones({ onDone }: { onDone(): void }) {
+export function Opciones({ creador, onDone }: { creador: boolean; onDone(): void }) {
   const [iniciando, setIniciando] = useState(false)
   // A la derecha, como en los hilos, el navegador de las redes mientras inicias sesión en él: se abre solo al conectar
   // TikTok, y el globo del título lo enseña o lo esconde.
   return (
     <ConNavegadorRedes puede={iniciando}>
-      <Ajustes onDone={onDone} iniciando={iniciando} onIniciando={setIniciando} />
+      <Ajustes creador={creador} onDone={onDone} iniciando={iniciando} onIniciando={setIniciando} />
     </ConNavegadorRedes>
   )
 }
 
 type Seccion = 'redes' | 'agentes' | 'voz' | 'flow' | 'articulos' | 'llaves' | 'radar' | 'avisos' | 'equipo' | 'herramientas' | 'apoyo' | 'ayuda'
 
-function Ajustes({ onDone, iniciando, onIniciando }: { onDone(): void; iniciando: boolean; onIniciando(si: boolean): void }) {
+function Ajustes({ creador, onDone, iniciando, onIniciando }: { creador: boolean; onDone(): void; iniciando: boolean; onIniciando(si: boolean): void }) {
   const req = useRequisitos(true)
   // Uno para Voz y Google Flow: la cuenta de la voz también genera en Flow, y quitarla en uno la quita en el otro.
   const voz = useVoz()
@@ -54,8 +54,8 @@ function Ajustes({ onDone, iniciando, onIniciando }: { onDone(): void; iniciando
     { id: 'agentes', nombre: 'Agentes', icono: 'usuario' },
     { id: 'voz', nombre: 'Voz', icono: 'microfono' },
     { id: 'flow', nombre: 'Google Flow', icono: 'play' },
-    { id: 'articulos', nombre: 'Artículos', icono: 'documento' },
-    ...(!VENTA ? [{ id: 'llaves' as const, nombre: 'Llaves de API', icono: 'codigo' as const }] : []),
+    ...(!VENTA || creador ? [{ id: 'articulos' as const, nombre: 'Artículos', icono: 'documento' as const }] : []),
+    ...(!VENTA || creador ? [{ id: 'llaves' as const, nombre: 'Llaves de API', icono: 'codigo' as const }] : []),
     { id: 'radar', nombre: 'Radar', icono: 'radar' },
     { id: 'avisos', nombre: 'Avisos', icono: 'campana' },
     { id: 'equipo', nombre: 'Equipo', icono: 'personas' },
@@ -128,13 +128,13 @@ function Ajustes({ onDone, iniciando, onIniciando }: { onDone(): void; iniciando
                 <FlowOpciones voz={voz} />
               </Grupo>
             )}
-            {seccion === 'articulos' && (
+            {seccion === 'articulos' && (!VENTA || creador) && (
               <Grupo titulo="Artículos" nota="La card «Artículo para tu blog» escribe y publica en el blog que conectes aquí: solo pide la dirección y la llave. Las llaves se quedan en tu usuario de esta computadora, no en la app.">
                 <ArticulosOpciones />
               </Grupo>
             )}
             {/* Solo sirven a Ideas: sin la de YouTube, las recomendaciones van con el canal conectado. */}
-            {seccion === 'llaves' && !VENTA && (
+            {seccion === 'llaves' && (!VENTA || creador) && (
               <Grupo titulo="Llaves de API">
                 <Llave id="youtube" />
                 <Llave id="meta" />

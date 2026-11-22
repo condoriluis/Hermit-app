@@ -6,6 +6,6 @@
   </defs>
   <!-- Cuadro del fondo con el color de fondo de la app (la variable bg) y el cangrejo en el del texto: así el icono se ve
        igual de bien en una barra de tareas clara que en la oscura, y no solo sobre el fondo de la app. -->
-  <rect x="-10" y="-10" width="520" height="520" rx="112" fill="#0a0e14"/>
-  <use href="#crab" fill="#e6edf7"/>
+  <rect x="-10" y="-10" width="520" height="520" rx="112" fill="#0b0e11"/>
+  <use href="#crab" fill="#e8edf2"/>
 </svg>

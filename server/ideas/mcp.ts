@@ -8,6 +8,7 @@ import { tokenMeta } from '../opciones.ts'
 import { cuentaInstagram } from './instagram.ts'
 import { buscarInstagram } from './instagram-web.ts'
 import { mediana, mil } from './resumen.ts'
+import { permite } from '../permisos.ts'
 import { buscarTikTok, comentariosTikTok, cuentaTikTok, type Hallado } from './tiktok.ts'
 import { parecidos, transcripcion } from './vectores.ts'
 
@@ -22,6 +23,7 @@ import { parecidos, transcripcion } from './vectores.ts'
 
 /** Las herramientas, si `cwd` es la carpeta de un canal (`trabajo/ideas/<id>`, con su `canal.json`); si no, ninguna. */
 export function herramientasIdeas(cwd: string): Record<string, McpSdkServerConfigWithInstance> {
+  if (!permite('ideas')) return {}
   if (!/[\\/]trabajo[\\/]ideas[\\/][\w-]+[\\/]?$/.test(cwd)) return {}
   let canal: Canal | null = null
   try {

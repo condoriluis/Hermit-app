@@ -52,6 +52,11 @@ export interface Card {
    * ofrecidas, menos contexto en cada mensaje.
    */
   sinHerramientas?: string[]
+  /**
+   * Solo la ve y la usa el creador de Hermit (`server/permisos.ts`): en la app que se vende no le llega a nadie más,
+   * ni puede abrir un hilo con ella. En desarrollo todo se ve, como siempre.
+   */
+  soloCreador?: boolean
 }
 
 /** Un modelo con su esfuerzo. `medido` dice dónde se midió; sin él, es el de por defecto. */

@@ -39,8 +39,9 @@ function leerRaizTrabajo(): string | null {
 /** La raiz elegida por el usuario, o null si es la de por defecto. */
 let raizElegida: string | null = leerRaizTrabajo()
 
-/** La carpeta de trabajo efectiva: la elegida o la de por defecto. */
+/** La carpeta de trabajo efectiva: `HERMIT_TRABAJO` manda sobre todo (pruebas y arranques especiales, como `HERMIT_SKILLS`); si no, la elegida o la de por defecto. */
 function carpetaEfectiva(app: string, raiz: string | null): string {
+  if (process.env.HERMIT_TRABAJO) return resolve(process.env.HERMIT_TRABAJO)
   if (raiz) return raiz
   return !VENTA && resolve(app) === REPO ? TRABAJO_DEV : join(app, 'trabajo')
 }

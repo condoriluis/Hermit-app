@@ -1,6 +1,6 @@
 <!doctype html>
 <!--
-  La guía de lo nuevo de la 0.6.2: sale una vez al abrir Hermit después de actualizar (web/src/Novedades.tsx, en un
+  La guía de lo nuevo de la 0.6.4: sale una vez al abrir Hermit después de actualizar (web/src/Novedades.tsx, en un
   iframe), y también se abre sola en un navegador. Una página suelta, sin dependencias: el logo (web/public/icon.svg)
   va adentro, en #cara. Cinco escenas (el concierto, tres novedades y el final, que es el mismo concierto); cada una
   tiene su guion en `guiones`, y «Siguiente», las flechas o deslizar pasan de una a otra. Con ?escena=N abre directo
@@ -11,7 +11,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hermit 0.6.2</title>
+<title>Hermit 0.6.4</title>
 <style>
   /* Paleta de Hermit (web/src/tokens.css). */
   :root {
@@ -118,7 +118,7 @@
   <!-- Cabecera de la guía -->
   <g id="cabecera" opacity="0">
     <g transform="translate(90 50) scale(.15)"><use href="#cara"/></g>
-    <text x="180" y="112" font-size="46" font-weight="800" fill="#e8edf2">Lo nuevo de la <tspan fill="#2dd4bf">0.6.2</tspan></text>
+    <text x="180" y="112" font-size="46" font-weight="800" fill="#e8edf2">Lo nuevo de la <tspan fill="#2dd4bf">0.6.4</tspan></text>
     <g id="barras"></g>
   </g>
 
@@ -128,13 +128,13 @@
     <rect class="destello" width="1080" height="1080" fill="#5eead4" opacity="0"/>
     <g class="titulo"><text class="partir-letras" x="540" y="700" text-anchor="middle" font-size="64" font-weight="800" fill="#e8edf2" letter-spacing="1">Ya salió Hermit</text></g>
     <g class="version-neon" style="transform-box: view-box; transform-origin: 540px 810px">
-      <text class="neon-glow" x="540" y="880" text-anchor="middle" font-size="210" font-weight="900" fill="none" stroke="#5eead4" stroke-width="44" stroke-opacity=".22" stroke-linejoin="round">0.6.2</text>
-      <text class="partir-letras" x="540" y="880" text-anchor="middle" font-size="210" font-weight="900" fill="#e8edf2" stroke="#2dd4bf" stroke-width="16" stroke-linejoin="round" paint-order="stroke">0.6.2</text>
+      <text class="neon-glow" x="540" y="880" text-anchor="middle" font-size="210" font-weight="900" fill="none" stroke="#5eead4" stroke-width="44" stroke-opacity=".22" stroke-linejoin="round">0.6.4</text>
+      <text class="partir-letras" x="540" y="880" text-anchor="middle" font-size="210" font-weight="900" fill="#e8edf2" stroke="#2dd4bf" stroke-width="16" stroke-linejoin="round" paint-order="stroke">0.6.4</text>
     </g>
     <g class="publico"></g>
   </g></g>
 
-  <!-- 1 · Editor de video: subtítulos a tu gusto, efectos de entrada y el botón Renderizar -->
+  <!-- 1 · Video con tu material: sus fotos y videos, y su música de fondo -->
   <g class="escena" id="e1"><g class="cuerpo">
     <use href="#panel"/>
     <g clip-path="url(#clipPanel)">
@@ -142,123 +142,93 @@
         <g clip-path="url(#telA)">
           <rect width="158" height="280" fill="url(#telaB)"/>
           <text x="79" y="30" text-anchor="middle" font-size="13" font-weight="800" fill="#e8edf2">Hermit</text>
-          <!-- El editor: una escena con su entrada, subtítulos y el botón -->
-          <rect x="14" y="44" width="130" height="150" rx="10" fill="#0b0e11" stroke="#232a33" stroke-width="2"/>
-          <rect x="24" y="56" width="52" height="8" rx="4" fill="#181d24"/>
-          <rect x="24" y="72" width="34" height="8" rx="4" fill="#161b23"/>
-          <rect x="24" y="94" width="110" height="52" rx="8" fill="#181d24" stroke="#232a33" stroke-width="1.5"/>
-          <rect x="34" y="116" width="62" height="8" rx="4" fill="#2dd4bf"/>
-          <rect x="34" y="130" width="44" height="6" rx="3" fill="#8b97a5"/>
-          <rect x="102" y="102" width="30" height="16" rx="8" fill="#2dd4bf"/>
+          <!-- La card «Video con tu material» con su collage y su música -->
+          <rect x="14" y="44" width="130" height="186" rx="10" fill="#05070a" stroke="#232a33" stroke-width="2"/>
+          <rect x="24" y="56" width="110" height="66" rx="8" fill="#12161b" stroke="#232a33"/>
+          <rect x="30" y="62" width="44" height="54" rx="6" fill="#2dd4bf" fill-opacity=".28"/>
+          <rect x="78" y="62" width="50" height="54" rx="6" fill="#5eead4" fill-opacity=".22"/>
+          <path d="M63 88 L84 102 L99 82" stroke="#2dd4bf" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <text x="79" y="148" text-anchor="middle" font-size="12" font-weight="800" fill="#e8edf2">Video con tu material</text>
+          <text x="79" y="166" text-anchor="middle" font-size="10" font-weight="600" fill="#8b97a5">fotos · videos · música</text>
+          <!-- La barra de música con su play -->
+          <rect x="24" y="186" width="110" height="18" rx="9" fill="#12161b" stroke="#2dd4bf" stroke-width="1.5"/>
+          <rect x="32" y="191" width="6" height="8" rx="2" fill="#2dd4bf"/>
+          <rect x="42" y="188" width="6" height="14" rx="2" fill="#2dd4bf"/>
+          <rect x="52" y="193" width="6" height="10" rx="2" fill="#2dd4bf"/>
+          <rect x="62" y="189" width="6" height="12" rx="2" fill="#2dd4bf"/>
+          <rect x="72" y="192" width="6" height="9" rx="2" fill="#2dd4bf"/>
+          <rect x="82" y="190" width="6" height="11" rx="2" fill="#2dd4bf"/>
+          <rect x="98" y="188" width="30" height="14" rx="7" fill="#2dd4bf"/>
+          <path d="M108 192 L116 195 L108 198 Z" fill="#04201c"/>
           <!-- La entrega compacta, abajo -->
-          <rect x="14" y="204" width="130" height="46" rx="10" fill="#12161b" stroke="#232a33" stroke-width="2"/>
-          <rect x="24" y="218" width="66" height="8" rx="4" fill="#181d24"/>
-          <rect x="24" y="232" width="44" height="6" rx="3" fill="#161b23"/>
-          <rect x="102" y="214" width="34" height="26" rx="8" fill="#2dd4bf"/>
+          <rect x="14" y="238" width="130" height="34" rx="10" fill="#12161b" stroke="#232a33" stroke-width="2"/>
+          <rect x="24" y="250" width="60" height="8" rx="4" fill="#181d24"/>
+          <rect x="96" y="246" width="36" height="18" rx="9" fill="#2dd4bf"/>
           <rect x="0" y="273" width="158" height="7" fill="#232a33"/>
           <rect class="izq prog" x="0" y="273" width="158" height="7" fill="#2dd4bf"/>
         </g>
         <rect width="158" height="280" rx="18" fill="none" stroke="#2dd4bf" stroke-width="3"/>
       </g></g>
       <text x="209" y="548" text-anchor="middle" font-size="19" font-weight="700" fill="#e8edf2">Hermit</text>
-      <text x="209" y="576" text-anchor="middle" font-size="16" font-weight="600" fill="#8b97a5">edita tu video a mano</text>
-      <g class="navegadores">
+      <text x="209" y="576" text-anchor="middle" font-size="16" font-weight="600" fill="#8b97a5">tus fotos, tu música</text>
+      <!-- La página del estilo -->
+      <g class="barras-lado">
         <rect x="320" y="214" width="640" height="412" rx="20" fill="#181d24" stroke="#232a33" stroke-width="2"/>
         <use href="#i-film" x="344" y="238" width="26" height="26" style="color:#e8edf2"/>
-        <text x="382" y="260" font-size="23" font-weight="800" fill="#e8edf2">Editor de video, a mano</text>
-        <g class="render" style="transform-box: fill-box; transform-origin: center">
-          <rect x="792" y="230" width="140" height="38" rx="19" fill="#2dd4bf"/>
-          <use href="#i-flecha" x="808" y="239" width="20" height="20" style="color:#04201c"/>
-          <text x="834" y="256" font-size="16" font-weight="800" fill="#04201c">Renderizar</text>
+        <text x="382" y="260" font-size="23" font-weight="800" fill="#e8edf2">Video con tu material</text>
+        <text x="350" y="300" font-size="13" font-weight="700" fill="#8b97a5">TU MATERIAL</text>
+        <!-- Los archivos adjuntos: los chips los arma construir -->
+        <g class="adjuntos"></g>
+        <text x="350" y="392" font-size="13" font-weight="700" fill="#8b97a5">MÚSICA DE FONDO</text>
+        <rect class="musica-pista" x="350" y="404" width="300" height="34" rx="10" fill="#12161b" stroke="#232a33" stroke-width="2"/>
+        <text x="366" y="425" font-size="13" font-weight="700" fill="#e8edf2">mi-cancion.mp3</text>
+        <g class="musica-sw" transform="translate(880 411)">
+          <rect width="52" height="30" rx="15" fill="#2dd4bf"/>
+          <circle class="musica-bola" cx="15" cy="15" r="11" fill="#04201c"/>
         </g>
-        <!-- La vista previa, con sus subtítulos -->
-        <rect x="350" y="288" width="580" height="182" rx="14" fill="#05070a" stroke="#232a33" stroke-width="2"/>
-        <rect x="378" y="326" width="72" height="10" rx="5" fill="#181d24"/>
-        <rect x="378" y="346" width="48" height="8" rx="4" fill="#161b23"/>
-        <circle cx="884" cy="331" r="7" fill="#2dd4bf"/>
-        <g class="subtitulo">
-          <rect x="430" y="408" width="290" height="36" rx="10" fill="#2dd4bf" fill-opacity=".9"/>
-          <text x="575" y="432" text-anchor="middle" font-size="15" font-weight="800" fill="#04201c">así se ven tus subtítulos</text>
-        </g>
-        <!-- La línea de tiempo: escenas, piezas y audio -->
-        <g class="linea-tiempo">
-          <text x="350" y="512" font-size="14" font-weight="700" fill="#8b97a5">escenas</text>
-          <rect x="430" y="496" width="140" height="20" rx="6" fill="#2dd4bf"/>
-          <rect x="578" y="496" width="110" height="20" rx="6" fill="#181d24" stroke="#232a33" stroke-width="1.5"/>
-          <rect x="696" y="496" width="168" height="20" rx="6" fill="#181d24" stroke="#232a33" stroke-width="1.5"/>
-          <text x="782" y="510" text-anchor="middle" font-size="10" font-weight="800" fill="#2dd4bf">fx</text>
-          <text x="350" y="556" font-size="14" font-weight="700" fill="#8b97a5">piezas</text>
-          <rect x="430" y="540" width="200" height="20" rx="6" fill="#181d24" stroke="#232a33" stroke-width="1.5"/>
-          <rect x="638" y="540" width="118" height="20" rx="6" fill="#5eead4" fill-opacity=".45"/>
-          <text x="350" y="596" font-size="14" font-weight="700" fill="#8b97a5">audio</text>
-          <rect x="430" y="580" width="480" height="12" rx="6" fill="#12161b" stroke="#232a33" stroke-width="1.5"/>
-          <rect class="izq onda" x="438" y="583" width="180" height="6" rx="3" fill="#8b97a5"/>
-        </g>
-        <!-- Los colores de los subtítulos -->
-        <g class="chips">
-          <circle cx="380" cy="608" r="9" fill="#e8edf2"/>
-          <circle cx="410" cy="608" r="9" fill="#2dd4bf"/>
-          <circle cx="440" cy="608" r="9" fill="#fbbf24"/>
-          <circle cx="470" cy="608" r="9" fill="#f87171"/>
+        <!-- La vista previa del recap -->
+        <g class="recap-marco" style="transform-box: fill-box; transform-origin: center">
+          <rect x="350" y="456" width="582" height="150" rx="14" fill="#05070a" stroke="#232a33" stroke-width="2"/>
+          <rect x="366" y="472" width="130" height="118" rx="10" fill="#12161b" stroke="#232a33" stroke-width="2"/>
+          <rect x="380" y="486" width="40" height="52" rx="6" fill="#2dd4bf" fill-opacity=".3"/>
+          <rect x="426" y="486" width="56" height="52" rx="6" fill="#5eead4" fill-opacity=".25"/>
+          <path d="M396 524 L416 540 L438 516" stroke="#2dd4bf" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <rect x="510" y="486" width="180" height="10" rx="5" fill="#181d24"/>
+          <rect class="izq prog" x="510" y="486" width="180" height="10" rx="5" fill="#2dd4bf"/>
+          <rect x="510" y="506" width="120" height="8" rx="4" fill="#181d24"/>
+          <circle class="play-pulso" cx="450" cy="540" r="20" fill="#2dd4bf" fill-opacity=".25" style="transform-box: fill-box; transform-origin: center"/>
+          <path d="M444 530 L462 540 L444 550 Z" fill="#2dd4bf"/>
         </g>
       </g>
     </g>
-    <g class="kicker"><use href="#i-film" x="150" y="693" width="32" height="32" style="color:#2dd4bf"/><text x="194" y="720" font-size="30" font-weight="800" fill="#2dd4bf" letter-spacing="4">EDITOR DE VIDEO</text></g>
-    <text class="partir-palabras" x="150" y="795" font-size="60" font-weight="800" fill="#e8edf2">Edita tu video a mano</text>
-    <g class="linea"><text x="150" y="850" font-size="32" font-weight="500" fill="#8b97a5">Subtítulos, efectos de entrada y un botón</text></g>
-    <g class="linea"><text x="150" y="895" font-size="32" font-weight="500" fill="#8b97a5">Renderizar que no usa al agente.</text></g>
+    <g class="kicker"><use href="#i-film" x="150" y="693" width="32" height="32" style="color:#2dd4bf"/><text x="194" y="720" font-size="30" font-weight="800" fill="#2dd4bf" letter-spacing="4">VIDEO PROPIO</text></g>
+    <text class="partir-palabras" x="150" y="795" font-size="60" font-weight="800" fill="#e8edf2">Tu material, tu música</text>
+    <g class="linea"><text x="150" y="850" font-size="32" font-weight="500" fill="#8b97a5">Sube tus fotos y videos y el agente arma</text></g>
+    <g class="linea"><text x="150" y="895" font-size="32" font-weight="500" fill="#8b97a5">el recap; la música de fondo va con un toque.</text></g>
   </g></g>
 
-  <!-- 2 · Tema menta: la paleta completa de Hermit, ahora en verde azulado -->
+  <!-- 2 · La nueva cara: el cangrejo sobre el grafito de la app -->
   <g class="escena" id="e2"><g class="cuerpo">
     <use href="#panel"/>
     <g clip-path="url(#clipPanel)">
-      <g class="navegador-w"><g transform="translate(130 230)">
-        <g clip-path="url(#telA)">
-          <rect width="158" height="280" fill="url(#telaB)"/>
-          <text x="79" y="30" text-anchor="middle" font-size="13" font-weight="800" fill="#e8edf2">Hermit</text>
-          <!-- La app entera, en menta -->
-          <rect x="14" y="44" width="130" height="148" rx="10" fill="#0b0e11" stroke="#232a33" stroke-width="2"/>
-          <rect x="24" y="56" width="52" height="8" rx="4" fill="#181d24"/>
-          <rect x="24" y="72" width="34" height="8" rx="4" fill="#161b23"/>
-          <rect x="24" y="92" width="48" height="38" rx="6" fill="#181d24" stroke="#232a33" stroke-width="1.5"/>
-          <rect x="80" y="92" width="48" height="38" rx="6" fill="#2dd4bf" fill-opacity=".18" stroke="#2dd4bf" stroke-width="1.5"/>
-          <rect x="24" y="138" width="48" height="38" rx="6" fill="#181d24" stroke="#232a33" stroke-width="1.5"/>
-          <rect x="80" y="138" width="48" height="38" rx="6" fill="#181d24" stroke="#232a33" stroke-width="1.5"/>
-          <circle cx="132" cy="212" r="7" fill="#2dd4bf"/>
-          <!-- La entrega compacta, abajo -->
-          <rect x="14" y="204" width="130" height="46" rx="10" fill="#12161b" stroke="#232a33" stroke-width="2"/>
-          <rect x="24" y="218" width="66" height="8" rx="4" fill="#181d24"/>
-          <rect x="24" y="232" width="44" height="6" rx="3" fill="#161b23"/>
-          <rect x="102" y="214" width="34" height="26" rx="8" fill="#2dd4bf"/>
-          <rect x="0" y="273" width="158" height="7" fill="#232a33"/>
-          <rect class="izq prog" x="0" y="273" width="158" height="7" fill="#2dd4bf"/>
-        </g>
-        <rect width="158" height="280" rx="18" fill="none" stroke="#2dd4bf" stroke-width="3"/>
-      </g></g>
-      <text x="209" y="548" text-anchor="middle" font-size="19" font-weight="700" fill="#e8edf2">Hermit</text>
-      <text x="209" y="576" text-anchor="middle" font-size="16" font-weight="600" fill="#8b97a5">tema menta, en todo</text>
       <g class="barras-lado">
         <rect x="320" y="214" width="640" height="412" rx="20" fill="#181d24" stroke="#232a33" stroke-width="2"/>
         <use href="#i-pincel" x="344" y="238" width="26" height="26" style="color:#e8edf2"/>
-        <text x="382" y="260" font-size="23" font-weight="800" fill="#e8edf2">La paleta, en menta</text>
-        <!-- Los colores de Hermit -->
-        <g class="muestras"></g>
-        <!-- Antes y ahora -->
-        <g class="antes-ahora">
-          <circle cx="392" cy="548" r="11" fill="#3b82a0"/>
-          <text x="392" y="584" text-anchor="middle" font-size="14" font-weight="700" fill="#8b97a5">antes</text>
-          <line x1="430" y1="548" x2="520" y2="548" stroke="#232a33" stroke-width="3" stroke-linecap="round"/>
-          <path d="M512 540 l12 8 -12 8" fill="none" stroke="#8b97a5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-          <circle cx="560" cy="548" r="11" fill="#2dd4bf" style="transform-box: fill-box; transform-origin: center"/>
-          <text x="560" y="584" text-anchor="middle" font-size="14" font-weight="800" fill="#2dd4bf">ahora</text>
+        <text x="382" y="260" font-size="23" font-weight="800" fill="#e8edf2">La nueva cara</text>
+        <!-- El icono nuevo: el cangrejo sobre el grafito de la app -->
+        <g class="icono-nuevo" style="transform-box: fill-box; transform-origin: center">
+          <rect x="430" y="296" width="220" height="220" rx="50" fill="#0b0e11" stroke="#2dd4bf" stroke-width="4"/>
+          <g transform="translate(446 312) scale(.377)"><use href="#cara"/></g>
         </g>
+        <text class="nombre" x="540" y="566" text-anchor="middle" font-size="30" font-weight="900" fill="#e8edf2">Hermit</text>
+        <!-- Dónde se ve: los chips los arma construir -->
+        <g class="donde"></g>
       </g>
     </g>
-    <g class="kicker"><use href="#i-pincel" x="150" y="693" width="32" height="32" style="color:#2dd4bf"/><text x="194" y="720" font-size="30" font-weight="800" fill="#2dd4bf" letter-spacing="4">TEMA</text></g>
-    <text class="partir-palabras" x="150" y="795" font-size="60" font-weight="800" fill="#e8edf2">La app, en menta</text>
-    <g class="linea"><text x="150" y="850" font-size="32" font-weight="500" fill="#8b97a5">La paleta completa pasó a menta oscuro,</text></g>
-    <g class="linea"><text x="150" y="895" font-size="32" font-weight="500" fill="#8b97a5">la misma en cada pantalla.</text></g>
+    <g class="kicker"><use href="#i-pincel" x="150" y="693" width="32" height="32" style="color:#2dd4bf"/><text x="194" y="720" font-size="30" font-weight="800" fill="#2dd4bf" letter-spacing="4">NUEVA CARA</text></g>
+    <text class="partir-palabras" x="150" y="795" font-size="60" font-weight="800" fill="#e8edf2">Hermit con nueva cara</text>
+    <g class="linea"><text x="150" y="850" font-size="32" font-weight="500" fill="#8b97a5">El mismo cangrejo, ahora sobre el grafito</text></g>
+    <g class="linea"><text x="150" y="895" font-size="32" font-weight="500" fill="#8b97a5">de la app, en el icono y en el instalador.</text></g>
   </g></g>
 
   <!-- 3 · Y también: lo que no cabe en una escena -->
@@ -268,7 +238,7 @@
       <g class="arreglos"></g>
     </g>
     <g class="kicker"><use href="#i-palomita" x="150" y="693" width="32" height="32" style="color:#2dd4bf"/><text x="194" y="720" font-size="30" font-weight="800" fill="#2dd4bf" letter-spacing="4">Y TAMBIÉN</text></g>
-    <text class="partir-palabras" x="150" y="795" font-size="60" font-weight="800" fill="#e8edf2">Y quedó más limpio</text>
+    <text class="partir-palabras" x="150" y="795" font-size="60" font-weight="800" fill="#e8edf2">Y quedó más fino</text>
     <g class="linea"><text x="150" y="850" font-size="32" font-weight="500" fill="#8b97a5">Lo que no cabe en una escena también llegó.</text></g>
   </g></g>
 
@@ -597,34 +567,29 @@ function construir() {
   tablado(escenas[0], 'HERMIT'); publico(escenas[0], 1050);
   tablado(escenas[4], document.title.replace('Hermit ', '')); publico(escenas[4], 1075);
 
-  // Escena 1 · Editor de video: el mockup ya trae subtítulos, línea de tiempo y el botón
-  oculto(en(escenas[1], '.render'));
-  oculto(en(escenas[1], '.subtitulo'));
-  oculto(en(escenas[1], '.linea-tiempo'));
-  oculto(en(escenas[1], '.chips'));
+  // Un chip redondeado con su texto, para las filas de la escena
+  const ponerChip = (x, y, w, h, texto, relleno, tinta, padre) => {
+    const g = el('g', { class: 'chip' }, padre);
+    el('rect', { x, y, width: w, height: h, rx: h / 2, fill: relleno, stroke: C.line, 'stroke-width': 1.5 }, g);
+    el('text', { x: x + w / 2, y: y + h / 2 + 5, 'text-anchor': 'middle', 'font-size': 12, 'font-weight': 800, fill: tinta }, g).textContent = texto;
+    return g;
+  };
+  // Escena 1 · Video con tu material: los archivos adjuntos, como chips
+  const adjuntos = en(escenas[1], '.adjuntos');
+  ['playa.jpg', 'clip.mp4', 'familia.png', 'viaje.mov'].forEach((t, k) =>
+    ponerChip(350 + k * 104, 312, 96, 26, t, '#12161b', C.muted, adjuntos));
 
-  // Escena 2 · Tema menta: la parrilla de colores
-  const muestras2 = en(escenas[2], '.muestras');
-  const colores = [['#2dd4bf', 'acento'], ['#5eead4', 'acento claro'], ['#0b0e11', 'fondo'], ['#12161b', 'panel'], ['#181d24', 'panel 2'], ['#232a33', 'línea'], ['#e8edf2', 'texto'], ['#8b97a5', 'suave']];
-  colores.forEach(([c, nombre], k) => {
-    const x = 360 + (k % 4) * 145, y = 290 + Math.floor(k / 4) * 105;
-    const claro = ['#e8edf2', '#8b97a5', '#5eead4'].includes(c);
-    const m = el('g', { class: 'muestra' }, muestras2);
-    el('rect', { x, y, width: 120, height: 85, rx: 14, fill: c, stroke: C.line, 'stroke-width': 2 }, m);
-    el('text', { x: x + 60, y: y + 112, 'text-anchor': 'middle', 'font-size': 13, 'font-weight': 700, fill: claro ? C.muted : C.text }, m).textContent = nombre;
-  });
-  oculto(en(escenas[2], '.antes-ahora'));
+  // Escena 2 · La nueva cara: los lugares donde se ve
+  const donde = en(escenas[2], '.donde');
+  [['la app', 360, 80], ['el instalador', 452, 120], ['las actualizaciones', 584, 160]].forEach(([t, x, w]) =>
+    ponerChip(x, 582, w, 26, t, '#12161b', C.muted, donde));
 
   // La lista de la escena 3
   const arreglos = en(escenas[3], '.arreglos');
   [
-    ['El editor de video: subtítulos, efectos y Renderizar', 'Videos'],
-    ['La paleta completa pasó a menta oscuro', 'Tema'],
-    ['Inter viaja dentro de la app, sin CDN', 'Fuente'],
-    ['La CSP vigila la interfaz en modo reporte', 'Seguridad'],
-    ['Hermit ya no pasa de los núcleos de tu PC', 'Rendimiento'],
-    ['Typecheck más estricto: sin variables muertas', 'Código'],
-    ['Ventana mínima de 900×600', 'Ventana'],
+    ['Video con tu material: fotos, videos y tu música de fondo', 'Videos'],
+    ['Icono nuevo: el cangrejo sobre el grafito de la app', 'Diseño'],
+    ['Controles más firmes: cada herramienta sabe quién puede usarla', 'Permisos'],
   ].forEach(([texto, donde], k) => {
     const y = 218 + k * 60, f = el('g', { class: 'arreglo' }, arreglos);
     el('rect', { class: 'arreglo-borde', x: 120, y, width: 840, height: 52, rx: 12, fill: '#12161b', stroke: C.line, 'stroke-width': 2 }, f);
@@ -681,43 +646,37 @@ const guiones = [
     pulsar();
     polvo(vivo);
   },
-  // 1 · Editor de video: el mockup se arma por partes y el botón Renderizar pulsa
-  async (e, vivo) => {
-    textos(e);
-    A(en(e, '.navegador-w'), [{ opacity: 0, transform: 'translateY(40px)' }, { opacity: 1, transform: 'none' }], { duration: 650, delay: 80, easing: REBOTE });
-    A(en(e, '.navegadores'), [{ opacity: 0, transform: 'translateX(50px)' }, { opacity: 1, transform: 'none' }], { duration: 650, delay: 200 });
-    A(en(e, '.prog'), [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: 3600, iterations: Infinity, easing: 'linear' });
-    // Los subtítulos, la línea de tiempo y los colores entran uno tras otro
-    A(en(e, '.subtitulo'), [{ opacity: 0, transform: 'translateY(14px)' }, { opacity: 1, transform: 'none' }], { duration: 500, delay: 900 });
-    A(en(e, '.linea-tiempo'), [{ opacity: 0, transform: 'translateY(14px)' }, { opacity: 1, transform: 'none' }], { duration: 500, delay: 1250 });
-    A(en(e, '.chips'), [{ opacity: 0 }, { opacity: 1 }], { duration: 500, delay: 1600 });
-    await espera(2100); if (!vivo()) return;
-    // El botón Renderizar entra, pulsa y la onda del audio avanza: ya se está exportando
-    const r = en(e, '.render');
-    A(r, [{ opacity: 0, transform: 'scale(.6)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 500, delay: 200, easing: REBOTE });
-    await espera(700); if (!vivo()) return;
-    A(r, [{ transform: 'scale(1)' }, { transform: 'scale(1.08)' }, { transform: 'scale(1)' }], { duration: 500, easing: REBOTE });
-    A(en(e, '.onda'), [{ transform: 'scaleX(.2)' }, { transform: 'scaleX(1)' }], { duration: 1400, delay: 250, easing: 'ease-out' });
-    await espera(1300); if (!vivo()) return;
-    confeti(700, 470, 30, -90, 110, [5, 11]);
-    estallido(700, 470, C.acento2, 22, 5);
-    A(r, [{ boxShadow: '0 0 0 0 rgba(45, 212, 191, .6)' }, { boxShadow: '0 0 0 14px rgba(45, 212, 191, 0)' }], { duration: 1400, iterations: Infinity });
-  },
-  // 2 · Tema menta: las muestras caen una a una y el menta toma el lugar del acero
+  // 1 · Video con tu material: los archivos entran, la música se enciende y el recap late
   async (e, vivo) => {
     textos(e);
     A(en(e, '.navegador-w'), [{ opacity: 0, transform: 'translateY(40px)' }, { opacity: 1, transform: 'none' }], { duration: 650, delay: 80, easing: REBOTE });
     A(en(e, '.barras-lado'), [{ opacity: 0, transform: 'translateX(50px)' }, { opacity: 1, transform: 'none' }], { duration: 650, delay: 200 });
-    A(en(e, '.prog'), [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: 3600, iterations: Infinity, easing: 'linear' });
-    todos(e, '.muestra').forEach((m, k) => aparece(m, { duration: 500, delay: 500 + k * 110 }));
-    await espera(1900); if (!vivo()) return;
-    // Antes → ahora: el acero se apaga y el menta aparece
-    A(en(e, '.antes-ahora'), [{ opacity: 0, transform: 'translateY(16px)' }, { opacity: 1, transform: 'none' }], { duration: 600, easing: REBOTE });
-    const [, ahora] = todos(en(e, '.antes-ahora'), 'circle');
-    salta(ahora, { duration: 500 });
-    await espera(1100); if (!vivo()) return;
-    confeti(700, 470, 32, -90, 110, [5, 11]);
-    estallido(700, 470, C.acento2, 22, 5);
+    todos(e, '.prog').forEach((p) => A(p, [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: 3600, iterations: Infinity, easing: 'linear' }));
+    // Los archivos entran uno a uno
+    todos(e, '.adjuntos .chip').forEach((c, k) => aparece(c, { duration: 450, delay: 800 + k * 160 }));
+    await espera(1400); if (!vivo()) return;
+    // La música de fondo se enciende: el interruptor viaja y la pista toma el acento
+    A(en(e, '.musica-sw'), [{ opacity: 0, transform: 'translate(880 411) scale(.7)' }, { opacity: 1, transform: 'translate(880 411) scale(1)' }], { duration: 450, delay: 0, easing: REBOTE });
+    A(en(e, '.musica-pista'), [{ stroke: C.line }, { stroke: C.acento }], { duration: 500, delay: 500 });
+    A(en(e, '.musica-bola'), [{ transform: 'translateX(0)' }, { transform: 'translateX(22px)' }], { duration: 500, delay: 500, easing: REBOTE });
+    // El recap aparece y su play late
+    A(en(e, '.recap-marco'), [{ opacity: 0, transform: 'scale(.92)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 600, delay: 900, easing: REBOTE });
+    A(en(e, '.play-pulso'), [{ transform: 'scale(.4)', opacity: 0 }, { transform: 'scale(1.5)', opacity: .5, offset: .4 }, { transform: 'scale(2)', opacity: 0 }], { duration: 1400, delay: 1600, iterations: Infinity, easing: 'ease-out' });
+    await espera(2200); if (!vivo()) return;
+    confeti(640, 480, 34, -90, 110, [5, 11]);
+    estallido(640, 480, C.acento2, 24, 5);
+  },
+  // 2 · La nueva cara: el icono cae con rebote, el nombre se enciende y los lugares entran
+  async (e, vivo) => {
+    textos(e);
+    A(en(e, '.barras-lado'), [{ opacity: 0, transform: 'translateX(50px)' }, { opacity: 1, transform: 'none' }], { duration: 650, delay: 150 });
+    // El icono nuevo cae con rebote y el nombre late
+    A(en(e, '.icono-nuevo'), [{ opacity: 0, transform: 'translateY(-160px) scale(.4)' }, { opacity: 1, transform: 'none' }], { duration: 800, delay: 300, easing: REBOTE });
+    A(en(e, '.nombre'), [{ opacity: 0 }, { opacity: 1 }], { duration: 600, delay: 1000 });
+    todos(e, '.donde .chip').forEach((c, k) => aparece(c, { duration: 450, delay: 1250 + k * 160 }));
+    await espera(1800); if (!vivo()) return;
+    confeti(540, 400, 36, -90, 110, [5, 11]);
+    estallido(540, 400, C.acento2, 24, 5);
   },
   // 3 · Los arreglos se palomean uno por uno
   async (e, vivo) => {

@@ -1,1 +1,1 @@
-Hermit 0.6.3: saca clips de directos en vivo al momento, con la previa que no miente
+Hermit 0.6.4: video con tu material y tu música de fondo, con una cara nueva

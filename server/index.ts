@@ -33,6 +33,7 @@ import { guardarMeta, guardarYoutube, opciones } from './opciones.ts'
 import { previas } from './previas.ts' // previas de las cards
 import { radar } from './radar/index.ts' // radar
 import { comunidad, llaveDelCreador } from './comunidad.ts' // comunidad
+import { esCreador, permite } from './permisos.ts' // permisos: lo del creador
 import { enVivo } from './en-vivo.ts' // clips en vivo
 import { redes } from './redes/index.ts' // redes
 import { voz } from './voz/index.ts' // voz de AI Studio
@@ -178,6 +179,11 @@ function cards(): Card[] {
   return leidas?.cards ?? []
 }
 
+/** Las cards que ve esta copia: las `soloCreador` solo le llegan a la del creador (`server/permisos.ts`). */
+function cardsVisibles(): Card[] {
+  return permite('privadas') ? cards() : cards().filter((c) => !c.soloCreador)
+}
+
 // Publicar los videos verticales terminados en TikTok e Instagram (y en las redes que se sumen), y los largos en YouTube.
 // La app que se vende aún no publica.
 const publicar = redes(APP, sessions, cards, broadcast) // redes
@@ -187,8 +193,9 @@ const subirLargos = youtube(APP, sessions, cards, `http://127.0.0.1:${PORT}/api/
 const previa = previas(join(APP, 'data', 'previas'), cards, sessions) // previas de las cards
 // Las imágenes que el panel de etapas enseña en rejilla, en pequeño.
 const { miniatura, cuadro } = miniaturas(join(APP, 'data', 'miniaturas')) // panel de etapas
-// Ideas para YouTube: investigar el nicho de un canal y que Claude proponga videos con evidencia.
-const idear = VENTA ? undefined : ideas(APP, sessions, broadcast, subirLargos?.lectura) // ideas
+// Ideas para YouTube: investigar el nicho de un canal y que Claude proponga videos con evidencia. Solo la copia
+// del creador la tiene en la app que se vende (`server/permisos.ts`); en desarrollo, siempre.
+const idear = permite('ideas') ? ideas(APP, sessions, broadcast, subirLargos?.lectura) : undefined // ideas
 // La biblioteca de modelos 3D que llenan los videos, para verla: la de la skill que usan los agentes, que es donde guardan.
 const biblioteca3d = modelos3d(carpetaSkill('modelos-3d') ?? join(APP, 'skills', 'modelos-3d'), {
   python: () => rutaPythonHermit() ?? (process.platform === 'win32' ? 'python' : 'python3')
@@ -233,12 +240,12 @@ const blog = articulos(APP)
 const generarFlow = flow(APP, narrar.google) // Google Flow
 
 // Si el agente (o tú) edita cards.json, las cards se actualizan solas.
-watch(CARDS, () => broadcast({ type: 'cards', cards: cards() }))
+watch(CARDS, () => broadcast({ type: 'cards', cards: cardsVisibles() }))
 // Y si «Nuevo estilo» hizo uno: su skill se enlaza donde la buscan Claude y Codex antes del primer hilo con su card.
 watch(dirname(CARDS_TUYAS), (_, archivo) => {
   if (archivo !== basename(CARDS_TUYAS)) return
   if (VENTA) enlazarSkills(APP), enlazarSkillsCodex(APP)
-  broadcast({ type: 'cards', cards: cards() })
+  broadcast({ type: 'cards', cards: cardsVisibles() })
 })
 
 /** Por qué ahora no se puede reiniciar el servidor: lo cortaría a medias. `null` si nada trabaja. */
@@ -376,7 +383,7 @@ async function api(req: IncomingMessage, res: ServerResponse, url: URL): Promise
 
   if (path === '/api/state' && method === 'GET') {
     if (!cargandoModelos && (['claude', 'codex', 'opencode'] as const).some((p) => rutaAgente(p) && !modelos.some((m) => proveedorDe(m.id) === p))) pedirModelos()
-    send(res, 200, { cards: cards(), sessions: sessions.list(), models: modelos, app: APP, version: VERSION, avances: avance?.todos() ?? {} })
+    send(res, 200, { cards: cardsVisibles(), sessions: sessions.list(), models: modelos, app: APP, version: VERSION, avances: avance?.todos() ?? {}, creador: esCreador() })
     return true
   }
 
@@ -405,8 +412,8 @@ async function api(req: IncomingMessage, res: ServerResponse, url: URL): Promise
   if (await maquina.api(req, res, path)) return true // tu equipo
   if (await narrar.api(req, res, path)) return true // voz de AI Studio
   if (await generarFlow.api(req, res, path)) return true // Google Flow
-  if (await blog.api(req, res, path)) return true // artículos: la config del blog
-  if (await enVivoApi.api(req, res, path)) return true // clips en vivo
+  if (permite('articulos') && (await blog.api(req, res, path))) return true // artículos: la config del blog, solo el creador
+  if (permite('clips') && (await enVivoApi.api(req, res, path))) return true // clips en vivo: solo el creador
 
   if (path === '/api/opciones' && method === 'GET') {
     send(res, 200, opciones())
@@ -588,6 +595,7 @@ async function api(req: IncomingMessage, res: ServerResponse, url: URL): Promise
     const input = await body<{ cardId: string; model: string; effort?: string; text: string; images?: string[]; masDeDos?: boolean }>(req)
     const card = cards().find((c) => c.id === input.cardId)
     if (!card) return send(res, 404, { error: 'No existe esa card' }), true
+    if (card.soloCreador && !permite('privadas')) return send(res, 403, { error: 'Esa card es solo del creador de Hermit.' }), true
     if (esDeVideo(card) && pideConfirmar(res, input.masDeDos)) return true
     mkdirSync(card.cwd, { recursive: true })
     // Uno que sale de Ideas se llama como la idea (su línea `Título:`); los demás, como su primer mensaje, hasta que llegue
@@ -617,6 +625,7 @@ async function api(req: IncomingMessage, res: ServerResponse, url: URL): Promise
     const input = await body<{ cardId: string; model: string; effort?: string; text: string; enlaces: string[]; images?: string[]; masDeDos?: boolean }>(req)
     const card = cards().find((c) => c.id === input.cardId)
     if (!card?.lote) return send(res, 404, { error: 'Esa card no hace lotes' }), true
+    if (card.soloCreador && !permite('privadas')) return send(res, 403, { error: 'Esa card es solo del creador de Hermit.' }), true
     const n = input.enlaces.length
     if (n < 2) return send(res, 400, { error: 'Un lote lleva al menos dos enlaces' }), true
     // Todos los videos del lote copian a la misma carpeta, cada uno con el nombre de la suya.

@@ -55,6 +55,7 @@ export function App() {
   const [falloEstado, setFalloEstado] = useState('')
   const [app, setApp] = useState('')
   const [version, setVersion] = useState('')
+  const [creador, setCreador] = useState(false) // esta copia es la del creador (`server/permisos.ts`): Ideas y lo suyo
   const [menu, setMenu] = useState<{ session: SessionMeta; x: number; y: number } | null>(null)
   // El hilo que se renombra en su fila de la barra lateral.
   const [renombrando, setRenombrando] = useState<string | null>(null)
@@ -105,6 +106,7 @@ export function App() {
           setVersion(state.version ?? '')
           setSessions(state.sessions)
           setAvances(state.avances ?? {}) // avance
+          setCreador(!!state.creador)
           eventos.conexion(true)
           setFalloEstado('')
           // Mientras no hubo conexión no llegaron avisos: los paneles de etapas vuelven a leer su avance.
@@ -425,7 +427,7 @@ export function App() {
           Nuevo chat
         </button>
         <div className="nav-grupo">Crear</div>
-        {!VENTA && (
+        {(!VENTA || creador) && (
           <button className={`new-chat${view.kind === 'ideas' ? ' active' : ''}`} onClick={() => go({ kind: 'ideas' })} title={plegada ? 'Ideas' : undefined}>
             <span className="new-chat-icon">
               <Icono de="foco" />
@@ -433,7 +435,7 @@ export function App() {
             Ideas
           </button>
         )}
-        {!VENTA && (
+        {(!VENTA || creador) && (
           <button className={`new-chat${view.kind === 'clips' ? ' active' : ''}`} onClick={() => go({ kind: 'clips' })} title={plegada ? 'Clips' : undefined}>
             <span className="new-chat-icon">
               <Icono de="tramo" />
@@ -461,16 +463,18 @@ export function App() {
           </span>{' '}
           Mis imágenes
         </button>
-        <button
-          className={`new-chat${view.kind === 'galeria' && view.tipo === 'articulo' ? ' active' : ''}`}
-          onClick={() => go({ kind: 'galeria', tipo: 'articulo' })}
-          title={plegada ? 'Mis artículos' : undefined}
-        >
-          <span className="new-chat-icon">
-            <Icono de="lapiz" />
-          </span>{' '}
-          Mis artículos
-        </button>
+        {(!VENTA || creador) && (
+          <button
+            className={`new-chat${view.kind === 'galeria' && view.tipo === 'articulo' ? ' active' : ''}`}
+            onClick={() => go({ kind: 'galeria', tipo: 'articulo' })}
+            title={plegada ? 'Mis artículos' : undefined}
+          >
+            <span className="new-chat-icon">
+              <Icono de="lapiz" />
+            </span>{' '}
+            Mis artículos
+          </button>
+        )}
         <button
           className={`new-chat${view.kind === 'galeria' && view.tipo === 'presentacion' ? ' active' : ''}`}
           onClick={() => go({ kind: 'galeria', tipo: 'presentacion' })}
@@ -575,9 +579,9 @@ export function App() {
         <AvisoVideos />
         <AvisoFlow />
         {view.kind === 'opciones' && (
-          <Opciones onDone={() => go({ kind: 'new' })} />
+          <Opciones creador={creador} onDone={() => go({ kind: 'new' })} />
         )}
-        {!VENTA && view.kind === 'ideas' && (
+        {(!VENTA || creador) && view.kind === 'ideas' && (
           <Ideas
             canalId={view.canalId}
             cards={cards}
@@ -594,7 +598,7 @@ export function App() {
             }}
           />
         )}
-        {!VENTA && view.kind === 'clips' && <Clips sessions={sessions} models={models} onHilo={(id) => go({ kind: 'session', id })} />}
+        {(!VENTA || creador) && view.kind === 'clips' && <Clips sessions={sessions} models={models} onHilo={(id) => go({ kind: 'session', id })} />}
         {view.kind === 'modelos3d' && <Modelos3D />} {/* modelos 3D */}
         {view.kind === 'comunidad' && <Comunidad />}
         {/* comunidad: «Pedir una mejora», que abre el símbolo del agente de cualquier hilo y la publica en Mejoras. */}
@@ -605,7 +609,7 @@ export function App() {
           </ConNavegadorRedes>
         )}
         {view.kind === 'galeria' && view.tipo === 'imagen' && <MisImagenes cards={cards} sessions={sessions} />}
-        {view.kind === 'galeria' && view.tipo === 'articulo' && <MisArticulos cards={cards} sessions={sessions} />}
+        {(!VENTA || creador) && view.kind === 'galeria' && view.tipo === 'articulo' && <MisArticulos cards={cards} sessions={sessions} />}
         {view.kind === 'galeria' && view.tipo === 'presentacion' && <MisPresentaciones cards={cards} sessions={sessions} />}
         {newCard && draftId && (
           <NewSession

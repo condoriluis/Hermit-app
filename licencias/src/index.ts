@@ -44,6 +44,7 @@
  */
 import type { VersionLiberable } from '../../shared/types.ts'
 import { comunidad, creditos } from './comunidad.ts'
+import { datos, descarga, panel, visita } from './estadisticas.ts'
 
 export interface Env {
   DB: D1Database
@@ -222,7 +223,7 @@ const ULTIMAS = { windows: 'ultima.json', mac: 'ultima-mac.json', 'mac-arm64': '
 /** Lo que lee electron-updater de cada sistema. */
 const YML = { windows: 'latest.yml', mac: 'latest-mac.yml', 'mac-arm64': 'latest-arm64-mac.yml', linux: 'latest-linux.yml' } as const
 const NOMBRES = { windows: 'Windows', mac: 'Mac con Intel', 'mac-arm64': 'Mac con Apple Silicon', linux: 'Linux' } as const
-type Sistema = keyof typeof ULTIMAS
+export type Sistema = keyof typeof ULTIMAS
 export const sistema = (so: string | null): Sistema => (so && so !== 'windows' && Object.hasOwn(ULTIMAS, so) ? (so as Sistema) : 'windows')
 /** El sistema del que `archivo` es el instalador; `undefined` si no es uno (el .zip de Mac, un mapa, latest.yml). */
 export function instaladorDe(archivo: string): Sistema | undefined {
@@ -286,7 +287,7 @@ const AVISO = 7 * DIA
  */
 const ANTICIPO = 7 * DIA
 /** Lo que la página de Hermit llama desde el navegador. */
-const PUBLICAS = new Set(['/precio', '/version', '/suscribir', '/suscripcion', '/paypal', '/creditos'])
+const PUBLICAS = new Set(['/precio', '/version', '/suscribir', '/suscripcion', '/paypal', '/creditos', '/mide'])
 /** Quién vende, al pie de cada correo (Ley N.º 453, de Bolivia): su nombre, domicilio y contacto están en los términos de la página, no aquí. */
 const PROVEEDOR = 'Hermit, de luchodev · Quién vende, su domicilio y su contacto: https://myhermit.vercel.app/terminos'
 
@@ -353,6 +354,8 @@ async function atender(req: Request, env: Env, ctx: ExecutionContext, url: URL):
         const intel = so === 'mac' ? u : undefined
         if ([intel, arm].some((m) => m && !m.firmada) || (intel && arm)) return avisoMac(intel, arm)
       }
+      // La descarga de verdad cuenta para las estadísticas; el aviso de arriba y los rangos de una misma no.
+      if (req.method === 'GET' && !req.headers.get('range')) ctx.waitUntil(descarga(req, env, so).catch(() => {}))
       return servir(req, env, u.archivo, u.bytes, { 'content-disposition': `attachment; filename="${u.archivo}"` })
     }
     if ((req.method === 'GET' || req.method === 'HEAD') && url.pathname.startsWith('/actualizaciones/')) return await actualizaciones(req, env, url)
@@ -369,6 +372,10 @@ async function atender(req: Request, env: Env, ctx: ExecutionContext, url: URL):
     if (req.method === 'POST' && url.pathname === '/pago') return await pago(env, await cuerpo(req))
     if (req.method === 'POST' && url.pathname === '/admin/apoyo') return await apoyoManual(req, env)
     if (url.pathname === '/comunidad' || url.pathname.startsWith('/comunidad/')) return await comunidad(req, env, url)
+    // Las estadísticas de la página y de las descargas (src/estadisticas.ts): `/mide` es público, el panel pide la llave.
+    if (req.method === 'POST' && url.pathname === '/mide') return await visita(req, env)
+    if (req.method === 'GET' && url.pathname === '/panel') return await panel(req, env, url)
+    if (req.method === 'GET' && url.pathname === '/estadisticas/datos') return await datos(req, env, url)
     return json({ error: 'No existe' }, 404)
   } catch (error) {
     if (error instanceof Rechazo) return json({ error: error.message }, error.status)

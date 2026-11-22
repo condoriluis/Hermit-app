@@ -78,6 +78,10 @@ Aplica las migraciones cuando el cambio incluya alguna, antes de desplegar códi
 Comprueba la ruta afectada en `https://hermit-licencias.myhermit.workers.dev`. Este despliegue es independiente de
 `main` y `venta`; subir la app no actualiza el Worker. Los nombres de sus secretos están en la cabecera de su configuración.
 
+Las visitas de myhermit.vercel.app y sus descargas las cuenta el mismo Worker (`licencias/src/estadisticas.ts`, tabla
+`visitas`): la landing avisa con `POST /mide` y `/descargar` anota cada binario servido. El panel es
+`/panel?llave=` con la llave `PUBLICAR` (los datos, en `/estadisticas/datos?llave=`); sin ella, 404.
+
 ## Publicaciones de Instagram: nube/
 
 El Worker `hermit-redes`, con R2 y su cron, se configura en `nube/wrangler.jsonc`. Desde la raíz:

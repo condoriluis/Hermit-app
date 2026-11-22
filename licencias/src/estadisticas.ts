@@ -266,7 +266,7 @@ const $=id=>document.getElementById(id);
 const num=n=>Number(n||0).toLocaleString('es');
 const esc=s=>String(s??'').slice(0,80);
 function pais(c){return c==='??'?'—':(PAISES[c]||c)}
-function barras(el,filas,{etiqueta=clave,max=n=>n}={}){
+function barras(el,filas,{etiqueta=f=>f.clave}={}){
   if(!filas.length){el.innerHTML='<div class="vacio">Todavía no hay datos.</div>';return}
   const tope=Math.max(...filas.map(f=>Number(f.n)||0),1);
   el.innerHTML=filas.map(f=>'<div class="barra"><span>'+esc(etiqueta(f))+'</span><span class="pista"><i style="width:'+Math.round(Number(f.n)/tope*100)+'%"></i></span><b>'+num(f.n)+'</b></div>').join('');

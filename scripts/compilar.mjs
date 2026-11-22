@@ -55,7 +55,7 @@ const SKILLS_CREADOR = ['ideas-youtube', 'ideas-vertical']
  * Los paquetes que el servidor carga o lanza. Lo demás ya va dentro de server/index.mjs o de la interfaz. De los agentes
  * van solo su SDK y su lanzador: su programa (cientos de MB cada uno) se baja al elegirlo (`server/agentes.ts`).
  */
-const PAQUETES = ['@anthropic-ai/claude-agent-sdk', '@openai/codex', '@opencode/client', '@playwright/mcp', 'playwright-core', 'ws']
+const PAQUETES = ['@anthropic-ai/claude-agent-sdk', '@openai/codex', '@opencode/client', '@playwright/mcp', 'playwright-core', 'ws', 'zod']
 /** Lo que no se copia de las skills ni de los procesos de Python. */
 const BASURA = new Set(['__pycache__', 'node_modules', '.git', '.cache'])
 /**

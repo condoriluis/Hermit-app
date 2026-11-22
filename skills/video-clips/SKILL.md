@@ -51,7 +51,7 @@ El mensaje trae `Formato: vertical` o `Formato: horizontal`; sin la línea, vert
 3. **Cortes.** Primero `guion.md`: el plan ya aprobado, en prosa legible — una tabla o lista con cada momento,
    su tiempo en `m:ss`, su `gancho` y por qué funciona (es lo que se ve en la pestaña Guion del estudio). Se escribe con la herramienta de archivos, no por consola: por consola se pierden los acentos (`?`). Después,
    `cortes.json`: cada clip elegido con `desde`/`hasta` en segundos, `nombre`, `gancho` opcional (≤ 80
-   caracteres, lo que se lee al abrir) y `subtitulos` (`minimal`, `top`, `centro`, `crimen` o `ninguno`; `minimal` por omisión; `centro` es el minimal en el centro del cuadro). `portada_titulo` es el titular de la portada en vertical (2 a 5 palabras, hasta 60 caracteres) y se escribe
+   caracteres, lo que se lee al abrir) y `subtitulos` (`minimal`, `top`, `archivo`, `varela`, `crimen` o `ninguno`; `minimal` por omisión — cada uno con su letra: Bebas Neue, Anton, Archivo Black, Varela Round y Courier Prime; `centro`, el minimal al centro del cuadro, sigue valiendo en el motor solo por cortes viejos). `portada_titulo` es el titular de la portada en vertical (2 a 5 palabras, hasta 60 caracteres) y se escribe
    como un gancho, no como un resumen: la cifra, el nombre o la promesa que obliga a ver el clip. Nada de
    «explicado», «análisis» ni «todo sobre» — eso describe el contenido en vez de venderlo. Con el video de la
    caída de Microsoft: «80 % en 2 horas» y «Un correo que intoxicó a 15» enganchan; «Explicación del efecto

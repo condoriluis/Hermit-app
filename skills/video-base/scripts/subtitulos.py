@@ -3,7 +3,7 @@ Subtítulos karaoke para los estilos que no tienen plantilla propia (motivaciona
 raíz del proyecto:
 
     python <base>/scripts/subtitulos.py <video.mp4> <salida.mp4> --voz public/voz.wav
-        [--formato vertical|horizontal] [--estilo minimal|crimen|top] [--offset 0]
+        [--formato vertical|horizontal] [--estilo minimal|top|archivo|varela|crimen] [--offset 0]
 
 Toma los tiempos de la voz (`--voz`, la pista ya masterizada; si no se pasa, el audio del propio vídeo) y los pasa por
 el Whisper de Hermit. Escribe los subtítulos palabra a palabra en ASS —cada palabra se pinta en el color del estilo
@@ -15,9 +15,11 @@ audio de la salida.
 
 Los estilos (cada uno con su tipografía de `../assets/fonts`, quemada con `fontsdir`, no con la del sistema):
 - `minimal` (motivacional): Bebas Neue, blanco puro, palabra activa en blanco cálido apenas más cálido.
-- `centro`: el mismo minimal, pero la línea va en el centro del cuadro (Alignment 5), para talks a cámara.
 - `crimen`: Courier Prime, blanco con contorno marcado y palabra activa en ámbar, como las fechas y sellos de un expediente.
 - `top`: Anton, blanco grande, palabra activa en amarillo puro. El golpe de cuenta regresiva.
+- `archivo`: Archivo Black, blanco condensado, palabra activa en rojo. El titular de cartel.
+- `varela`: Varela Round, blanco suave, palabra activa en cyan. Cercano y limpio.
+- `centro` (deprecado, solo por cortes.json viejos): el minimal en el centro del cuadro (Alignment 5).
 """
 
 import json
@@ -42,6 +44,8 @@ ESTILOS = {
     "centro": {"palabras": 4, "fuente": "Bebas Neue", "archivo": "BebasNeue-Regular.ttf", "negrita": -1, "acento": "&H00E6F4FF", "tinta": "&H00FFFFFF", "espaciado": 1, "contorno": 0.10, "sombra": 0.04, "tam_v": 0.072, "tam_h": 0.044, "alineacion": 5},
     "crimen": {"palabras": 3, "fuente": "Courier Prime", "archivo": "CourierPrime-Bold.ttf", "negrita": -1, "acento": "&H0042B0FF", "tinta": "&H00FFFFFF", "espaciado": 0, "contorno": 0.14, "sombra": 0.08, "tam_v": 0.062, "tam_h": 0.037},
     "top": {"palabras": 3, "fuente": "Anton", "archivo": "Anton-Regular.ttf", "negrita": -1, "acento": "&H0000FFFF", "tinta": "&H00FFFFFF", "espaciado": 0, "contorno": 0.12, "sombra": 0.06, "tam_v": 0.070, "tam_h": 0.042},
+    "archivo": {"palabras": 3, "fuente": "Archivo Black", "archivo": "ArchivoBlack-Regular.ttf", "negrita": -1, "acento": "&H004D4DFF", "tinta": "&H00FFFFFF", "espaciado": 0, "contorno": 0.12, "sombra": 0.06, "tam_v": 0.070, "tam_h": 0.042},
+    "varela": {"palabras": 4, "fuente": "Varela Round", "archivo": "VarelaRound-Regular.ttf", "negrita": -1, "acento": "&H00EED322", "tinta": "&H00FFFFFF", "espaciado": 1, "contorno": 0.10, "sombra": 0.04, "tam_v": 0.072, "tam_h": 0.044},
 }
 
 
@@ -86,6 +90,22 @@ def linea(texto: str) -> str:
     return re.sub(r"[{}\\]", "", texto).strip(" ,;:!?¡¿")
 
 
+def partir_palabra(texto: str, maximo: float, ancho_de) -> list[str]:
+    """Una palabra que sola no cabe en la línea (un enlace, un hashtag) se parte en trozos que sí,
+    midiendo carácter a carácter con la fuente real del estilo."""
+    trozos: list[str] = []
+    actual = ""
+    for ch in texto:
+        if actual and ancho_de(actual + ch) > maximo:
+            trozos.append(actual)
+            actual = ch
+        else:
+            actual += ch
+    if actual:
+        trozos.append(actual)
+    return trozos
+
+
 def ass(palabras: list[tuple[float, float, str]], estilo: dict, ancho: int, alto: int) -> str:
     """Un Dialogue por grupo de palabras; dentro, `{\\k}` por palabra: el karaoke las pinta en el acento al decirlas."""
     vertical = alto > ancho
@@ -101,14 +121,53 @@ def ass(palabras: list[tuple[float, float, str]], estilo: dict, ancho: int, alto
         "[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n"
     )
 
-    # Agrupar en líneas de hasta `palabras` palabras, cortando también tras puntuación de cierre.
+    # El ancho de cada palabra con la fuente real del estilo (Pillow + su .ttf): ninguna línea puede
+    # pasar del marco. Sin Pillow se estima por carácter, siempre por encima de la medida real.
+    try:
+        from PIL import ImageFont
+
+        fuente = ImageFont.truetype(str(FUENTES / estilo["archivo"]), letra)
+        ancho_de = fuente.getlength
+        ancho_espacio = fuente.getlength(" ")
+    except Exception:
+        ancho_de = lambda t: len(t) * letra * 0.6
+        ancho_espacio = letra * 0.3
+    util = ancho - 120  # los márgenes laterales del estilo son 60 + 60
+
+    # Primero se parten las palabras que solas no caben en el marco (enlaces, hashtags): cada trozo se
+    # queda con su parte del tiempo de la palabra para que el karaoke no se desordene.
+    medidas: list[tuple[float, float, str]] = []
+    for ini, fin, texto in palabras:
+        w = linea(texto)
+        if not w:
+            continue
+        if ancho_de(w) <= util:
+            medidas.append((ini, fin, texto))
+            continue
+        trozos = partir_palabra(w, util, ancho_de)
+        total = sum(len(t) for t in trozos)
+        t = ini
+        for i, trozo in enumerate(trozos):
+            fin_t = fin if i == len(trozos) - 1 else t + (fin - ini) * len(trozo) / total
+            medidas.append((t, fin_t, trozo))
+            t = fin_t
+
+    # Agrupar en líneas de hasta `palabras` palabras y del ancho útil, cortando también tras
+    # puntuación de cierre: la línea nunca se sale del cuadro, se parte en otra fila.
     grupos: list[list[tuple[float, float, str]]] = []
     actual: list[tuple[float, float, str]] = []
-    for p in palabras:
-        actual.append(p)
-        if len(actual) >= estilo["palabras"] or re.search(r"[.!?…:;]$", p[2]):
+    ancho_actual = 0.0
+    for p in medidas:
+        w = ancho_de(linea(p[2]))
+        if actual and (
+            len(actual) >= estilo["palabras"]
+            or ancho_actual + (ancho_espacio if ancho_actual else 0.0) + w > util
+            or re.search(r"[.!?…:;]$", actual[-1][2])
+        ):
             grupos.append(actual)
-            actual = []
+            actual, ancho_actual = [], 0.0
+        actual.append(p)
+        ancho_actual += (ancho_espacio if len(actual) > 1 else 0.0) + w
     if actual:
         grupos.append(actual)
 

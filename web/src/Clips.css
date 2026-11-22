@@ -297,6 +297,7 @@
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
   padding: 24px; text-align: center; color: var(--muted);
   background: var(--media-bg); border-radius: 8px; border: 1px solid var(--line);
+  container-type: size;
 }
 .envivo-sinpreview svg { width: 34px; height: 34px; }
 .envivo-sinpreview p { margin: 0; max-width: 380px; font-size: 12.5px; }
@@ -320,8 +321,11 @@
 
 /* Mientras no hay stream (conectando) o el video aún no pinta el primer frame: un hueso con brillo, con
    steps() como el resto de la app — nada de spinners que giran para siempre. */
+/* El hueso toma la proporción del directo (--ar, como el marco del video) y nunca desborda: el ancho
+   queda limitado también por el alto del panel (100cqh × proporción), igual que .envivo-video-marco. */
 .envivo-hueso-video {
-  display: block; width: min(100%, 540px); aspect-ratio: 16 / 9; border-radius: 8px;
+  display: block; width: min(100%, 540px, calc(100cqh * var(--ar, 16 / 9)));
+  aspect-ratio: var(--ar, 16 / 9); border-radius: 8px;
   background: linear-gradient(90deg, var(--panel-2) 0%, var(--line) 50%, var(--panel-2) 100%);
   background-size: 200% 100%;
   animation: envivo-hueso 1.6s steps(30) infinite;
@@ -344,7 +348,8 @@
 .envivo-vista-campo { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .envivo-vista {
   position: relative; margin-inline: auto; overflow: hidden;
-  border-radius: 10px; border: 1px solid var(--line); background: var(--media-bg);
+  /* Borde discontinuo: marca la maqueta como «así quedará», no como una pieza ya hecha. */
+  border-radius: 6px; border: 1px dashed var(--line-fuerte); background: var(--media-bg);
   display: flex; flex-direction: column;
   /* Contenedor de ancho: el desenfoque del difuminado se mide en cqw, proporcional al cuadro
      como el boxblur=24 del render sobre su resolución final. */
@@ -362,20 +367,10 @@
   .envivo-vista.v { flex: none; height: 320px; width: auto; }
   .envivo-vista.h { width: min(100%, 460px); }
 }
-/* El video real del live dentro de la maqueta: recorte centrado por defecto, como el reencuadre del render. */
-.envivo-vista-video {
-  position: absolute; inset: 0; width: 100%; height: 100%;
-  object-fit: cover; background: var(--media-bg);
-}
-/* «Pantalla completa» (difuminado), tal cual el filtro de hacer.py: el cuadro entero nítido
-   (scale=ancho:-2, o sea contain) centrado en X y al 42 % del alto — un poco arriba del centro —
-   sobre su propia copia a cover con boxblur. Sin oscurecer ni saturar: solo desenfoque. */
-.envivo-vista.re-difuminado .envivo-vista-video { object-fit: contain; object-position: center 42%; }
-.envivo-vista.re-difuminado .envivo-vista-video.fondo {
-  object-fit: cover;
-  /* boxblur=24 sobre ~1080 px de ancho ≈ 1,3 % del ancho: en la previa, 1,4 cqw. */
-  filter: blur(1.4cqw);
-  transform: scale(1.04);
+/* La imagen de la maqueta: el frame del video de la columna 1 pintado en canvas, a todo el cuadro.
+   El reencuadre (cover, difuminado, quien habla) lo calcula pintarCuadro en ClipsEnVivo.tsx. */
+.envivo-vista-lienzo {
+  position: absolute; inset: 0; width: 100%; height: 100%; display: block;
 }
 /* El brillo de la maqueta sigue al acento del clip; sin acento queda neutro (texto), no el accent de la app. */
 .envivo-vista-fondo {
@@ -396,6 +391,14 @@
   background-size: 200% 100%;
   animation: envivo-hueso 1.6s steps(30) infinite;
 }
+/* Sin live la maqueta no «carga»: es un marco quieto que invita a conectar — icono y texto centrados,
+   atenuados, sin animación. */
+.envivo-vista-vacia {
+  position: absolute; inset: 0; z-index: 1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  padding: 12px; text-align: center; color: var(--text-2);
+}
+.envivo-vista-vacia svg { width: 22px; height: 22px; opacity: 0.6; }
 /* Portada y subtítulo son overlays absolutos: el marco lo marcan solo el formato y el flex — el texto
    nunca empuja el cuadro, así cambiar de estilo de subtítulo no mueve nada. */
 .envivo-vista-portada {
@@ -413,26 +416,34 @@
   font-size: 9.5px; font-weight: 600; color: color-mix(in srgb, var(--text) 75%, transparent);
   border-left: 2px solid var(--acento, var(--line-fuerte)); padding-left: 5px;
 }
+/* Las mismas fuentes que quema subtitulos.py (assets de video-base): la previa viste cada estilo de
+   verdad, no una aproximación con la tipografía de la app. */
+@font-face { font-family: 'Bebas Neue'; src: url('/fonts/BebasNeue-Regular.ttf') format('truetype'); font-weight: 400; }
+@font-face { font-family: 'Anton'; src: url('/fonts/Anton-Regular.ttf') format('truetype'); font-weight: 400; }
+@font-face { font-family: 'Archivo Black'; src: url('/fonts/ArchivoBlack-Regular.ttf') format('truetype'); font-weight: 400; }
+@font-face { font-family: 'Varela Round'; src: url('/fonts/VarelaRound-Regular.ttf') format('truetype'); font-weight: 400; }
+@font-face { font-family: 'Courier Prime'; src: url('/fonts/CourierPrime-Bold.ttf') format('truetype'); font-weight: 700; }
 .envivo-vista-sub {
   position: absolute; left: 0; right: 0; bottom: 21%; z-index: 1; margin: 0;
   padding: 0 10px; text-align: center;
   color: var(--text); font-weight: 800; font-size: 12px; line-height: 1.3;
+  /* Un enlace o hashtag sin espacios también corta dentro de la palabra, como hace subtitulos.py. */
+  overflow-wrap: anywhere;
   text-shadow: 0 1px 3px var(--shadow-fuerte);
 }
 /* El margen real de subtitulos.py: 21 % del alto en vertical, 10 % en horizontal. */
 .envivo-vista.h .envivo-vista-sub { bottom: 10%; }
 .envivo-vista-sub mark { background: none; font-weight: 900; }
-.envivo-vista-sub.minimal { letter-spacing: 0.04em; text-transform: uppercase; font-size: 10px; }
-/* `top` es Anton amarillo, pero va abajo como los demás (Alignment 2 en subtitulos.py). */
-.envivo-vista-sub.top { font-size: 12px; letter-spacing: 0.02em; }
-.envivo-vista-sub.crimen {
-  font-family: ui-monospace, 'Courier New', monospace; font-weight: 700; font-size: 9.5px;
-  letter-spacing: 0.02em;
+.envivo-vista-sub.minimal {
+  font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.04em; text-transform: uppercase; font-size: 13px;
 }
-/* `centro`: el minimal pero en el medio del cuadro, para talks a cámara. Se centra con transform, no con
-   flex: en flex cada palabra sería un ítem suelto y el subtítulo se dispersaría en líneas separadas. */
-.envivo-vista-sub.centro {
-  top: 50%; bottom: auto; transform: translateY(-50%);
+/* `top` es Anton amarillo, pero va abajo como los demás (Alignment 2 en subtitulos.py). */
+.envivo-vista-sub.top { font-family: 'Anton', sans-serif; font-size: 15px; letter-spacing: 0.02em; }
+.envivo-vista-sub.archivo { font-family: 'Archivo Black', sans-serif; font-size: 14px; letter-spacing: 0.01em; }
+.envivo-vista-sub.varela { font-family: 'Varela Round', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 0.01em; }
+.envivo-vista-sub.crimen {
+  font-family: 'Courier Prime', ui-monospace, monospace; font-weight: 700; font-size: 10.5px;
+  letter-spacing: 0.02em;
 }
 /* La esquina del formato va arriba a la derecha: abajo estorba a los subtítulos, que viven en la base. */
 .envivo-vista-corner {

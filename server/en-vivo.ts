@@ -62,7 +62,7 @@ const MAX_REINICIOS = 5
 const MIN_CLIP = 5
 const MAX_CLIP = 600
 
-const SUBTILOS = new Set(['minimal', 'top', 'centro', 'crimen', 'ninguno'])
+const SUBTILOS = new Set(['minimal', 'top', 'archivo', 'varela', 'crimen', 'ninguno', 'centro'])
 /** Los `acento`, `portada_fuente` y `reencuadre` de `cortes.json` (los mismos que valida `hacer.py`). */
 const ACENTOS = new Set(['amarillo', 'rojo', 'naranja', 'verde', 'cyan', 'azul', 'morado', 'rosa'])
 const PORTADA_FUENTES = new Set(['anton', 'archivo', 'bebas', 'courier', 'varela'])
@@ -141,7 +141,6 @@ interface Vivo {
   canal?: string
   estado: VivoEstado['estado']
   error?: string
-  stream: VivoEstado['stream']
   /** La carpeta del live dentro de la card «Clips» (`trabajo/video-clips/en-vivo-…`): ahí caen sus clips. */
   proyecto: string
   buffer: string
@@ -199,10 +198,11 @@ function publico(v: Vivo): VivoEstado {
     canal: v.canal,
     estado: v.estado,
     error: v.error,
-    // La vista previa es la del propio buffer (`/api/en-vivo/hls.m3u8`): mismo origen, sin CORS, y es la
-    // misma grabación que se corta — ni una descarga extra ni un stream que se adelante. Antes del primer
-    // segmento se ofrece el m3u8 externo por si la plataforma lo deja ver.
-    stream: v.segmentos.size ? { url: '/api/en-vivo/hls.m3u8' } : v.stream,
+    // La vista previa es SIEMPRE la del propio buffer (`/api/en-vivo/hls.m3u8`): mismo origen, sin CORS, y es
+    // la misma grabación que se corta — ni una descarga extra ni un stream que se adelante. Sin m3u8 externo
+    // de por medio: cambiar de playlist a mitad de la emisión hacía saltar el video hacia atrás una vez.
+    // Antes del primer segmento no hay nada que previsualizar todavía (el hueso de carga lo cubre).
+    stream: v.segmentos.size ? { url: '/api/en-vivo/hls.m3u8' } : null,
     voz: v.vozOk,
     vozPendientes: v.colaVoz.length + (v.procesandoVoz ? 1 : 0),
     minutos: Math.round((((v.segmentos.size || VENTANA_SEG) * SEG_VIDEO) / 60) * 10) / 10,
@@ -1239,7 +1239,6 @@ export function enVivo(app: string, broadcast: (msg: ServerPush) => void) {
       titulo,
       canal: info.channel ?? info.uploader,
       estado: 'conectando',
-      stream: elegido.stream,
       proyecto,
       buffer: join(proyecto, 'buffer'),
       vozDir: join(proyecto, 'voz'),

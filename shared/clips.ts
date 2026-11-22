@@ -22,8 +22,8 @@ export const ACENTOS_CLIP: AcentoClip[] = [
   { nombre: 'rosa', hex: '#f472b6' }
 ]
 
-/** Los estilos de subtítulos karaoke de `subtitulos.py`/`hacer.py`. */
-export const SUBTITULOS_CLIP = ['minimal', 'top', 'centro', 'crimen', 'ninguno'] as const
+/** Los estilos de subtítulos karaoke de `subtitulos.py`/`hacer.py` (`centro` sigue valiendo en el motor por cortes.json viejos, pero ya no se ofrece). */
+export const SUBTITULOS_CLIP = ['minimal', 'top', 'archivo', 'varela', 'crimen', 'ninguno'] as const
 
 /** Los reencuadres de `encuadre.py`: `auto` sigue a quien habla, el resto son modos fijos. */
 export const REENCUADRES_CLIP = ['auto', 'centrado', 'difuminado', 'persona'] as const

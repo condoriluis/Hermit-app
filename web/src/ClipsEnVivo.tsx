@@ -1,4 +1,4 @@
-import { Fragment, type CSSProperties, useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, type CSSProperties, type RefObject, useEffect, useMemo, useRef, useState } from 'react'
 import Hls from 'hls.js'
 import { NAVEGADOR_CLIPS, type VivoClip, type VivoEstado, type VivoSegmento } from '../../shared/types'
 import { api } from './api'
@@ -26,7 +26,8 @@ const FORMATOS = [
 const SUBTITULOS = [
   { v: 'minimal', nombre: 'Minimal' },
   { v: 'top', nombre: 'Top' },
-  { v: 'centro', nombre: 'Centro' },
+  { v: 'archivo', nombre: 'Archivo' },
+  { v: 'varela', nombre: 'Varela' },
   { v: 'crimen', nombre: 'Crimen' },
   { v: 'ninguno', nombre: 'Ninguno' }
 ] as const
@@ -39,7 +40,8 @@ const ACENTOS = [{ v: '', nombre: 'Sin acento', hex: 'transparent' }, ...ACENTOS
 // mismo color, no con negro.
 const ACENTO_POR_ESTILO: Record<string, string> = {
   minimal: 'var(--sub-acento-minimal)',
-  centro: 'var(--sub-acento-minimal)',
+  archivo: 'var(--sub-acento-archivo)',
+  varela: 'var(--sub-acento-varela)',
   crimen: 'var(--sub-acento-crimen)',
   top: 'var(--sub-acento-top)'
 }
@@ -100,8 +102,60 @@ function adjuntarLive(v: HTMLVideoElement, stream: StreamLive): (() => void) | u
 }
 
 /**
+ * Pinta el frame del directo en el lienzo de la maqueta, con el reencuadre que hará el render al cortar:
+ * la ventana con la proporción del formato dentro de la fuente (la misma cuenta que `ventana()` de
+ * `encuadre.py`), centrada en `centrado`/`auto` y siguiendo la fracción de `pos` en `persona` (0–1 del
+ * recorrido, como la devuelve `/api/en-vivo/cara`). `difuminado` se dibuja como el render: el cuadro
+ * entero nítido al 42 % del alto sobre su copia a cover desenfocada (~1,4 % del ancho, boxblur=24
+ * proporcional). `directo` (el live ya tiene la proporción) sale entero, contain.
+ */
+function pintarCuadro(ctx: CanvasRenderingContext2D, v: HTMLVideoElement, w: number, h: number, modo: string, pos?: { x: number; y: number }) {
+  const vw = v.videoWidth
+  const vh = v.videoHeight
+  ctx.imageSmoothingEnabled = true
+  ctx.imageSmoothingQuality = 'high'
+  if (modo === 'difuminado') {
+    const s = Math.max(w / vw, h / vh)
+    const dw = vw * s
+    const dh = vh * s
+    ctx.save()
+    ctx.filter = `blur(${w * 0.014}px)`
+    ctx.drawImage(v, (w - dw) / 2, (h - dh) / 2, dw, dh)
+    ctx.restore()
+    const sc = w / vw
+    const fw = vw * sc
+    const fh = vh * sc
+    ctx.drawImage(v, (w - fw) / 2, (h - fh) * 0.42, fw, fh)
+    return
+  }
+  if (modo === 'directo') {
+    const s = Math.min(w / vw, h / vh)
+    const dw = vw * s
+    const dh = vh * s
+    ctx.drawImage(v, (w - dw) / 2, (h - dh) / 2, dw, dh)
+    return
+  }
+  // La ventana del formato dentro de la fuente: más ancha → recorta X; más alta → recorta Y.
+  const aspecto = w / h
+  let sx = 0
+  let sy = 0
+  let sw = vw
+  let sh = vh
+  if (vw / vh > aspecto) {
+    sw = vh * aspecto
+    sx = (vw - sw) * (pos?.x ?? 0.5)
+  } else {
+    sh = vw / aspecto
+    sy = (vh - sh) * (pos?.y ?? 0.5)
+  }
+  ctx.drawImage(v, sx, sy, sw, sh, 0, 0, w, h)
+}
+
+/**
  * La maqueta del clip que va a salir: proporción del formato elegido, la palabra activa del subtítulo en el
- * acento y la portada si la hay. Es solo CSS — cambia al instante con cada opción, sin render ni espera.
+ * acento y la portada si la hay. El video es un espejo del reproductor de la columna 1 — el mismo frame en
+ * el mismo instante, pintado en un canvas con el reencuadre del modo elegido; subtítulos y portada son
+ * overlays encima, cambian al instante con cada opción.
  */
 function VistaClip({
   formato,
@@ -113,6 +167,9 @@ function VistaClip({
   ratio,
   palabras,
   stream,
+  listo,
+  cargando,
+  video,
   reencuadre
 }: {
   formato: 'vertical' | 'horizontal'
@@ -125,9 +182,16 @@ function VistaClip({
   ratio: number
   /** Las últimas palabras del live, para que la maqueta subtitule con lo que se está diciendo de verdad. */
   palabras: string[]
-  /** El m3u8 del live para ver la imagen real en la maqueta; null si la plataforma no lo suelta. */
+  /** Hay stream del buffer: la maqueta refleja el video; null = hueso de carga. */
   stream: StreamLive | null
-  /** El reencuadre elegido: la maqueta lo simula (quien habla va centrado: el seguimiento real es del render). */
+  /** El video de la columna 1 ya pintó su primer frame: hasta entonces la maqueta es hueso. */
+  listo: boolean
+  /** El directo está llegando de verdad (conectando o esperando su primer frame/segmento): solo ahí la
+      maqueta muestra el hueso con brillo; sin live es un marco quieto que invita a conectar. */
+  cargando: boolean
+  /** El <video> del reproductor principal: la maqueta pinta sus mismos frames, ni una descarga de más. */
+  video: RefObject<HTMLVideoElement | null>
+  /** El reencuadre elegido: la maqueta lo simula con la misma ventana de crop que hará el render. */
   reencuadre: string
 }) {
   const acentoHex = ACENTOS.find((a) => a.v === acento)?.hex
@@ -137,39 +201,53 @@ function VistaClip({
   const vertical = formato === 'vertical'
   // El vivo ya es del formato pedido: sale sin reencuadre; si no, el clip lo reencuadra.
   const directo = ratio > 0 && (vertical ? ratio < 1 : ratio > 1)
-  // La imagen real del live dentro de la maqueta, muda y sin controles: el mismo stream del reproductor.
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const fondoRef = useRef<HTMLVideoElement>(null)
+  // La imagen es un espejo del video de la columna 1: cada frame se pinta en el canvas — el mismo
+  // instante, sin segunda descarga del stream ni deriva entre dos hls.js. El reencuadre se dibuja con
+  // la ventana de crop del render: centrado, siguiendo a quien habla o cuadro completo desenfocado.
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  // La posición del crop «quien habla» (0–1 del recorrido), la que mide el servidor sobre el buffer.
+  const posCara = useRef({ x: 0.5, y: 0.5 })
   useEffect(() => {
-    const v = videoRef.current
-    return v && stream ? adjuntarLive(v, stream) : undefined
-  }, [stream?.url]) // eslint-disable-line react-hooks/exhaustive-deps
-  // «Pantalla completa» (difuminado): el video entero nítido sobre una copia desenfocada del mismo frame.
-  useEffect(() => {
-    const v = fondoRef.current
-    return v && stream && reencuadre === 'difuminado' ? adjuntarLive(v, stream) : undefined
-  }, [stream?.url, reencuadre]) // eslint-disable-line react-hooks/exhaustive-deps
-  // «Quien habla»: el servidor mide la cara más grande del último frame del buffer (YuNet, la misma
-  // regla que el render) y la previa panea el video hacia ella, como hará el clip.
-  const [cara, setCara] = useState<{ x: number; y: number } | null>(null)
-  const siguiendo = reencuadre === 'persona' && !!stream && !directo
-  useEffect(() => {
-    if (!siguiendo) {
-      setCara(null)
-      return
-    }
+    if (reencuadre !== 'persona' || directo || !stream) return
     let vivo = true
-    const mirar = () =>
-      api<{ x: number; y: number }>(`/api/en-vivo/cara?formato=${formato}`)
-        .then((r) => vivo && setCara(r))
-        .catch(() => {})
-    mirar()
-    const t = setInterval(mirar, 2500)
+    const preguntar = async () => {
+      try {
+        const r = await fetch(`/api/en-vivo/cara?formato=${formato}`)
+        const d = (await r.json()) as { x?: number; y?: number }
+        if (vivo && typeof d?.x === 'number') posCara.current = { x: d.x, y: typeof d.y === 'number' ? d.y : 0.5 }
+      } catch {
+        /* el live puede estar reiniciando el buffer: se vuelve a preguntar en el siguiente turno */
+      }
+    }
+    void preguntar()
+    const t = setInterval(() => void preguntar(), 2500)
     return () => {
       vivo = false
       clearInterval(t)
     }
-  }, [siguiendo, formato]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [reencuadre, formato, directo, stream])
+  useEffect(() => {
+    const cv = canvasRef.current
+    const v = video.current
+    if (!cv || !v) return
+    let raf = 0
+    const pintar = () => {
+      const dpr = Math.min(2, window.devicePixelRatio || 1)
+      const w = cv.clientWidth
+      const h = cv.clientHeight
+      if (w > 0 && h > 0 && (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr))) {
+        cv.width = Math.round(w * dpr)
+        cv.height = Math.round(h * dpr)
+      }
+      const ctx = cv.getContext('2d')
+      if (ctx && v.readyState >= 2 && v.videoWidth > 0 && cv.width > 0) {
+        pintarCuadro(ctx, v, cv.width, cv.height, directo ? 'directo' : reencuadre, posCara.current)
+      }
+      raf = requestAnimationFrame(pintar)
+    }
+    raf = requestAnimationFrame(pintar)
+    return () => cancelAnimationFrame(raf)
+  }, [video, stream, listo, reencuadre, directo]) // eslint-disable-line react-hooks/exhaustive-deps
   const titulo = portadaTitulo.trim()
   const resaltar = portadaResaltar.trim()
   // La palabra «que se está diciendo» avanza sola por las palabras reales, como el karaoke del clip.
@@ -185,20 +263,19 @@ function VistaClip({
       <span className="clips-grupo-titulo">Así quedará el clip</span>
       <div className={`envivo-vista ${vertical ? 'v' : 'h'} re-${reencuadre}`} style={acentoColor ? ({ '--acento': acentoColor } as CSSProperties) : undefined}>
         <div className="envivo-vista-fondo" />
-        {/* Sin live conectado (o sin stream reproducible) la maqueta es un hueso con brillo, con la
-            proporción del formato elegido — igual que el reproductor del directo, nada de texto de ejemplo. */}
-        {!stream && <div className="envivo-vista-hueso" aria-hidden="true" />}
-        {reencuadre === 'difuminado' && stream && <video ref={fondoRef} className="envivo-vista-video fondo" muted playsInline autoPlay />}
-        {stream && (
-          <video
-            ref={videoRef}
-            className="envivo-vista-video"
-            muted
-            playsInline
-            autoPlay
-            style={siguiendo && cara ? { objectPosition: `${cara.x * 100}% ${cara.y * 100}%` } : undefined}
-          />
-        )}
+        {/* La maqueta vacía solo cuando NO hay live: el marco queda quieto con su texto, sin brillo de
+            «cargando» — el hueso es para cuando el directo sí está llegando. */}
+        {(!stream || !listo) &&
+          (cargando ? (
+            <div className="envivo-vista-hueso" aria-hidden="true" />
+          ) : (
+            <div className="envivo-vista-vacia">
+              <Icono de="video" />
+              <p className="muted small">Conecta un live para ver la previa del clip.</p>
+            </div>
+          ))}
+        {/* La imagen es el mismo frame del video de la izquierda, pintado en canvas: ni una descarga extra. */}
+        {stream && <canvas ref={canvasRef} className="envivo-vista-lienzo" />}
         {stream && titulo && (
           <div className="envivo-vista-portada">
             <b>
@@ -233,9 +310,9 @@ function VistaClip({
           ? directo
             ? 'El live ya tiene esta proporción: sale directo, sin reencuadre.'
             : reencuadre === 'persona'
-              ? 'El clip seguirá a quien habla; la previa lo sigue en vivo, con la misma regla del render.'
+              ? 'El clip seguirá a quien habla; la previa hace lo mismo sobre el live.'
               : reencuadre === 'auto'
-                ? 'El clip elige el mejor encuadre solo; la previa muestra el video centrado.'
+                ? 'El clip elige el mejor encuadre solo al renderizar; la previa muestra el centrado.'
                 : reencuadre === 'difuminado'
                   ? 'El clip muestra el video entero sobre el fondo desenfocado.'
                   : `El live es ${ratio < 1 ? 'vertical' : 'horizontal'}: el clip se reencuadra a ${vertical ? '9:16' : '16:9'}.`
@@ -544,7 +621,7 @@ export function ClipsEnVivo({ onVolver }: { onVolver(): void }) {
               <div className="envivo-sinpreview">
                 <i
                   className="envivo-hueso-video"
-                  style={{ aspectRatio: vivo ? (plataformaDe(vivo.url)?.id === 'tiktok' ? '9 / 16' : '16 / 9') : '16 / 9' }}
+                  style={{ '--ar': vivo && plataformaDe(vivo.url)?.id === 'tiktok' ? '9 / 16' : '16 / 9' } as CSSProperties}
                   aria-hidden
                 />
                 <Icono de={vivo?.estado === 'conectando' ? 'recargar' : 'video'} />
@@ -650,6 +727,9 @@ export function ClipsEnVivo({ onVolver }: { onVolver(): void }) {
                 ratio={ratio}
                 palabras={palabrasClip}
                 stream={vivo?.stream ?? null}
+                listo={videoListo}
+                cargando={!!vivo && (vivo.estado === 'conectando' || vivo.estado === 'en-vivo') && (!vivo.stream || !videoListo)}
+                video={videoRef}
                 reencuadre={reencuadre}
               />
               <div className="envivo-form">

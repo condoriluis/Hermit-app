@@ -23,9 +23,10 @@ Lo que el agente deja en el proyecto:
   slug del archivo (`out/redes/1-el-remate.mp4`); si falta, el número del corte. `gancho` es el texto que se
   lee los primeros segundos sobre el video (opcional, hasta 80 caracteres). `portada_titulo` es el título de
   la portada en vertical (opcional, 2 a 5 palabras; sin él, la portada usa el gancho limpio). `subtitulos` es el estilo karaoke:
-  `minimal` (Bebas Neue, el de omisión), `top` (Anton, palabra activa amarilla), `centro` (el minimal
-  en el centro del cuadro), `crimen` (Courier Prime, ámbar) o `ninguno` (la fuente ya trae sus
-  subtítulos: no se queman los nuestros). `formato` del JSON manda sobre `--formato`.
+  `minimal` (Bebas Neue, el de omisión), `top` (Anton, palabra activa amarilla), `archivo` (Archivo Black,
+  palabra activa roja), `varela` (Varela Round, palabra activa cyan), `crimen` (Courier Prime, ámbar),
+  `centro` (el minimal en el centro del cuadro; deprecado, solo cortes viejos) o `ninguno` (la fuente ya
+  trae sus subtítulos: no se queman los nuestros). `formato` del JSON manda sobre `--formato`.
   `acento` (opcional) es el golpe de color del clip: `amarillo`, `rojo`, `naranja`, `verde`, `cyan`, `azul`,
   `morado`, `rosa` o un #RRGGBB — pinta la palabra activa de los subtítulos y, con `portada_resaltar`, la
   palabra o frase elegida del título de la portada (el resto queda blanco). `portada_fuente` (opcional) es
@@ -63,7 +64,7 @@ PROYECTO = Path(_en).resolve() if _en else Path.cwd()
 if PROYECTO == SKILL.parent or SKILL.parent in PROYECTO.parents:
     sys.exit(f"{PROYECTO} es la carpeta de las skills: pasa la ruta completa de la línea `Carpeta:`.")
 FORMATOS = {"vertical": (1080, 1920), "horizontal": (1920, 1080)}
-SUBTITULOS = {"minimal", "top", "centro", "crimen", "ninguno"}
+SUBTITULOS = {"minimal", "top", "archivo", "varela", "crimen", "ninguno", "centro"}
 # El acento del clip (`acento` en cortes.json): nombre de la paleta o #RRGGBB. Pinta la palabra
 # destacada de la portada y la palabra activa de los subtítulos karaoke — el mismo golpe de color
 # en todo el clip. Sin `acento`, la portada queda blanca y los subtítulos con el color del estilo.

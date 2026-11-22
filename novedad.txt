@@ -1,1 +1,1 @@
-Hermit 0.6.2: edita subtítulos y escenas de tus videos y renderiza sin esperar al agente
+Hermit 0.6.3: saca clips de directos en vivo al momento, con la previa que no miente

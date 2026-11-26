@@ -100,6 +100,12 @@
 .pieza-datos dt { color: var(--muted); white-space: nowrap; }
 .pieza-datos dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
 .pieza-datos code { font-family: var(--mono); font-size: 11px; }
+.pieza-prompt-caixa { position: relative; display: inline-block; max-width: 100%; vertical-align: top; }
+.pieza-prompt { display: block; margin: 0; padding: 32px 88px 10px 10px; border: 1px solid var(--accent-border); border-radius: 10px; background: var(--panel-2); font-family: var(--mono); font-size: 11.5px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+.pieza-prompt-copiar { position: absolute; top: 8px; right: 8px; z-index: 1; display: inline-flex; align-items: center; gap: 6px; padding: 4px 11px 4px 9px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--muted); font-size: 11.5px; font-weight: 600; transition: border-color 0.15s, color 0.15s, background 0.15s; }
+.pieza-prompt-copiar .ico { width: 12px; height: 12px; }
+.pieza-prompt-copiar:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.pieza-prompt-copiar.copiado { border-color: var(--ok); color: var(--ok); }
 .pieza-dialogo-acciones { display: flex; flex-wrap: wrap; gap: 10px; margin-top: auto; padding-top: 6px; }
 .pieza-accion { display: inline-flex; align-items: center; gap: 7px; padding: 8px 15px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel-2); color: var(--text); font-size: 13px; font-weight: 600; transition: border-color 0.15s, color 0.15s, background 0.15s; }
 .pieza-accion .ico { width: 14px; height: 14px; }

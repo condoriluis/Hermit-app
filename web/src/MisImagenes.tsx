@@ -147,6 +147,7 @@ function ImagenDe({ imagen, orientacion: orientada, onMedir, onVer }: { imagen: 
  */
 function FotoDialogo({ imagen, total, cards, onCerrar, onPaso }: { imagen: ImagenHecha; total: number; cards: Card[]; onCerrar(): void; onPaso(paso: number): void }) {
   const [copiado, setCopiado] = useState(false)
+  const [copiadoPrompt, setCopiadoPrompt] = useState(false)
   const dialogo = useRef<HTMLDivElement>(null)
   const estilo = cards.find((c) => c.id === imagen.cardId)?.title
   const tamano = imagen.ancho && imagen.alto ? `${imagen.ancho} × ${imagen.alto} px` : '—'
@@ -158,6 +159,11 @@ function FotoDialogo({ imagen, total, cards, onCerrar, onPaso }: { imagen: Image
     const t = setTimeout(() => setCopiado(false), 1600)
     return () => clearTimeout(t)
   }, [copiado])
+  useEffect(() => {
+    if (!copiadoPrompt) return
+    const t = setTimeout(() => setCopiadoPrompt(false), 1600)
+    return () => clearTimeout(t)
+  }, [copiadoPrompt])
   // Al abrir, el foco entra a la ficha: lo que se teclea ya no va a la rejilla de atrás.
   useEffect(() => {
     const cuadro = requestAnimationFrame(() => dialogo.current?.focus({ preventScroll: true }))
@@ -187,6 +193,7 @@ function FotoDialogo({ imagen, total, cards, onCerrar, onPaso }: { imagen: Image
     hay[j].focus()
   }
   const copiar = () => navigator.clipboard.writeText(imagen.ruta).then(() => setCopiado(true), () => {})
+  const copiarPrompt = () => (imagen.prompt ? navigator.clipboard.writeText(imagen.prompt).then(() => setCopiadoPrompt(true), () => {}) : undefined)
   // Solo cierra un clic que empezó y acabó en el velo: soltar fuera una selección de texto no la cierra.
   const desdeElVelo = useRef(false)
 
@@ -226,6 +233,20 @@ function FotoDialogo({ imagen, total, cards, onCerrar, onPaso }: { imagen: Image
             <dd>
               <code>{imagen.ruta}</code>
             </dd>
+            {imagen.prompt && (
+              <>
+                <dt>Prompt</dt>
+                <dd>
+                  <div className="pieza-prompt-caixa">
+                    <pre className="pieza-prompt">{imagen.prompt}</pre>
+                    <button className={`pieza-prompt-copiar${copiadoPrompt ? ' copiado' : ''}`} onClick={copiarPrompt}>
+                      <Icono de={copiadoPrompt ? 'palomita' : 'copiar'} />
+                      {copiadoPrompt ? 'Copiado' : 'Copiar'}
+                    </button>
+                  </div>
+                </dd>
+              </>
+            )}
           </dl>
           <div className="pieza-dialogo-acciones">
             <button className="pieza-accion" onClick={copiar}>

@@ -493,6 +493,14 @@ export function imagenesDe(card: Card, sessions: Sessions): ImagenHecha[] {
   }
   const imagenes: ImagenHecha[] = []
   for (const folder of carpetasDe(card)) {
+    // El `lista.json` del cierre de la skill `imagenes` trae el prompt de cada imagen: es lo que enseña su ficha.
+    const prompts = new Map<string, string>()
+    try {
+      const lista = JSON.parse(readFileSync(join(folder, 'lista.json'), 'utf8').replace(/^\uFEFF/, '')) as { imagenes?: { archivo?: string; prompt?: string }[] }
+      for (const i of lista.imagenes ?? []) if (i.archivo && i.prompt) prompts.set(basename(i.archivo), i.prompt)
+    } catch {
+      // Sin lista.json no hay prompts que enseñar.
+    }
     for (const a of files(folder, '*')) {
       if (!ES_IMAGEN.test(a.ruta) || basename(a.ruta).startsWith('_')) continue
       const ruta = join(folder, a.ruta)
@@ -505,7 +513,8 @@ export function imagenesDe(card: Card, sessions: Sessions): ImagenHecha[] {
         sessionId: hilos.get(folder)?.id,
         cardId: card.id,
         ancho: tam?.ancho,
-        alto: tam?.alto
+        alto: tam?.alto,
+        prompt: prompts.get(basename(a.ruta))
       })
     }
   }

@@ -122,6 +122,8 @@ export interface ImagenHecha {
   /** Su tamaño real en píxeles, medido en el servidor: la tarjeta se dibuja con su proporción desde el primer cuadro. */
   ancho?: number
   alto?: number
+  /** El prompt con que la generó su skill (del `lista.json` de su carpeta), para la ficha de «Mis imágenes». */
+  prompt?: string
 }
 
 /**

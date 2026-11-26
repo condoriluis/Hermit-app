@@ -280,7 +280,8 @@
       },
       {
         "nombre": "Voz",
-        "listo": "{fuentes/voz/*.wav,public/voz.wav,voz.wav}",
+        "listo": "{fuentes/voz/*.wav,public/voz.wav,voz.wav,public/sonido.wav}",
+        "muestra": "{fuentes/voz/*.wav,public/voz.wav,voz.wav,public/sonido.wav}",
         "fase": "sonido"
       },
       {
@@ -382,7 +383,8 @@
       },
       {
         "nombre": "Voz",
-        "listo": "{fuentes/voz/*.wav,public/voz.wav,voz.wav}",
+        "listo": "{fuentes/voz/*.wav,public/voz.wav,voz.wav,public/sonido.wav}",
+        "muestra": "{fuentes/voz/*.wav,public/voz.wav,voz.wav,public/sonido.wav}",
         "fase": "sonido"
       },
       {
@@ -439,7 +441,8 @@
       },
       {
         "nombre": "Voz",
-        "listo": "{fuentes/voz/*.wav,public/voz.wav,voz.wav}",
+        "listo": "{fuentes/voz/*.wav,public/voz.wav,voz.wav,public/sonido.wav}",
+        "muestra": "{fuentes/voz/*.wav,public/voz.wav,voz.wav,public/sonido.wav}",
         "fase": "sonido"
       },
       {
@@ -491,7 +494,8 @@
       },
       {
         "nombre": "Voz",
-        "listo": "{fuentes/voz/*.wav,public/voz.wav,voz.wav}",
+        "listo": "{fuentes/voz/*.wav,public/voz.wav,voz.wav,public/sonido.wav}",
+        "muestra": "{fuentes/voz/*.wav,public/voz.wav,voz.wav,public/sonido.wav}",
         "fase": "sonido"
       },
       {
@@ -537,7 +541,8 @@
       },
       {
         "nombre": "Voz",
-        "listo": "{fuentes/voz/*.wav,public/voz.wav,voz.wav}",
+        "listo": "{fuentes/voz/*.wav,public/voz.wav,voz.wav,public/sonido.wav}",
+        "muestra": "{fuentes/voz/*.wav,public/voz.wav,voz.wav,public/sonido.wav}",
         "fase": "sonido"
       },
       {
@@ -588,7 +593,8 @@
       },
       {
         "nombre": "Voz",
-        "listo": "{fuentes/voz/*.wav,public/voz.wav,voz.wav}",
+        "listo": "{fuentes/voz/*.wav,public/voz.wav,voz.wav,public/sonido.wav}",
+        "muestra": "{fuentes/voz/*.wav,public/voz.wav,voz.wav,public/sonido.wav}",
         "fase": "sonido"
       },
       {
@@ -682,7 +688,8 @@
       },
       {
         "nombre": "Voz",
-        "listo": "{fuentes/voz/*.wav,public/voz.wav,voz.wav}",
+        "listo": "{fuentes/voz/*.wav,public/voz.wav,voz.wav,public/sonido.wav}",
+        "muestra": "{fuentes/voz/*.wav,public/voz.wav,voz.wav,public/sonido.wav}",
         "fase": "sonido"
       },
       {

@@ -172,6 +172,8 @@ def main() -> None:
                    input=audio.tobytes(), check=True)
     (PROYECTO / "public").mkdir(exist_ok=True)
     ffmpeg("-i", str(crudo), "-af", "loudnorm=I=-12:TP=-1:LRA=11", "-ar", str(SR), str(PROYECTO / "public" / "voz.wav"))
+    # La mezcla cruda era para nivelarla: cumplió, no se queda en el proyecto (las frases sí: son la voz de cada una).
+    crudo.unlink(missing_ok=True)
     dur = len(audio) / SR
     if voz_studio:
         voz, rate = f"AI Studio {voz_studio}", ""

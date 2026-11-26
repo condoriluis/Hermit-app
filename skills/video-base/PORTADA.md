@@ -26,7 +26,10 @@ En la raíz del proyecto, `portada.png` (si el proyecto entrega varios vídeos, 
 Si el mensaje trae `Imágenes: genéralas en Google Flow…`, la imagen va con `generar_imagen` y formato `9:16`
 ([FLOW.md](FLOW.md)): los pasos de abajo, con los tres cuadros en `referencias` y el pedido sin su primer párrafo,
 diciendo `vertical 9:16` en vez de `vertical 2:3 (1024x1536)`, a `portada.jpg`. Pásala a `portada.png` y sigue en el
-paso 4.
+paso 4. Si `generar_imagen` o `estado_flow` la deja en fila porque ninguna cuenta puede ahora (frenadas, sin sesión o
+sin créditos), **no la esperes consultando**: Hermit la reintenta solo a la hora que dice y no se gasta nada. Haz la
+provisional del paso sin-cuenta (`portada_sin_ia.mjs`), dilo una vez —«la de Flow sale sola; dime "cámbiala" cuando
+esté»— y cierra el turno. Si `portada.jpg` llega en el mismo turno, síguela a `portada.png` como siempre.
 
 Si no, primero `codex login status`: sale con 0 si hay una cuenta de ChatGPT conectada. **Sin ella** (sale con otro código,
 o `codex` no está), la imagen no se genera: la portada es un cuadro del propio vídeo con el título encima, y se le dice

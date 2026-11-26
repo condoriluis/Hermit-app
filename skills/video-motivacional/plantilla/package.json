@@ -1,0 +1,22 @@
+{
+  "name": "video-motivacional",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "studio": "remotion studio src/index.ts"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.540",
+    "gsap": "3.14.2",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "remotion": "4.0.540"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "typescript": "^5.9.0"
+  },
+  "allowScripts": {
+    "esbuild@0.28.1": true
+  }
+}

@@ -137,6 +137,12 @@ la vez otros agentes, cada uno en su hilo:
    Entrega la ruta, el guion, qué es material real y qué recorte de stock, y lo que no revisaste: el audio no lo oyes,
    solo lo transcribes. No le propongas al usuario cambios a la skill al entregar.
 
+El reel entregado queda limpio: los scripts de un solo uso van a `fuentes/scripts/` o se borran al usarlos — nada de
+`.py`, `.ps1`, `.log` ni temporales sueltos en la raíz. `voz.py` recoge `voz_cruda.wav` y `final.py`, al terminar, los
+`*.huella` de deduplicación y el `portada.jpg` crudo cuando ya está `portada.png`. Lo que se queda a propósito:
+`fuentes/voz/fNN.*` (la voz de cada frase), `out/borrador.mp4` (lo usa `revisar.py --sin-render`) y `fuentes/` con sus
+originales y licencias. Lo que quede fuera de eso es tuyo y se limpia.
+
 ## El personaje
 
 Es el usuario, o quien él quiera: sus fotos son la biblioteca de poses, en `<skill>/personaje/` (un PNG por pose y

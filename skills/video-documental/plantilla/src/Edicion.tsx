@@ -22,6 +22,13 @@ const Cuadros: FC<{ id: string; n: number; alfa: boolean }> = ({ id, n, alfa }) 
 type Capa = { id: string; f0: number; f1: number; z: number; cls: string; style: string; pieza: string };
 type Clip = Capa & { html: string };
 type Video = Capa & { src: string; desde: number };
+/** Las pistas del monitor en vivo y de la línea de tiempo (`sonido` de edicion.json, lo escribe el director):
+ *  la base (voz y cama) y cada efecto en su golpe. El video final no las usa —su audio es la mezcla
+ *  `sonido.wav` de `sonido.py`—: los `<Audio>` solo viven en el Player del monitor. */
+type Sonido = {
+  voz?: { src: string; desde: number; hasta: number; volumen: number };
+  sfx?: { src: string; desde: number; hasta: number; volumen: number }[];
+};
 type Escena = { nombre: string; f0: number; f1: number };
 type Datos = {
   titulo: string;
@@ -36,9 +43,11 @@ type Datos = {
   js: string;
   escenas: Escena[];
   audio: string | null;
+  sonido?: Sonido;
 };
 
 export const datos = json as unknown as Datos;
+const S = datos.sonido;
 
 /** Una ruta de public/ (con su `?v=` si lo trae) como la sirve Remotion; las de fuera, tal cual. */
 function ruta(s: string) {
@@ -169,7 +178,25 @@ export const Edicion: FC<{ cuadros?: boolean }> = ({ cuadros }) => {
       <div ref={raiz} className={datos.alto > datos.ancho ? "ev1-frame ev1-vertical" : "ev1-frame"} style={{ width: datos.ancho, height: datos.alto }}>
         <Capas cuadros={cuadros} />
       </div>
-      {datos.audio && <Audio src={ruta(datos.audio)} />}
+      {/* Las pistas del sonido, cada una en su carril de la línea de tiempo; showInTimeline=false para que
+          no se lean como escenas (las escenas son las secuencias con nombre de abajo). Si la edición no trae
+          `sonido` (una vieja), queda la mezcla única de `audio`. */}
+      {S ? (
+        <>
+          {S.voz && (
+            <Sequence from={S.voz.desde} durationInFrames={Math.max(1, S.voz.hasta - S.voz.desde)} name="Voz y cama" showInTimeline={false}>
+              <Audio src={ruta(S.voz.src)} name="Voz y cama" volume={S.voz.volumen} />
+            </Sequence>
+          )}
+          {S.sfx?.map((s, i) => (
+            <Sequence key={`sfx-${i}`} from={s.desde} durationInFrames={Math.max(1, s.hasta - s.desde)} showInTimeline={false}>
+              <Audio src={ruta(s.src)} volume={s.volumen} />
+            </Sequence>
+          ))}
+        </>
+      ) : (
+        datos.audio && <Audio src={ruta(datos.audio)} />
+      )}
       {datos.escenas.map((e, i) => (
         <Sequence key={i} from={e.f0} durationInFrames={Math.max(1, e.f1 - e.f0)} name={e.nombre} layout="none">
           {null}

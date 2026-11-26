@@ -9,7 +9,8 @@ El video de top o ranking, del proyecto a `out/top-<nombre>.mp4`, con el contrat
 Lo que el agente deja en el proyecto:
 - `guion.md`: gancho, la cuenta regresiva y el remate (las líneas en negrita son textos en pantalla, no narración).
 - `fuentes/investigacion.md`: de dónde sale cada dato.
-- `public/voz.wav` (o `voz.wav`), ya masterizada a -14 LUFS (VOZ.md de video-base), y `public/musica.mp3`
+- `fuentes/voz/*.wav` (VOZ.md de video-base: ahí la deja `generar_voz`; `public/voz.wav` o `voz.wav` valen como
+  rutas viejas), ya masterizada a -14 LUFS, y `public/musica.mp3`
   (o `musica.mp3`, `public/musica.wav`) opcional, a bajo volumen debajo de la voz.
 - `top.json`: el montaje declarativo — cada escena con la `palabra` del guion donde entra, su `titular`, su
   `numero` (la cuenta regresiva: enteros que bajan de a uno hasta 1, con la tarjeta "NÚMERO N" y el golpe seco)
@@ -25,12 +26,16 @@ Lo que el agente deja en el proyecto:
 
 `--revisa` valida todo en un segundo y sin red ni voz: la forma de `top.json`, que cada `palabra` exista en el
 guion y vaya en orden, y que cada `foto`/`clip` local exista o sea una referencia bien formada. El resto — voz,
-material, tarjeta, golpe por puesto, subtítulos karaoke en Anton con la palabra activa amarilla
-(`subtitulos.py --estilo top`), portada y hoja— se cronometra en `revision/tiempos.json`.
+material, la edición de Remotion (el director pone las fotos con paneo, los clips con su velocidad, las tarjetas
+«NÚMERO N» y los titulares con su entrada), los golpes por puesto, los subtítulos karaoke en Anton con la palabra
+activa amarilla —capas dentro de la composición, como en el documental—, portada y hoja— se cronometra en
+`revision/tiempos.json`.
 """
 
 import json
+import os
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -39,10 +44,14 @@ sys.stdout.reconfigure(encoding="utf-8")
 SKILL = Path(__file__).resolve().parent.parent
 BASE = SKILL.parent / "video-base" / "scripts"
 sys.path.insert(0, str(BASE))
+sys.path.insert(0, str(SKILL / "components"))
+sys.path.insert(0, str(SKILL / "scripts"))
 from bancos import Falla, fuentes_md, revisar_item, traer_items  # noqa: E402
-from hermit import duracion, encoder_video, transcribir  # noqa: E402
+from pistas import a_public, duracion_wav  # noqa: E402
+from hermit import duracion, transcribir  # noqa: E402
 from momentos import Reloj, anclar, errores_mojibake, hoja, palabras_de, roto, texto_guion, tiempos_de_escenas  # noqa: E402
-from tramos import es_clip, desde_de, render_tarjeta, render_tramo, unir_tramos, velocidad_de  # noqa: E402
+from subtitulos import ESTILOS as ESTILOS_SUB, grupos_de_lineas, palabras_tiempo  # noqa: E402
+import director  # noqa: E402
 
 # `--en <carpeta>` es la ruta completa de la línea `Carpeta:` de Hermit: el proyecto no depende del directorio donde se
 # corra; sin ella, el directorio actual.
@@ -57,7 +66,6 @@ PROYECTO = Path(_en).resolve() if _en else Path.cwd()
 if PROYECTO == SKILL.parent or SKILL.parent in PROYECTO.parents:
     sys.exit(f"{PROYECTO} es la carpeta de las skills: pasa la ruta completa de la línea `Carpeta:`.")
 FORMATOS = {"vertical": (1080, 1920), "horizontal": (1920, 1080)}
-FPS = 30
 GOLPE = BASE.parent / "assets" / "sfx" / "golpe.wav"
 
 
@@ -133,98 +141,116 @@ def leer_top() -> tuple[dict, list[str]]:
     return datos, errores
 
 
-def escribir_textos(escenas: list[dict], revision: Path, ancho: int, alto: int) -> tuple[dict, str]:
-    """
-    Un .txt por texto de tarjeta y, por escena, sus drawtext listos: (archivo, tamaño en px, color, y en px).
-    El número va en el amarillo del top (#ffe600); el titular, en blanco. Ambos con contorno negro. El tamaño
-    escala con el lado menor del cuadro para que se vea igual en vertical y en horizontal.
-    """
-    carpeta = revision / "txt"
-    carpeta.mkdir(parents=True, exist_ok=True)
-    fuente = (BASE.parent / "assets" / "fonts" / "Anton-Regular.ttf").as_posix().replace(":", "\\:")
-    escala = min(ancho / 1080, alto / 1920)
-    salida = {}
-    for k, e in enumerate(escenas):
-        items = []
-        tarjeta = not e.get("material")  # escena de solo tarjeta: los textos van centrados, no arriba
-        if e.get("numero"):
-            numero = carpeta / f"e{k}-num.txt"
-            numero.write_text(f"NÚMERO {e['numero']}", encoding="utf-8")
-            items.append((numero.as_posix().replace(":", "\\:"), round(96 * escala), "#ffe600",
-                          round(alto * (0.40 if tarjeta else 0.10))))
-        if e.get("titular"):
-            titular = carpeta / f"e{k}-tit.txt"
-            titular.write_text(str(e["titular"]).upper(), encoding="utf-8")
-            y = round(alto * (0.50 if e.get("numero") else 0.46)) if tarjeta else round(alto * 0.175)
-            items.append((titular.as_posix().replace(":", "\\:"), round(52 * escala), "#ffffff", y))
-        salida[k] = items
-    return salida, fuente
+SFX = SKILL / "sfx"
 
 
-def visual(escenas: list[dict], archivos: list[list[Path]], textos: dict, fuente: str, ancho: int, alto: int,
-           revision: Path) -> Path:
+def cues(escenas: list[dict]) -> list[tuple[float, object, float]]:
+    """Los momentos del kit del formato top, en segundos del video (los usa la mezcla final y las pistas
+    del monitor, que se calculan de los mismos tiempos):
+
+    - `swish_1` al empezar cada escena (el whoosh del corte de puesto).
+    - `click_3` en cada cambio de material dentro de la escena.
+    - `riser_1` antes del número 1 y `subboom_1` con su golpe — el payoff se prepara y aterriza.
+    - `golpe.wav` (video-base) al entrar cada puesto — el mismo t0 del slam del número en la edición.
+    - `outro_1` hacia el cierre.
     """
-    Cada escena en tramos iguales de su material —foto con paneo Ken Burns, clip con paneo lento— con la tarjeta
-    del puesto encima; una escena sin `material` es una tarjeta sobre fondo negro. Los tramos unen en
-    visual.mp4 (sin audio: la voz y los golpes van aparte).
-    """
-    segmentos = []
-    k_global = 0
-    for k, e in enumerate(escenas):
-        dur = e["t1"] - e["t0"]
-        suyos = archivos[k]
-        items_texto = textos.get(k, [])
-        if not suyos:
-            salida = revision / f"seg-{k + 1}-tarjeta.mp4"
-            render_tarjeta(salida, dur, items_texto, fuente, ancho, alto, FPS)
-            segmentos.append(salida)
-            k_global += 1
-            continue
-        slot = dur / len(suyos)
-        for j, ruta in enumerate(suyos):
-            salida = revision / f"seg-{k + 1}-{j + 1}.mp4"
-            extra = [f"drawtext=fontfile='{fuente}':textfile='{ruta_txt}':expansion=none:fontsize={tam_px}:fontcolor={color}:"
-                     f"borderw={max(2, round(tam_px * 0.05))}:bordercolor=black:x=(w-text_w)/2:y={y}"
-                     for ruta_txt, tam_px, color, y in items_texto]
-            item = e["material"][j]
-            render_tramo(salida, ruta, slot, es_clip(item), desde_de(item), velocidad_de(item),
-                         ancho, alto, FPS, extra, k_global % 2 == 0)
-            segmentos.append(salida)
-            k_global += 1
-    return unir_tramos(segmentos, revision / "visual.mp4")
+    cues: list[tuple[float, object, float]] = []
+    for e in escenas:
+        t0, t1 = e["t0"], e["t1"]
+        mat = e.get("material") or []
+        cues.append((t0, "swish_1", 0.16))
+        if mat:
+            slot = (t1 - t0) / len(mat)
+            for j in range(1, len(mat)):
+                cues.append((t0 + j * slot, "click_3", 0.26))
+        if e.get("numero") == 1:
+            cues.append((max(0.0, t0 - 0.8), "riser_1", 0.42))
+            cues.append((t0, "subboom_1", 0.14))
+    for t in [e["t0"] for e in escenas if e.get("numero")]:
+        cues.append((t, GOLPE, 0.8))
+    if escenas:
+        cues.append((max(0.0, escenas[-1]["t1"] - 0.4), "outro_1", 0.4))
+    return cues
+
+
+def musica() -> Path | None:
+    """La música incidental del proyecto: `public/musica.mp3`, `musica.mp3` o `public/musica.wav`."""
+    return next((PROYECTO / p for p in ["public/musica.mp3", "musica.mp3", "public/musica.wav"]
+                 if (PROYECTO / p).exists()), None)
+
+
+def pistas(voz: Path, escenas: list[dict], total: float) -> dict:
+    """El bloque `sonido` de edicion.json: las pistas del monitor en vivo y de la línea de tiempo — la voz,
+    la música en loop a su volumen y cada efecto en su golpe, cada fuente en `public/sonido/` como WAV.
+    El video final no las usa: su audio es la mezcla ffmpeg de `audio()`, que es la que se masteriza."""
+    fps = 30  # el de la composición (comp.py)
+    tope = round(total * fps)
+    sonido: dict = {"voz": {"src": a_public(voz, "voz", PROYECTO), "desde": 0, "hasta": tope, "volumen": 1.0}}
+    if (mus := musica()) is not None:
+        sonido["musica"] = {"src": a_public(mus, "musica", PROYECTO), "volumen": 0.08}
+    por_archivo: dict[str, list[tuple[float, float]]] = {}
+    for t, s, g in cues(escenas):
+        ruta = str(s) if Path(str(s)).is_absolute() or Path(str(s)).exists() else str(SFX / f"{s}.wav")
+        por_archivo.setdefault(ruta, []).append((t, g))
+    if por_archivo:
+        sonido["sfx"] = []
+        for ruta, suyos in por_archivo.items():
+            rel = a_public(Path(ruta), Path(ruta).stem, PROYECTO)
+            n = max(1, round(duracion_wav(PROYECTO / "public" / rel) * fps))
+            for t, g in suyos:
+                desde = max(0, int(round(t * fps)))
+                sonido["sfx"].append({"src": rel, "desde": desde, "hasta": min(tope, desde + n), "volumen": g})
+    return sonido
 
 
 def audio(voz: Path, escenas: list[dict], revision: Path) -> Path:
-    """La voz con el golpe seco al entrar cada puesto de la cuenta regresiva y la música incidental a bajo
-    volumen (`public/musica.mp3`, `musica.mp3` o `public/musica.wav`, como en politica), masterizada a -14 LUFS."""
+    """
+    La voz con la cama de efectos del formato top, masterizada a -14 LUFS (`public/musica.mp3`, `musica.mp3` o
+    `public/musica.wav` a bajo volumen, como en politica). Es el audio del video final: la mezcla de Remotion
+    es la pieza frágil (reel-collage la documenta fallando), así que el render va `--muted` y esto entra por
+    ffmpeg. Las pistas del monitor en vivo y de la línea de tiempo son las de `pistas()`, calculadas de los
+    mismos `cues()`.
+    """
     audio_master = revision / "audio_master.wav"
-    puestos = [e["t0"] for e in escenas if e.get("numero")]
-    musica = next((PROYECTO / p for p in ["public/musica.mp3", "musica.mp3", "public/musica.wav"]
-                   if (PROYECTO / p).exists()), None)
-    hay_golpe = bool(puestos) and GOLPE.exists()
-    if not hay_golpe and not musica:
+    todos = cues(escenas)
+    mus = musica()
+    if not todos and not mus:
         subprocess.run(["node", str(BASE / "masterizar.mjs"), str(voz), str(audio_master)], check=True)
         return audio_master
 
+    # Cada sonido único es una entrada; sus cues salen por adelay+volume como el golpe ya lo hacía.
+    sonidos: list[str] = []
+
+    def indice(sonido) -> int:
+        # Devuelve el índice del input en ffmpeg: el 0 es la voz y los sonidos van del 1 en adelante.
+        ruta = str(sonido) if Path(str(sonido)).is_absolute() or Path(str(sonido)).exists() else str(SFX / f"{sonido}.wav")
+        if ruta not in sonidos:
+            sonidos.append(ruta)
+        return sonidos.index(ruta) + 1
+
+    por_sonido: dict[int, list[tuple[float, float]]] = {}
+    for t, sonido, ganancia in todos:
+        por_sonido.setdefault(indice(sonido), []).append((t, ganancia))
+
     entradas = ["-i", str(voz)]
     idx = 1
-    golpe_idx = None
-    if hay_golpe:
-        golpe_idx = idx
-        entradas += ["-i", str(GOLPE)]
+    for ruta in sonidos:
+        entradas += ["-i", ruta]
         idx += 1
     mus_idx = None
-    if musica:
+    if mus is not None:
         mus_idx = idx
-        entradas += ["-stream_loop", "-1", "-i", str(musica)]
+        entradas += ["-stream_loop", "-1", "-i", str(mus)]
+
     partes = ["[0:a]aformat=channel_layouts=stereo,aresample=48000[voz]"]
     delays = []
-    if hay_golpe:
-        partes.append(f"[{golpe_idx}:a]asplit={len(puestos)}" + "".join(f"[g{k}]" for k in range(len(puestos))))
-        for k, t in enumerate(puestos):
+    for i, suyos in por_sonido.items():
+        n = len(suyos)
+        partes.append(f"[{i}:a]asplit={n}" + "".join(f"[s{i}_{k}]" for k in range(n)))
+        for k, (t, ganancia) in enumerate(suyos):
             ms = int(round(t * 1000))
-            partes.append(f"[g{k}]adelay={ms}|{ms},volume=0.8[h{k}]")
-            delays.append(f"[h{k}]")
+            partes.append(f"[s{i}_{k}]adelay={ms}|{ms},volume={ganancia}[h{i}_{k}]")
+            delays.append(f"[h{i}_{k}]")
     if mus_idx is not None:
         partes.append(f"[{mus_idx}:a]volume=0.08,aformat=channel_layouts=stereo[bg]")
         delays.append("[bg]")
@@ -274,9 +300,18 @@ def main() -> None:
 
     # 1. La voz
     reloj.paso("voz…")
-    voz = next((PROYECTO / p for p in ["public/voz.wav", "voz.wav"] if (PROYECTO / p).exists()), None)
+    # La voz vive en fuentes/voz/ (VOZ.md: ahí la deja generar_voz), como en el documental; public/voz.wav y
+    # voz.wav son las rutas viejas que aún se aceptan. Si hay varias, la más reciente es la que se produjo última.
+    carpeta_voz = PROYECTO / "fuentes" / "voz"
+    voz = None
+    if carpeta_voz.is_dir():
+        candidatos = [p for p in carpeta_voz.glob("*.wav") if p.is_file()]
+        if candidatos:
+            voz = max(candidatos, key=lambda p: p.stat().st_mtime)
     if not voz:
-        sys.exit("✗ Falta el audio en public/voz.wav o voz.wav (VOZ.md de video-base).")
+        voz = next((PROYECTO / p for p in ["public/voz.wav", "voz.wav"] if (PROYECTO / p).exists()), None)
+    if not voz:
+        sys.exit("✗ Falta la voz en fuentes/voz/ (VOZ.md de video-base) o en public/voz.wav.")
     total = duracion(voz)
     reloj.nota("voz", f"{total:.1f} s")
 
@@ -305,29 +340,51 @@ def main() -> None:
         sys.exit(f"✗ {f}")
     fuentes_md(PROYECTO, registro)
 
-    # 5. El visual: tramos con su tarjeta de puesto
-    reloj.paso("visual…")
-    textos, fuente = escribir_textos(escenas_t, revision, ancho, alto)
-    video_crudo = visual(escenas_t, archivos, textos, fuente, ancho, alto, revision)
-
-    # 6. El audio: voz + golpe por puesto, masterizado
+    # 5. El audio del video final: voz + golpe por puesto + música incidental, masterizado a -14 LUFS
+    # (public/sonido.wav). Entra por ffmpeg en el mux del paso 7; el monitor en vivo y la línea de tiempo
+    # llevan las pistas de `pistas()` (paso 6), calculadas de los mismos cues.
     reloj.paso("audio…")
     audio_master = audio(voz, escenas_t, revision)
+    sonido = PROYECTO / "public" / "sonido.wav"
+    if sonido.exists():
+        sonido.unlink()
+    try:
+        os.link(audio_master, sonido)
+    except OSError:
+        shutil.copy2(audio_master, sonido)
 
-    # 7. El video base (visual + audio) y los subtítulos karaoke del estilo.
-    # subtitulos.py corre ffmpeg con cwd=salida.parent y nombres relativos: el base va en out/, junto a la salida.
-    # Con `_` delante no cuenta como video terminado (la etapa «Video» y las Entregas solo ven el final).
+    # 6. La edición: el director pone cada tramo de material (foto con paneo, clip con su velocidad), los textos
+    # del puesto con su entrada, las escenas y los subtítulos karaoke —capas dentro del video, como en el
+    # documental, con los tiempos de palabra de la misma transcripción—, en src/edicion.json. Sin .ass ni
+    # post-pase de ffmpeg: out/ queda solo con el mp4 final. El bloque `sonido` son las pistas del monitor en
+    # vivo y de la línea de tiempo (la voz, la música y cada efecto por separado); el audio del video final
+    # es la mezcla de arriba, que entra por ffmpeg en el mux.
+    reloj.paso("edición…")
+    subs = grupos_de_lineas(palabras_tiempo(segmentos, 0.0), ESTILOS_SUB["top"], ancho, alto)
+    edicion = director.armar(escenas_t, archivos, PROYECTO, ancho, alto, total, audio=None, subs=subs)
+    edicion["sonido"] = pistas(voz, escenas_t, total)
+    (PROYECTO / "src" / "edicion.json").write_text(json.dumps(edicion, ensure_ascii=False), encoding="utf-8")
+
+    # 7. El render de Remotion, sin audio como en el documental: los cuadros de cada clip van ya sacados a imágenes
+    # (cuadros_render.cjs, --antes), que es varias veces más rápido que OffthreadVideo cuadro a cuadro. La voz y los
+    # efectos (`public/sonido.wav`) entran por ffmpeg, no por el `<Audio>` del render: la mezcla de audio de
+    # Remotion es la pieza frágil (reel-collage la documenta fallando y El Diff la dejó por @remotion/media), y los
+    # `<Audio>` de la plantilla quedan solo para el monitor en vivo, con las pistas del bloque `sonido`. Los
+    # subtítulos ya van dentro de la composición (capas del director), así que el mux es el video final: out/
+    # queda solo con él.
     reloj.paso("render…")
     nombre = nombre_arg or re.sub(r"^top-", "", PROYECTO.name)
-    base_mp4 = out_dir / f"_top-{nombre}-base.mp4"
-    ffmpeg("-i", str(video_crudo), "-i", str(audio_master), "-map", "0:v", "-map", "1:a",
-           *encoder_video(18), "-color_primaries", "bt709", "-color_trc", "bt709", "-colorspace", "bt709",
-           "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", str(base_mp4))
-
-    reloj.paso("subtítulos…")
+    sin_sonido = out_dir / f"_top-{nombre}-video.mp4"
     final = out_dir / f"top-{nombre}.mp4"
-    subprocess.run([sys.executable, "-I", "-B", "-X", "utf8", str(BASE / "subtitulos.py"),
-                    str(base_mp4), str(final), "--estilo", "top", "--formato", formato], check=True)
+    subprocess.run(["node", str(BASE / "render.cjs"), str(sin_sonido), "--id=Top", "--muted",
+                    "--concurrency=66%", "--crf=18", "--x264-preset=veryfast",
+                    "--pixel-format=yuv420p", "--color-space=bt709",
+                    f"--antes={SKILL / 'scripts' / 'cuadros_render.cjs'}",
+                    '--props={"cuadros":true}'], cwd=PROYECTO, check=True)
+    ffmpeg("-i", str(sin_sonido), "-i", str(sonido), "-map", "0:v", "-map", "1:a",
+           "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-ar", "48000",
+           "-movflags", "+faststart", str(final))
+    sin_sonido.unlink()
 
     # 8. La portada de primer fotograma en vertical (PORTADA.md de video-base)
     portada_img = next((PROYECTO / p for p in ["portada.png", "public/portada.png", "portada/portada.png",
@@ -338,6 +395,32 @@ def main() -> None:
     # 9. La hoja de cuadros para mirarlo de un vistazo
     reloj.paso("hoja…")
     hoja_png = hoja(final, revision / "hoja.png")
+    # La voz vive solo en fuentes/voz/ (como en el documental): si se usó una copia vieja de public/ o de la raíz,
+    # se muda ahí; si ya estaba en fuentes/voz/, las copias de public/ y de la raíz son duplicados y se borran.
+    carpeta_voz.mkdir(parents=True, exist_ok=True)
+    if carpeta_voz in voz.parents:
+        for viejo in (PROYECTO / "public" / "voz.wav", PROYECTO / "voz.wav"):
+            viejo.unlink(missing_ok=True)
+    else:
+        destino = carpeta_voz / "voz.wav"
+        if not destino.exists() or destino.stat().st_mtime < voz.stat().st_mtime:
+            try:
+                os.replace(voz, destino)
+            except OSError:
+                shutil.move(str(voz), str(destino))
+        else:
+            voz.unlink(missing_ok=True)
+    # El proyecto entregado queda limpio: la mezcla y la edición ya son el video final (se regeneran en cada
+    # corrida), las huellas de dedup ya sirvieron y portada.jpg es el crudo cuando ya está portada.png.
+    # node_modules es un enlace compartido: no se cruza.
+    for patron in ("mezcla.wav", "audio_master.wav"):
+        for f in revision.glob(patron):
+            f.unlink(missing_ok=True)
+    for archivo_huella in PROYECTO.rglob("*.huella"):
+        if "node_modules" not in archivo_huella.parts:
+            archivo_huella.unlink(missing_ok=True)
+    if (PROYECTO / "portada.png").exists():
+        (PROYECTO / "portada.jpg").unlink(missing_ok=True)
     reloj.listo(final, [hoja_png])
 
 

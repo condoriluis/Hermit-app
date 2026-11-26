@@ -283,6 +283,8 @@ def main() -> None:
         # Se queda la que empareja más palabras del subtítulo.
         if emparejar(leer_frases(RAIZ / "subtitulos.txt"), remendadas) <= emparejar(leer_frases(RAIZ / "subtitulos.txt"), palabras):
             palabras = remendadas
+    # La copia de 16 kHz era para transcribir y medir los huecos: cumplió, no se queda en el proyecto.
+    v16.unlink(missing_ok=True)
     (RAIZ / "fuentes" / "palabras.json").write_text(json.dumps(palabras, ensure_ascii=False, indent=1), encoding="utf8")
     emparejar(frases, palabras)
     # Lo que sigue faltando después de remendar casi siempre no se grabó: en nuevo-10 la voz generada se saltó una frase

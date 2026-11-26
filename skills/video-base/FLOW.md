@@ -24,7 +24,8 @@ En los estilos que hacen clips, la línea `Clips: genéralos en Google Flow con 
 - Lo que tu skill pasa con `-i` va en `referencias`, en rutas absolutas (probado con tres). Sale el mismo personaje.
 - `formato`: `1:1` para poses, bocas y texturas; `9:16` para la portada.
 - Deja un JPEG, de 1024×1024 en `1:1` y 768×1376 en `9:16`, en `<nombre>.jpg`. Tu paso sigue con el PNG:
-  `ffmpeg -nostdin -v error -y -i <nombre>.jpg <nombre>.png`.
+  `ffmpeg -nostdin -v error -y -i <nombre>.jpg <nombre>.png`. El `.jpg` es el intermedio: con el PNG hecho ya no
+  hace falta — bórralo junto a su `.huella`, o las carpetas de material enseñan cada imagen dos veces.
 - Míralo siempre: si algo no salió, pídelo otra vez diciendo qué corregir. Si lo demás quedó bien, pasa el intento fallido
   en `referencias` y pide solo ese cambio: conserva el título tal cual. Las imágenes no gastan créditos.
 

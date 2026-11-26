@@ -30,7 +30,8 @@ sys.path.insert(0, str(AQUI.parent.parent / 'video-base' / 'scripts'))
 from ev1_more import *          # noqa: E402,F401,F403  (los dispositivos: ev1_devices + ev1_more)
 import ev1_treat                # noqa: E402
 from momentos import anclar, busca, normal, palabras_de  # noqa: E402,F401
-from sonido import mezclar      # noqa: E402
+from sonido import mezclar, resolve   # noqa: E402
+from pistas import a_public, duracion_wav   # noqa: E402
 
 ESPECIALES = ('cara', 'negro', 'maquina')
 FORMAS = ('serie', 'rafaga', 'tarjetas', 'muro', 'triptico', 'mundo')
@@ -723,6 +724,35 @@ def rotar_clics(c):
             c.cues[i] = (t, nombre, round(g0 * 0.85 * (g / 0.42), 3))
 
 
+def pistas_de_audio(base, dur):
+    """Las pistas del sonido para el monitor en vivo y la línea de tiempo: la base (voz y cama) y cada
+    efecto en su golpe, cada fuente en `public/sonido/` por `pistas.py` de video-base. El video final no
+    las usa —su audio es `public/sonido.wav`, la mezcla de `sonido.py`—: los `<Audio>` solo viven en el
+    Player del monitor. Devuelve None si no hay nada que poner."""
+    raiz = Path.cwd()
+    out = {}
+    if base and os.path.exists(base):
+        rel = a_public(Path(base), 'voz', raiz)
+        n = duracion_wav(raiz / 'public' / rel)
+        out['voz'] = {'src': rel, 'desde': 0, 'hasta': min(round(dur * FPS), round(n * FPS)), 'volumen': 1.0}
+    sfx = []
+    for line in open('sfx-cues.txt', encoding='utf-8'):
+        partes = line.split('#', 1)[0].split()
+        if not partes:
+            continue
+        t, nombre = float(partes[0]), partes[1]
+        g = float(partes[2]) if len(partes) > 2 else 0.12
+        src = Path(resolve(nombre))
+        rel = a_public(src, f'{src.parent.name}-{src.stem}', raiz)
+        n = duracion_wav(raiz / 'public' / rel)
+        desde = max(0, round(t * FPS))
+        sfx.append({'src': rel, 'desde': desde,
+                    'hasta': min(round(dur * FPS), desde + max(1, round(n * FPS))), 'volumen': g})
+    if sfx:
+        out['sfx'] = sfx
+    return out or None
+
+
 def armar(m, words, hecho, p, final=True):
     """La edición entera. `p` es lo que devolvió `plan`; cada momento con recorte trae ya su `recorte_archivo`."""
     c = Comp(p['dur'])
@@ -774,7 +804,8 @@ def armar(m, words, hecho, p, final=True):
     c.write_cues('sfx-cues.txt')
     base = 'work/premix.wav' if os.path.exists('work/premix.wav') else 'public/assets/media/vo.wav'
     mezclar(base, 'sfx-cues.txt', 'public/sonido.wav', p['dur'])
-    c.write('src/edicion.json', audio='sonido.wav', title=str(m.get('titulo') or 'Documental'))
+    c.write('src/edicion.json', audio='sonido.wav', title=str(m.get('titulo') or 'Documental'),
+            sonido=pistas_de_audio(base, p['dur']))
     cortes = sorted(set(e.cortes))
     huecos_t = [round(b - a, 2) for a, b in zip(cortes, cortes[1:] + [p['fin']])]
     datos = {'dur': p['dur'], 'fin': p['fin'], 'momentos': len(p['momentos']), 'cortes': cortes,

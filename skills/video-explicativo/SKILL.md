@@ -234,3 +234,7 @@ Las reglas de lo que se ve en las tarjetas: [`CINE.md`](CINE.md), al final.
 
 Si algo que el video necesita de verdad no cabe en `momentos.json` (una pieza 2D que no hay), se escribe a mano como
 explica [`KIT.md`](KIT.md), y díselo al usuario: falta en el director.
+
+El proyecto entregado queda limpio: los scripts de un solo uso van a `$TEMP` o se borran al usarlos — nada de `.py`,
+`.log` ni temporales sueltos en la raíz ni en `fuentes/`. `hacer.py` ya recoge lo que sus pasos generan (`voz16k.wav`,
+los `.huella` de deduplicación); lo que quede fuera de eso es tuyo y se limpia.

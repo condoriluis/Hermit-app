@@ -52,6 +52,46 @@ def correr(cmd: list[str], que: str, fatal: bool = True) -> str:
     return salida
 
 
+def escribir_momentos_md(p: dict, salida: Path) -> None:
+    """momentos.md: el plan en lectura para el estudio — qué se ve en cada frase, con sus segundos. El JSON es lo que corre el video."""
+    import director
+    material = p.get("material") or {}
+    especiales = {"cara": "tú a cámara", "negro": "fondo negro", "maquina": "texto tecleado sobre negro"}
+    rotulos = {"pagina": "la página ", "clip": "el clip ", "foto": "la foto ", "post": "el post ",
+               "logo": "el logo ", "archivo": "el archivo "}
+
+    def que_se_ve(id_: str) -> str:
+        if id_ in especiales:
+            return especiales[id_]
+        c = material.get(id_)
+        if c:
+            for tipo, rotulo in rotulos.items():
+                if tipo in c:
+                    return rotulo + str(c[tipo])
+        return id_
+
+    lineas = ["# Momentos", ""]
+    for x in p["momentos"]:
+        if x.get("i0") is None:
+            continue
+        linea = f"- **{x['t0']:.1f}–{x['t1']:.1f} s** · «{x.get('palabra', '')}» → " + \
+            ", ".join(que_se_ve(i) for i in director.lista_ve(x))
+        extra = []
+        if x.get("forma"):
+            extra.append(x["forma"])
+        g = x.get("grande")
+        if g:
+            extra.append(f"palabra grande «{g if isinstance(g, str) else g.get('texto', '')}»")
+        if x.get("mega"):
+            extra.append(f"roja «{x['mega']}»")
+        if x.get("entra"):
+            extra.append(f"entrada {x['entra']}")
+        if extra:
+            linea += " · " + ", ".join(extra)
+        lineas.append(linea)
+    salida.write_text("\n".join(lineas) + "\n", encoding="utf-8")
+
+
 def recortes(momentos: list[dict], errores: list[str]) -> None:
     """
     El recorte de quien habla (matte.py, en la GPU) de cada momento con `mega` o `mundo`, desde su palabra. Con el
@@ -142,6 +182,7 @@ def main() -> None:
         print(f"✓ momentos.json bien: {len(p['momentos'])} momentos para {p['fin']:.0f} s, la cara el {p['cara']:.0%}. "
               "Ya puedes lanzar hacer.py de fondo")
         return
+    escribir_momentos_md(p, RAIZ / "momentos.md")
     reloj = Reloj(RAIZ)
     vertical = director.VERTICAL
     reloj.paso(f"momentos.json bien; bajando y tratando {len(cosas)} cosas"
@@ -204,6 +245,12 @@ def main() -> None:
         print("  Derechos por revisar (FUENTES.md), díselo al usuario:\n    " + "\n    ".join(marcados), flush=True)
     # Una sola imagen que mirar: la hoja del video. El material y la portada quedan por si algo no se ve bien.
     print(f"  El material está en {hoja_material}" + (f" y la portada, en {foto}" if foto else "") + ".", flush=True)
+    # El proyecto entregado queda limpio: las huellas de dedup ya sirvieron y sfx-cues.txt es el intermedio del
+    # sonido (lo escribe armar y lo consume en la misma llamada). node_modules es un enlace compartido: no se cruza.
+    for archivo_huella in RAIZ.rglob("*.huella"):
+        if "node_modules" not in archivo_huella.parts:
+            archivo_huella.unlink(missing_ok=True)
+    (RAIZ / "sfx-cues.txt").unlink(missing_ok=True)
     reloj.listo(video, mira)
 
 

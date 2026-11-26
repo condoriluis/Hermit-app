@@ -10,6 +10,9 @@ dist
 /crates/*/node.def
 /server/native/
 
+# La demo del kit fx: su render de prueba se regenera, no se sube.
+/skills/video-base/fx/prueba/out/
+
 # Lo que cada quien guarda solo en su copia: sus poses, su biblioteca de modelos 3D, lo que Hermit aprende de sus
 # videos y el material que no es de Hermit (memes, referencias, las métricas de Ideas).
 /references/

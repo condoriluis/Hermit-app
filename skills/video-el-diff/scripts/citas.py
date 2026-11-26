@@ -7,7 +7,8 @@ seis subagentes Haiku tardaron 2.5 minutos en lo mismo. Se corre en la raíz del
 
 `fuentes/datos.json` es la lista de lo que dirá el guion: `[{"dato": "...", "claves": "..."}]`. El dato lleva sus cifras
 en dígitos; `claves` (opcional) son las palabras con que lo dice la fuente, en su idioma («bookmarks», «seed round»): sin
-ellas solo cuentan las cifras y los nombres. Deja `fuentes/fichas/citas.json`, que `verificar.py` comprueba, y por cada
+ellas solo cuentan las cifras y los nombres. Deja `fuentes/fichas/citas.json`, que `verificar.py` comprueba, y
+`citas.md`, las mismas fichas en lectura para el estudio, y por cada
 dato imprime la cita elegida y las dos que le siguen. La cita es la que mejor cuadra, no necesariamente la que lo prueba:
 léelas, cambia la que no diga el dato por otra de la lista y busca las que salen SIN CITA.
 
@@ -142,6 +143,11 @@ def main() -> None:
     fichas += [f for f in ya.values() if "pedido" not in f]
     salida.parent.mkdir(parents=True, exist_ok=True)
     salida.write_text(json.dumps(fichas, ensure_ascii=False, indent=1), encoding="utf8")
+    # citas.md: las mismas fichas en lectura, para la etapa «Datos» del estudio (el JSON lo corre verificar.py).
+    lineas = ["# Datos con su cita", ""]
+    for f in fichas:
+        lineas += [f"## {f['dato']}", "", f"> {f['cita']}", "", f"Fuente: {f['url']}", ""]
+    (salida.parent / "citas.md").write_text("\n".join(lineas), encoding="utf-8")
     print(f"\n{len(fichas)} fichas en {salida}: {nuevas - sin} nuevas, {len(fichas) - nuevas + sin} que ya estaban,"
           f" {len(viejas)} quitadas (su dato ya no está en datos.json) y {sin} datos sin cita. Revisa las nuevas y corre"
           " verificar.py.")

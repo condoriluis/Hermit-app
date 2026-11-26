@@ -7,7 +7,7 @@ description: Hace un video profesional con las fotos y los videos del usuario (v
 
 Todo el material es del usuario: sus fotos y sus videos. Tú escribes **un archivo** (`plan.json`: qué va, en qué
 orden, cuánto dura cada momento y qué título lleva) y corres **un comando** (`hacer.py`), que prepara el material,
-mezcla el sonido, renderiza, mide y deja la hoja para mirar. **No escribas código ni abras `plantilla/` ni
+prepara el sonido, renderiza, mide y deja la hoja para mirar. **No escribas código ni abras `plantilla/` ni
 `components/`**: el collage, los paneos, los títulos, los fundidos y las tarjetas los pone la plantilla; lo tuyo es
 la edición.
 
@@ -87,8 +87,17 @@ tú, se rehace solo en cada corrida (y con `--revisa`).
 - **`acento`**: el color del marcador de la última palabra de cada título, el filete de las tarjetas y la barra de
   avance — en `#RRGGBB`. Sin él, menta `#8ef0c8`. Elige uno que lea bien sobre el material (amarillo `#ffd23f`,
   naranja `#ff7a3d`, rosa `#ff5da2`…) y que combine con la portada (su color de texto, abajo).
-- **`musica`**: la canción del usuario, ruta del proyecto o archivo de `public/assets/music/`. Sin ella, el video
-  lleva una música sintetizada del largo exacto.
+- **`musica`**: la canción del usuario, ruta del proyecto o archivo de `public/assets/music/` — si el mensaje
+  adjunta un audio o pide una canción, va aquí. **Sin ella, el video lleva una música sintetizada del largo
+  exacto** (92 BPM, con batería: es la que marca el ritmo de los cortes). **`false`** es «sin música» a
+  propósito: no hay cama, solo voz y efectos — úsalo solo si el usuario lo pide.
+- **`musica_volumen`**: 0 a 1, el volumen de la música de fondo (0,85 por omisión; con voz narrada baja a 0,35 y
+  la música se hunde bajo la narración midiéndola de verdad — suena en las pausas, no encima). Sube o baja
+  según lo que pida el usuario o lo que pida el material.
+- **`voz_volumen`**: 0 a 1, el volumen de la voz narrada (1 por omisión).
+- **`sfx`**: `false` quita los efectos de sonido del kit (whoosh de los cortes, pop del collage, cierre
+  cálido). Por omisión suenan **suaves** — si el usuario dice que se oyen ruidos o efectos, baja no es opción:
+  pon `false` o pídele al usuario que elija; nunca subas las ganancias a mano en `hacer.py`.
 - **`voz`/`voz_desde`**: solo si el mensaje trae `Voz:` y ya está la narración (ver «La voz», abajo).
 
 ## La voz
@@ -98,8 +107,34 @@ usuario eligió mandar su voz o una de AI Studio/Fish/ElevenLabs) sigue [`VOZ.md
 `guion.md` (lo que se narra, en el orden del video), genera o recibe la voz en `fuentes/voz.wav` y ponla en `plan.json`
 con `voz_desde` (segundos donde arranca, 0 por omisión; la intro viene antes, así que suele ser lo que dura la
 intro). Si la voz es más larga que el video, recorta el guion; si el video es más largo, el último tramo queda con
-música sola. Con voz se pueden quemar subtítulos después con `subtitulos.py` de la base (`--voz fuentes/voz.wav
---offset <voz_desde>`), estilo `minimal`.
+música sola. Con voz se pueden quemar subtítulos después con `subtitulos.py` de la base, estilo `propio`
+(Varela Round —la de las tarjetas del estilo—, palabra activa en el `acento` del plan, puesta **por encima**
+de la zona de títulos de escena para que no se monten):
+`subtitulos.py out/final.mp4 out/final-subs.mp4 --voz <ruta absoluta de fuentes/voz.wav> --offset <voz_desde> --estilo propio --acento <acento del plan>`.
+Ojo: `--voz` y la salida van con **ruta absoluta** (el proceso de Whisper resuelve las relativas desde otra
+carpeta y falla con `voz.16k.wav` no encontrado), y la salida no puede ser el mismo archivo que la entrada
+(ffmpeg no escribe sobre sí mismo); después se renombra `final-subs.mp4` a `final.mp4`. **Nunca** corras
+`subtitulos.py` sobre un `final.mp4` que ya tenga subtítulos quemados: se queman en los píxeles y quedan
+dos capas — parte siempre del video sin subtítulos (el que deja `hacer.py`). Si la narración sigue
+sonando sobre la tarjeta de cierre (título centrado), corta los subtítulos con `--hasta <segundo de inicio del cierre>`.
+
+El sonido va **dentro de la composición** — `hacer.py` lo deja en `public/sonido/` como pistas separadas y el
+motor en vivo lo oye mientras armas el video (la línea de tiempo las muestra: música, voz y efectos por
+separado):
+
+- **La música** suena en loop (como el `-stream_loop` de antes), con sus fundidos de 0,6 s y 1,6 s, y el
+  ducking bajo la voz calculado de su envolvente real (umbral, ratio y cola del compresor lateral de antes,
+  ventana a ventana). `musica_volumen` es su nivel base.
+- **La voz** entra en su `voz_desde` con `voz_volumen`, como pista propia.
+- **El kit `sfx/`** del estilo (`deslize` en cada empuje de escena, `pop` cuando cae el collage, `cierre` al
+  abrir la tarjeta final — sintetizado por `scripts/synth-sfx.py`, sin regalías) suena en los cortes medidos.
+- `terminar.py` solo renderiza y masteriza el audio del render a −14 LUFS; sin sonido a propósito
+  (`musica:false`, `sfx:false` y sin voz) el video lleva pista muda y la comprobación lo acepta.
+
+**El ritmo manda también en los cortes**: `batidos.py` detecta los golpes de la música (tempo por
+autocorrelación + fase, 60–200 BPM) y cada frontera entre escenas se acerca al golpe más cercano sin pasarse de
+0,30 s ni salirse de la duración permitida de cada tipo. Si la música no tiene pulso claro (o no hay), los cortes
+quedan como los marcó el plan. No hay que pedirlo: pasa solo en cada `hacer.py`.
 
 ## Pasos
 
@@ -121,8 +156,8 @@ música sola. Con voz se pueden quemar subtítulos después con `subtitulos.py` 
    <base>/assets/fonts/ArchivoBlack-Regular.ttf --color "#8ef0c8"` (y `--horizontal` en horizontal). Mírala en chico
    y luego `node <base>/scripts/portada.mjs out/final.mp4 portada.png` solo en vertical.
 6. **Entrega.** La ruta de `out/final.mp4`, cuánto dura, qué material usaste (cuántas fotos y tramos de cada video)
-   y que el audio no lo oíste: se comprobó por cifras. Si el usuario quiere otro orden o quitar algo, es editar
-   `plan.json` y relanzar `hacer.py`.
+   y que el audio se comprobó por cifras (el monitor en vivo ya lo dejó oír, pero no lo escuchaste entero). Si el
+   usuario quiere otro orden o quitar algo, es editar `plan.json` y relanzar `hacer.py`.
 
 ## Formato
 

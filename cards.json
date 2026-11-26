@@ -71,6 +71,7 @@
       {
         "nombre": "Datos",
         "listo": "fuentes/fichas/citas.json",
+        "muestra": "{fuentes/fichas/citas.md,fuentes/fichas/citas.json}",
         "fase": "idea"
       },
       {
@@ -94,6 +95,7 @@
       {
         "nombre": "Escenas",
         "listo": "guion.json",
+        "muestra": "{guion.md,guion.json}",
         "fase": "video"
       },
       {
@@ -278,7 +280,7 @@
       },
       {
         "nombre": "Voz",
-        "listo": "public/voz.wav",
+        "listo": "{fuentes/voz/*.wav,public/voz.wav,voz.wav}",
         "fase": "sonido"
       },
       {
@@ -323,6 +325,7 @@
       {
         "nombre": "Qué se ve en cada frase",
         "listo": "momentos.json",
+        "muestra": "{momentos.md,momentos.json}",
         "fase": "guion"
       },
       {
@@ -379,12 +382,12 @@
       },
       {
         "nombre": "Voz",
-        "listo": "public/voz.wav",
+        "listo": "{fuentes/voz/*.wav,public/voz.wav,voz.wav}",
         "fase": "sonido"
       },
       {
         "nombre": "Material",
-        "listo": "fuentes/material/*",
+        "listo": "{fuentes/**/*,material/*}.{png,jpg,jpeg,webp,gif,bmp,tif,tiff,avif,mp4,mov,mkv,avi,webm,m4v}",
         "fase": "idea"
       },
       {
@@ -395,6 +398,63 @@
       {
         "nombre": "Video",
         "listo": "out/top-*.mp4",
+        "fase": "video"
+      },
+      {
+        "nombre": "Portada",
+        "listo": "{portada.png,portada/*.png}",
+        "fase": "entrega"
+      }
+    ]
+  },
+  {
+    "id": "publicidad",
+    "title": "Publicidad",
+    "description": "Un anuncio o video publicitario profesional para cualquier empresa o producto: gancho, problema, solución, prueba y tarjeta de marca con el logo oficial, eslogan y llamada a la acción.",
+    "skill": "publicidad",
+    "produce": "video",
+    "icon": "megafono",
+    "voz": {
+      "propia": "Voz generada automáticamente"
+    },
+    "lote": {
+      "prefijo": "publicidad-"
+    },
+    "etapas": [
+      {
+        "nombre": "Marca",
+        "listo": "marca.json",
+        "muestra": "{marca/*.{png,jpg,jpeg,webp},logo*.{png,jpg,jpeg,webp},*-logo*.{png,jpg,jpeg,webp},*_logo*.{png,jpg,jpeg,webp}}",
+        "fase": "idea"
+      },
+      {
+        "nombre": "Investigación",
+        "listo": "fuentes/investigacion.md",
+        "fase": "idea"
+      },
+      {
+        "nombre": "Guion",
+        "listo": "guion.md",
+        "fase": "guion"
+      },
+      {
+        "nombre": "Voz",
+        "listo": "{fuentes/voz/*.wav,public/voz.wav,voz.wav}",
+        "fase": "sonido"
+      },
+      {
+        "nombre": "Material",
+        "listo": "{fuentes/**/*,material/*}.{png,jpg,jpeg,webp,gif,bmp,tif,tiff,avif,mp4,mov,mkv,avi,webm,m4v}",
+        "fase": "idea"
+      },
+      {
+        "nombre": "Revisión",
+        "listo": "revision/hoja.png",
+        "fase": "video"
+      },
+      {
+        "nombre": "Video",
+        "listo": "out/publicidad-*.mp4",
         "fase": "video"
       },
       {
@@ -420,7 +480,8 @@
     "etapas": [
       {
         "nombre": "Fuentes",
-        "listo": "fuentes/tema/post.json",
+        "listo": "{fuentes/tema/post.md,fuentes/tema/post.json}",
+        "muestra": "{fuentes/tema/post.md,fuentes/tema/post.json}",
         "fase": "idea"
       },
       {
@@ -430,7 +491,7 @@
       },
       {
         "nombre": "Voz",
-        "listo": "public/voz.wav",
+        "listo": "{fuentes/voz/*.wav,public/voz.wav,voz.wav}",
         "fase": "sonido"
       },
       {
@@ -476,7 +537,7 @@
       },
       {
         "nombre": "Voz",
-        "listo": "public/voz.wav",
+        "listo": "{fuentes/voz/*.wav,public/voz.wav,voz.wav}",
         "fase": "sonido"
       },
       {
@@ -527,7 +588,7 @@
       },
       {
         "nombre": "Voz",
-        "listo": "public/voz.wav",
+        "listo": "{fuentes/voz/*.wav,public/voz.wav,voz.wav}",
         "fase": "sonido"
       },
       {
@@ -568,7 +629,7 @@
       },
       {
         "nombre": "Cortes",
-                "listo": "cortes.json",
+        "listo": "cortes.json",
         "muestra": "{guion.md,cortes.json}",
         "fase": "guion"
       },
@@ -581,6 +642,11 @@
         "nombre": "Video",
         "listo": "out/redes/*.mp4",
         "fase": "video"
+      },
+      {
+        "nombre": "Portada",
+        "listo": "{portada.png,portada/*.png}",
+        "fase": "entrega"
       }
     ]
   },
@@ -611,16 +677,17 @@
       {
         "nombre": "Montaje",
         "listo": "montaje.json",
+        "muestra": "{montaje.md,montaje.json}",
         "fase": "guion"
       },
       {
         "nombre": "Voz",
-        "listo": "public/voz.wav",
+        "listo": "{fuentes/voz/*.wav,public/voz.wav,voz.wav}",
         "fase": "sonido"
       },
       {
         "nombre": "Material",
-        "listo": "{material.md,fuentes/material/**/*.{png,jpg,jpeg,webp}}",
+        "listo": "{material.md,FUENTES.md,fuentes/material/**/*.{png,jpg,jpeg,webp}}",
         "fase": "idea"
       },
       {
@@ -646,7 +713,6 @@
     "description": "Sube tus fotos y videos —viajes, eventos, familia, producto, lo que sea— y el agente arma un video profesional: collage animado, paneos, clips recortados, títulos cinéticos y música.",
     "skill": "video-propio",
     "produce": "video",
-    "musica": true,
     "icon": "escena",
     "voz": {
       "propia": "Sin narración"

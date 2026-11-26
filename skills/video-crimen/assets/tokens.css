@@ -1,0 +1,123 @@
+/* ==========================================================================
+   CRIMEN — tokens y piezas del formato
+   La paleta que ya usan director.py (karaoke) y el contrato de escenas.json:
+   el blanco de los subtítulos, el ámbar del expediente en la palabra activa
+   y en las tarjetas de fecha/sello, el negro de las tarjetas y el tratamiento
+   de color de cada `look`, más la firma del estilo: grano de película y
+   viñeta sobre todo el material. Las fuentes viven en fonts/ junto a este
+   archivo; nuevo.py las copia a public/assets/crimen/ y Crimen.tsx reescribe
+   las url() al servirlas. Las medidas de texto las calcula director.py en
+   píxeles del cuadro (1080×1920 o 1920×1080), igual que hacía subtitulos.py
+   --estilo crimen con su ASS.
+   ========================================================================== */
+
+@font-face { font-family: "Cri Courier Bold"; src: url("fonts/CourierPrime-Bold.ttf") format("truetype"); font-weight: 700; font-display: block; }
+@font-face { font-family: "Cri Courier"; src: url("fonts/CourierPrime-Regular.ttf") format("truetype"); font-weight: 400; font-display: block; }
+
+:root {
+  /* ---- colour --------------------------------------------------------- */
+  --cri-blanco:  #ffffff;   /* subtítulos: blanco con contorno marcado */
+  --cri-ambar:   #ffb042;   /* la palabra activa del karaoke y las tarjetas (el acento ASS &H0042B0FF) */
+  --cri-negro:   #000000;   /* las tarjetas de expediente sin material */
+
+  /* ---- tipografía ------------------------------------------------------ */
+  --cri-fuente-display: "Cri Courier Bold", "Courier New", monospace;  /* karaoke y tarjetas */
+}
+
+/* ---- el cuadro --------------------------------------------------------- */
+.cri-frame { position: relative; width: 100%; height: 100%; overflow: hidden; background: var(--cri-negro); }
+.cri-layer { position: absolute; inset: 0; }
+.cri-fill  { position: absolute; inset: 0; overflow: hidden; }
+.cri-fill img { position: absolute; left: -1%; top: -1%; width: 102%; height: 102%; object-fit: cover; }
+.cri-fill video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+
+/* ---- el ambiente del expediente -----------------------------------------
+   La firma del estilo sobre TODO el material (lo que en el pipeline viejo eran
+   `noise=alls=6:allf=t` y `vignette` encadenados tras el look): grano de película
+   que vibra cuadro a cuadro (lo mueve la línea GSAP del director) y viñeta que
+   cierra los bordes. Va dentro de la capa de material, encima del medio y debajo
+   del karaoke: las tarjetas de expediente no lo llevan, como antes. */
+.cri-ambiente { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.cri-grano {
+  position: absolute; inset: -25%;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+  background-size: 240px 240px;
+  opacity: 0.10;
+  mix-blend-mode: overlay;
+}
+.cri-vineta {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at center, transparent 52%, rgba(0, 0, 0, 0.45) 100%);
+}
+
+/* El `look` de cada escena (escenas.json): el tratamiento de color como filtro CSS del
+   medio de la capa — el grano y la viñeta quedan fuera del filtro, como en el pipeline
+   viejo, donde el noise/vignette iban después del eq/hue. `frio` es el de expediente
+   (el de omisión): colores apagados y fríos; `sepia` el archivo vintage; `color` tal cual. */
+
+/* ---- la foto de evidencia --------------------------------------------------
+   Las `foto` del material no son fondo: son piezas del expediente. Van dentro de un
+   marco con borde claro y sombra — la foto revelada sobre la mesa de trabajo— y, si el
+   item trae `pie`, con su leyenda Courier Prime abajo a la izquierda (la fecha y el
+   lugar sobrepuestos, como en los créditos del género). El marco no se mueve con el
+   paneo: solo la foto hace Ken Burns dentro. */
+.cri-evidencia {
+  position: absolute; inset: 4.5%;
+  border: 3px solid rgba(240, 235, 220, 0.9);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(0, 0, 0, 0.4);
+  background: #0a0a0a;
+}
+.cri-evidencia .cri-fill { position: absolute; inset: 0; overflow: hidden; }
+.cri-evidencia .cri-fill img { position: absolute; left: -1%; top: -1%; width: 102%; height: 102%; object-fit: cover; }
+.cri-pie {
+  position: absolute; left: 14px; bottom: 14px;
+  font-family: var(--cri-fuente-display);
+  font-size: calc(20px * var(--cri-pie-escala, 1));
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--cri-ambar);
+  background: rgba(0, 0, 0, 0.72);
+  padding: 6px 12px;
+  border-left: 3px solid var(--cri-ambar);
+  white-space: nowrap;
+}
+
+/* ---- la tarjeta de expediente --------------------------------------------
+   Escena sin `material`: fondo negro liso con el documento clasificado centrado —
+   el `titular` en Courier Prime Bold ámbar a 0,05 del ancho (54 px en 1080) y a 1,28
+   de interlínea, dentro de un marco con marcas de registro en las esquinas, como un
+   sello o una ficha del caso. El marco no se mueve con el sello: el texto se clava. */
+.cri-card { background: var(--cri-negro); display: flex; align-items: center; justify-content: center; }
+.cri-doc { position: relative; padding: 4.5% 6%; }
+.cri-doc i {
+  position: absolute; width: 34px; height: 34px; pointer-events: none;
+  border: 0 solid var(--cri-ambar); opacity: 0.85;
+}
+.cri-doc i:nth-child(1) { top: 0; left: 0; border-top-width: 3px; border-left-width: 3px; }
+.cri-doc i:nth-child(2) { top: 0; right: 0; border-top-width: 3px; border-right-width: 3px; }
+.cri-doc i:nth-child(3) { bottom: 0; left: 0; border-bottom-width: 3px; border-left-width: 3px; }
+.cri-doc i:nth-child(4) { bottom: 0; right: 0; border-bottom-width: 3px; border-right-width: 3px; }
+.cri-quote {
+  text-align: center;
+  font-family: var(--cri-fuente-display); color: var(--cri-ambar);
+  line-height: 1.28;
+  white-space: pre-line;
+}
+
+/* ---- los subtítulos karaoke ----------------------------------------------
+   Una capa por línea (las arma director.subtitulos con los tiempos de palabra de la
+   transcripción y los grupos de subtitulos.py --estilo crimen): la línea entera en
+   blanco y la palabra que se dice en el ámbar (`.on`, lo enciende la línea de GSAP).
+   Posición y medida las pone el director en línea: abajo al 21 % de la altura en
+   vertical (10 % en horizontal), cuerpo = 6,2 % del ancho en vertical y 3,7 % en
+   horizontal, con contorno y sombra marcados como el ASS del estilo. */
+.cri-karaoke {
+  position: absolute; left: 0; right: 0; text-align: center;
+  font-family: var(--cri-fuente-display); color: var(--cri-blanco);
+  -webkit-text-stroke: var(--cri-contorno, 9px) #000;
+  paint-order: stroke fill;
+  letter-spacing: 0;
+  white-space: nowrap;
+  text-shadow: 0 var(--cri-sombra, 5px) var(--cri-sombra, 5px) rgba(0, 0, 0, 0.85);
+}
+.cri-karaoke .w { color: var(--cri-blanco); }
+.cri-karaoke .w.on { color: var(--cri-ambar); }

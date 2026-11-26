@@ -248,6 +248,10 @@ def de_pagina(url: str) -> dict:
 def resolver(tipo: str, ref: str) -> dict:
     """De dónde se baja una foto o un clip, con su licencia."""
     video = tipo == "clip"
+    if not video and ref.startswith(("mixkit:", "archive:", "yt:")):
+        # Estos bancos solo tienen video: un `{"foto": "mixkit:…"}` bajaba el mp4 renombrado a .jpg y el
+        # `<img>` del estilo salía negro. Se para aquí, con la salida correcta.
+        raise Falla(f"«{ref}» es un banco de video: en `foto` va una foto (`commons:`, `nasa:`, una URL de imagen o la de su página)")
     if ref.startswith("commons:"):
         return de_commons(ref[8:])
     if ref.startswith("nasa:"):
@@ -326,16 +330,17 @@ def fuentes_md(proyecto: Path, registro: dict) -> None:
     (proyecto / "FUENTES.md").write_text("\n".join(lineas) + "\n", encoding="utf-8")
 
 
-def revisar_item(proyecto: Path, que: str, item: dict, errores: list[str]) -> None:
+def revisar_item(proyecto: Path, que: str, item: dict, errores: list[str], extra: set | None = None) -> None:
     """
     La forma de un `{"foto": …}` o `{"clip": …}` de una escena de `top.json`/`escenas.json`; lo que no se puede
     saber sin red queda para la corrida. `que` nombra el item («escena 2 material 1») para el mensaje de error.
+    `extra` son claves propias del estilo que se admiten además de las del contrato (p. ej. `pie` de video-crimen).
     """
     tipos = [t for t in ("foto", "clip") if t in item]
     if len(tipos) != 1:
         errores.append(f"{que}: lleva una sola de `foto` o `clip`")
         return
-    sobran = set(item) - {"foto", "clip", "desde", "velocidad"}
+    sobran = set(item) - {"foto", "clip", "desde", "velocidad", *(extra or set())}
     if sobran:
         errores.append(f"{que}: clave(s) que no van: {', '.join(sorted(sobran))} "
                        "(solo `foto`/`clip`, `desde` y `velocidad` en un clip)")

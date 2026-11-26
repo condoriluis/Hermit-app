@@ -622,6 +622,16 @@ def main() -> None:
     from momentos import duracion
     dura = duracion(video)
     mira = hoja(video, RAIZ / "revision" / "hoja.png", cada=max(1.5, dura / 72), columnas=12 if vertical else 6, ancho=160 if vertical else 320)
+    # El episodio entregado queda limpio: los .huella son la marca de deduplicación de Flow y de la voz junto a cada
+    # archivo bajado o generado (las imágenes no gastan créditos; la voz ya está en public/voz/narracion.wav y no se
+    # vuelve a pedir con el mismo guion), voz.log era del --solo-voz que ya cumplió, y el portada.jpg crudo de Flow ya
+    # está en portada.png. Con el video entregado ya no hacen falta.
+    for archivo_huella in RAIZ.rglob("*.huella"):
+        if "node_modules" not in archivo_huella.parts:
+            archivo_huella.unlink(missing_ok=True)
+    (RAIZ / "voz.log").unlink(missing_ok=True)
+    if (RAIZ / "portada.png").exists():
+        (RAIZ / "portada.jpg").unlink(missing_ok=True)
     reloj.listo(video, [mira] + ([RAIZ / "portada.png"] if vertical else []))
 
 

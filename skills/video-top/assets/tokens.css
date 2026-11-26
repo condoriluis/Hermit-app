@@ -1,0 +1,81 @@
+/* ==========================================================================
+   TOP — tokens y piezas del formato
+   La paleta que ya usan hacer.py, director.py (karaoke) y tramos.py:
+   el amarillo del acento, el blanco de los titulares y el negro de las
+   tarjetas. Las fuentes viven en fonts/ junto a este archivo; nuevo.py las
+   copia a public/assets/top/ y Top.tsx reescribe las url() al servirlas.
+   Las medidas de texto las calcula director.py en píxeles del cuadro
+   (1080×1920 o 1920×1080), igual que hacía escribir_textos con drawtext.
+   ========================================================================== */
+
+@font-face { font-family: "Top Anton"; src: url("fonts/Anton-Regular.ttf") format("truetype"); font-weight: 400; font-display: block; }
+@font-face { font-family: "Top Sans"; src: url("fonts/Inter-600.woff2") format("woff2"); font-weight: 600; font-display: block; }
+@font-face { font-family: "Top Sans"; src: url("fonts/Inter-700.woff2") format("woff2"); font-weight: 700; font-display: block; }
+
+:root {
+  /* ---- colour --------------------------------------------------------- */
+  --top-amarillo: #ffe600;   /* el acento: «NÚMERO N» y la palabra activa del karaoke */
+  --top-blanco:   #ffffff;   /* titulares y subtítulos */
+  --top-gris:     #e8e8e8;   /* el texto secundario */
+  --top-negro:    #000000;   /* las tarjetas sin material */
+
+  /* ---- tipografía ------------------------------------------------------ */
+  --top-fuente-display: "Top Anton", "Arial Narrow", sans-serif;  /* números, titulares, karaoke */
+  --top-fuente-texto:   "Top Sans", "Inter", sans-serif;          /* `sub`, créditos */
+}
+
+/* ---- el cuadro --------------------------------------------------------- */
+.top-frame { position: relative; width: 100%; height: 100%; overflow: hidden; background: var(--top-negro); }
+.top-layer { position: absolute; inset: 0; }
+.top-fill  { position: absolute; inset: 0; overflow: hidden; }
+.top-fill img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.top-fill video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+
+/* ---- los textos del puesto ----------------------------------------------
+   Las posiciones y tamaños van en línea (los calcula director.py con la
+   misma escala que escribir_textos: min(ancho/1080, alto/1920)). El contorno
+   negro es el borderw del drawtext: ~5 % del cuerpo de letra. */
+.top-num {
+  position: absolute; left: 0; right: 0; text-align: center;
+  font-family: var(--top-fuente-display); color: var(--top-amarillo);
+  -webkit-text-stroke: var(--top-contorno, 5px) #000;
+  paint-order: stroke fill;
+  letter-spacing: 0.01em;
+}
+.top-tit {
+  position: absolute; left: 0; right: 0; text-align: center;
+  font-family: var(--top-fuente-display); color: var(--top-blanco);
+  -webkit-text-stroke: var(--top-contorno, 4px) #000;
+  paint-order: stroke fill;
+  letter-spacing: 0.01em;
+}
+.top-sub {
+  position: absolute; left: 0; right: 0; text-align: center;
+  font-family: var(--top-fuente-texto); color: var(--top-gris); font-weight: 600;
+}
+/* ---- los subtítulos karaoke -------------------------------------------------
+   Una capa por línea (las arma director.subtitulos con los tiempos de palabra de la
+   transcripción): la línea entera en blanco y la palabra que se dice en el amarillo
+   del top (`.on`, lo enciende la línea de GSAP). La posición y la medida las pone el
+   director en línea, como en el ASS que reemplazó (abajo al 21 % de la altura en
+   vertical, cuerpo = 7 % del ancho). */
+.top-karaoke {
+  position: absolute; left: 0; right: 0; text-align: center;
+  font-family: var(--top-fuente-display); color: var(--top-blanco);
+  -webkit-text-stroke: var(--top-contorno, 8px) #000;
+  paint-order: stroke fill;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+.top-karaoke .w { color: var(--top-blanco); }
+.top-karaoke .w.on { color: var(--top-amarillo); }
+
+/* ---- los golpes del formato ------------------------------------------------
+   El flash amarillo del slam de cada puesto y el número fantasma de las tarjetas:
+   los anima la línea GSAP del director (opacity 0.55→0 y la entrada del puesto). */
+.top-flash { position: absolute; inset: 0; background: var(--top-amarillo); opacity: 0; }
+.top-ghost {
+  position: absolute; left: 0; right: 0; text-align: center;
+  font-family: var(--top-fuente-display); color: var(--top-amarillo);
+}
+.top-tarjeta { background: radial-gradient(120% 90% at 50% 30%, #16161c 0%, #000 72%); }

@@ -130,7 +130,8 @@ Son cinco llamadas si sale a la primera; cada vuelta de más cuesta.
    `python -I -B -X utf8 <skill>/scripts/hacer.py` **en segundo plano** (`run_in_background`); termina tu mensaje: te
    avisa al acabar. No esperes con `sleep` ni lo vigiles. `hacer.py` lo revisa primero, en un segundo: **si dice ✗**,
    dice todo lo que falla de una vez; arréglalo con Edit y vuelve a lanzarlo en el mismo mensaje (lo ya bajado no se
-   baja otra vez; una referencia que no bajó se cambia por otra de `busca.jpg`).
+   baja otra vez; una referencia que no bajó se cambia por otra de `busca.jpg`). `hacer.py` genera también
+   `momentos.md` — el plan en lectura para el estudio, no lo escribas — cuando el plan ya es válido.
 5. **Si dice ✓**, mira `revision/hoja.png` (un cuadro por segundo): que cada imagen sea lo que dice la frase, que
    nada salga en blanco y que la palabra roja se lea. Otro render solo si una imagen no es lo que se dice o no se ve,
    y todo en una vuelta. Un ✘ de la medida (ritmo, quieto) es del director: entrega y díselo al usuario. **Entrega**:
@@ -138,6 +139,16 @@ Son cinco llamadas si sale a la primera; cada vuelta de más cuesta.
    sonido no lo oíste (se comprobó que cada palabra se oye).
 
 `hacer.py --revisa` hace solo la revisión, sin fondo, por si quieres comprobar un cambio antes de lanzarlo.
+
+**El proyecto entregado queda limpio.** Al terminar bien, `hacer.py` borra las `*.huella` (las marcas de dedup del
+servidor: ya sirvieron) y `sfx-cues.txt` (el intermedio del sonido: lo escribe el director y lo consume en la misma
+pasada). No escribas scripts ni logs sueltos en la raíz ni en `fuentes/`: lo de un solo uso va a `$TEMP`. Se quedan a
+propósito `fuentes/` (la grabación y su procedencia), `work/` (la transcripción y los datos de la edición),
+`public/assets/m/` (el material ya tratado), `public/sonido.wav` y `public/sonido/` (la mezcla del video y las pistas
+por separado que el monitor en vivo y la línea de tiempo muestran —la base y cada efecto en su golpe—, que escribe
+`pistas_de_audio` del director con `pistas.py` de video-base; el render final sigue saliendo de `sonido.wav`),
+`revision/` (la hoja y lo revisado), `FUENTES.md`,
+`momentos.md`, `portada.png` y `out/final.mp4`.
 
 **Música**: si el usuario dio una canción, cópiala a `public/assets/music/` antes de `hacer.py`: va de cama bajo la voz,
 baja en el negro y se corta en los momentos con `remate`.

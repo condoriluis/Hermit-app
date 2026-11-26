@@ -768,6 +768,12 @@ def main() -> None:
                         *(["--horizontal"] if horizontal else [])], cwd=RAIZ, check=True, capture_output=True)
     if not horizontal:
         subprocess.run(["node", str(BASE / "portada.mjs"), str(video), str(portada)], cwd=RAIZ, check=True, capture_output=True)
+    # Los .huella son la marca de deduplicación de Flow y de la voz junto a cada archivo bajado o generado: cumplido
+    # su papel en el proyecto, se van para que la carpeta quede limpia (las imágenes no gastan créditos; la voz ya
+    # está en public/voz.wav y no se vuelve a pedir con el mismo guion).
+    for archivo_huella in RAIZ.rglob("*.huella"):
+        if "node_modules" not in archivo_huella.parts:
+            archivo_huella.unlink(missing_ok=True)
     paso(f"✓ listo: {video}\n  Mira {hoja(video)} (un cuadro cada 1.5 s) y {portada}.")
 
 

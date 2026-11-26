@@ -3,7 +3,7 @@ Subtítulos karaoke para los estilos que no tienen plantilla propia (motivaciona
 raíz del proyecto:
 
     python <base>/scripts/subtitulos.py <video.mp4> <salida.mp4> --voz public/voz.wav
-        [--formato vertical|horizontal] [--estilo minimal|top|archivo|varela|crimen] [--offset 0]
+        [--formato vertical|horizontal] [--estilo minimal|top|archivo|varela|crimen] [--offset 0] [--hasta <seg>]
 
 Toma los tiempos de la voz (`--voz`, la pista ya masterizada; si no se pasa, el audio del propio vídeo) y los pasa por
 el Whisper de Hermit. Escribe los subtítulos palabra a palabra en ASS —cada palabra se pinta en el color del estilo
@@ -11,7 +11,8 @@ mientras se dice— y los quema sobre el vídeo. Deja el `.ass` al lado de la sa
 
 `--offset` retrasa los subtítulos (segundos): para vídeos que abren con una tarjeta o un plano sin voz antes de que
 empiece la narración. El audio del vídeo no se toca, salvo que no tenga pista y sí `--voz`: entonces la voz entra como
-audio de la salida.
+audio de la salida. `--hasta` los corta en ese segundo: para cuando el final es una tarjeta de marca y el karaoke
+caería encima de sus textos.
 
 Los estilos (cada uno con su tipografía de `../assets/fonts`, quemada con `fontsdir`, no con la del sistema):
 - `minimal` (motivacional): Bebas Neue, blanco puro, palabra activa en blanco cálido apenas más cálido.
@@ -46,6 +47,10 @@ ESTILOS = {
     "top": {"palabras": 3, "fuente": "Anton", "archivo": "Anton-Regular.ttf", "negrita": -1, "acento": "&H0000FFFF", "tinta": "&H00FFFFFF", "espaciado": 0, "contorno": 0.12, "sombra": 0.06, "tam_v": 0.070, "tam_h": 0.042},
     "archivo": {"palabras": 3, "fuente": "Archivo Black", "archivo": "ArchivoBlack-Regular.ttf", "negrita": -1, "acento": "&H004D4DFF", "tinta": "&H00FFFFFF", "espaciado": 0, "contorno": 0.12, "sombra": 0.06, "tam_v": 0.070, "tam_h": 0.042},
     "varela": {"palabras": 4, "fuente": "Varela Round", "archivo": "VarelaRound-Regular.ttf", "negrita": -1, "acento": "&H00EED322", "tinta": "&H00FFFFFF", "espaciado": 1, "contorno": 0.10, "sombra": 0.04, "tam_v": 0.072, "tam_h": 0.044},
+    # `propio` (video-propio): Varela Round —la misma de las tarjetas y subtítulos de escena de la plantilla—,
+    # más pequeña que los títulos y **por encima de la zona de títulos** (estos viven a partir del 17 % del
+    # borde inferior en vertical y 9 % en horizontal; el `minimal` a 21 %/10 % se les montaba encima).
+    "propio": {"palabras": 4, "fuente": "Varela Round", "archivo": "VarelaRound-Regular.ttf", "negrita": -1, "acento": "&H00C8F08E", "tinta": "&H00FFFFFF", "espaciado": 1, "contorno": 0.12, "sombra": 0.05, "tam_v": 0.054, "tam_h": 0.033, "margen_v": 0.32, "margen_h": 0.30},
 }
 
 
@@ -106,20 +111,15 @@ def partir_palabra(texto: str, maximo: float, ancho_de) -> list[str]:
     return trozos
 
 
-def ass(palabras: list[tuple[float, float, str]], estilo: dict, ancho: int, alto: int) -> str:
-    """Un Dialogue por grupo de palabras; dentro, `{\\k}` por palabra: el karaoke las pinta en el acento al decirlas."""
+def grupos_de_lineas(palabras: list[tuple[float, float, str]], estilo: dict, ancho: int, alto: int) -> list[list[tuple[float, float, str]]]:
+    """
+    Las palabras en líneas de hasta `estilo["palabras"]` palabras y del ancho útil, cortando también tras
+    puntuación de cierre: la línea nunca se sale del cuadro, se parte en otra fila. Una palabra que sola no cabe
+    (un enlace, un hashtag) se parte en trozos que sí, midiendo carácter a carácter con la fuente real del estilo.
+    Devuelve grupos de (inicio, fin, texto); la usa `ass()` y el karaoke dentro de la composición (video-top).
+    """
     vertical = alto > ancho
     letra = round(ancho * (estilo["tam_v"] if vertical else estilo["tam_h"]))
-    margen = round(alto * (0.21 if vertical else 0.10))
-    contorno = max(round(letra * estilo["contorno"]), 1)
-    sombra = max(round(letra * estilo["sombra"]), 1)
-    cabeza = (
-        "[Script Info]\nScriptType: v4.00+\n"
-        f"PlayResX: {ancho}\nPlayResY: {alto}\nWrapStyle: 0\nScaledBorderAndShadow: yes\n\n"
-        "[V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\n"
-        f"Style: Sub,{estilo['fuente']},{letra},{estilo['tinta']},{estilo['acento']},&H00000000,&H96000000,{estilo['negrita']},0,0,0,100,100,{estilo['espaciado']},0,1,{contorno},{sombra},{estilo.get('alineacion', 2)},60,60,{margen},1\n\n"
-        "[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n"
-    )
 
     # El ancho de cada palabra con la fuente real del estilo (Pillow + su .ttf): ninguna línea puede
     # pasar del marco. Sin Pillow se estima por carácter, siempre por encima de la medida real.
@@ -170,9 +170,26 @@ def ass(palabras: list[tuple[float, float, str]], estilo: dict, ancho: int, alto
         ancho_actual += (ancho_espacio if len(actual) > 1 else 0.0) + w
     if actual:
         grupos.append(actual)
+    return grupos
+
+
+def ass(palabras: list[tuple[float, float, str]], estilo: dict, ancho: int, alto: int) -> str:
+    """Un Dialogue por grupo de palabras; dentro, `{\\k}` por palabra: el karaoke las pinta en el acento al decirlas."""
+    vertical = alto > ancho
+    letra = round(ancho * (estilo["tam_v"] if vertical else estilo["tam_h"]))
+    margen = round(alto * estilo.get("margen_v" if vertical else "margen_h", 0.21 if vertical else 0.10))
+    contorno = max(round(letra * estilo["contorno"]), 1)
+    sombra = max(round(letra * estilo["sombra"]), 1)
+    cabeza = (
+        "[Script Info]\nScriptType: v4.00+\n"
+        f"PlayResX: {ancho}\nPlayResY: {alto}\nWrapStyle: 0\nScaledBorderAndShadow: yes\n\n"
+        "[V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\n"
+        f"Style: Sub,{estilo['fuente']},{letra},{estilo['tinta']},{estilo['acento']},&H00000000,&H96000000,{estilo['negrita']},0,0,0,100,100,{estilo['espaciado']},0,1,{contorno},{sombra},{estilo.get('alineacion', 2)},60,60,{margen},1\n\n"
+        "[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n"
+    )
 
     lineas = []
-    for g in grupos:
+    for g in grupos_de_lineas(palabras, estilo, ancho, alto):
         partes = []
         for ini, fin, texto in g:
             w = linea(texto)
@@ -195,6 +212,7 @@ def main() -> None:
     acento = None
     voz = None
     offset = 0.0
+    hasta = None
     i = 1
     while i < len(sys.argv):
         a = sys.argv[i]
@@ -212,6 +230,9 @@ def main() -> None:
             i += 1
         elif a == "--offset":
             offset = segundos(sys.argv[i + 1])
+            i += 1
+        elif a == "--hasta":
+            hasta = segundos(sys.argv[i + 1])
             i += 1
         i += 1
     if formato not in FORMATOS:
@@ -244,7 +265,11 @@ def main() -> None:
     segmentos = datos.get("segmentos", [])
     if not segmentos:
         sys.exit("El Whisper no oyó voz: sin tiempos no hay subtítulos.")
-    ass_path.write_text(ass(palabras_tiempo(segmentos, offset), estilo_sub, ancho, alto), encoding="utf-8-sig", newline="\n")
+    palabras = palabras_tiempo(segmentos, offset)
+    if hasta is not None:
+        # Nada de karaoke a partir de ese segundo: la palabra que lo cruza se corta ahí y las demás no entran.
+        palabras = [(ini, min(fin, hasta), texto) for ini, fin, texto in palabras if ini < hasta]
+    ass_path.write_text(ass(palabras, estilo_sub, ancho, alto), encoding="utf-8-sig", newline="\n")
 
     # Desde la carpeta de salida: la ruta absoluta de `subtitles` en Windows (C:\…) rompe su sintaxis. `fontsdir` va
     # entre comillas y con los dos puntos escapados (C\:) para que el parser del filtro no lo parta.

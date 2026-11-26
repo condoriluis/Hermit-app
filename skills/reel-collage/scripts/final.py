@@ -62,6 +62,14 @@ def main() -> None:
             base("portada.mjs", str(final), str(portada))
         else:
             print("Falta la portada: hazla según PORTADA.md de video-base y ponla con portada.mjs.")
+        # El reel entregado queda limpio: los .huella son la marca de deduplicación de Flow y de la voz junto a cada
+        # archivo bajado o generado (las imágenes no gastan créditos; la voz ya está en public/voz.wav), y el
+        # portada.jpg crudo de Flow ya está en portada.png. Fuera de node_modules, que es un enlace compartido.
+        for archivo_huella in PROYECTO.rglob("*.huella"):
+            if "node_modules" not in archivo_huella.parts:
+                archivo_huella.unlink(missing_ok=True)
+        if (PROYECTO / "portada.png").exists():
+            (PROYECTO / "portada.jpg").unlink(missing_ok=True)
     finally:
         candado.soltar(PROYECTO)
 

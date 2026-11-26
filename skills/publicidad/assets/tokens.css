@@ -1,0 +1,192 @@
+/* ==========================================================================
+   PUBLICIDAD — tokens y piezas del formato
+   La anatomía del anuncio: gancho, problema, solución, prueba y la tarjeta de
+   marca del cierre. La paleta la pone la marca de cada proyecto: el director
+   inyecta --pub-color (acento: karaoke activo y píldora del CTA), --pub-fondo
+   (fondo de la tarjeta de marca) y --pub-acento en la edición; aquí quedan los
+   neutros — blanco de titulares, gris del sub y el degradado de las tarjetas.
+   Las fuentes viven en fonts/ junto a este archivo; nuevo.py las copia a
+   public/assets/pub/ y Publicidad.tsx reescribe las url() al servirlas.
+   Las medidas de texto las calcula director.py en píxeles del cuadro
+   (1080×1920 o 1920×1080), igual que hacía escribir_textos con drawtext.
+   ========================================================================== */
+
+@font-face { font-family: "Pub Anton"; src: url("fonts/Anton-Regular.ttf") format("truetype"); font-weight: 400; font-display: block; }
+@font-face { font-family: "Pub Bebas"; src: url("fonts/BebasNeue-Regular.ttf") format("truetype"); font-weight: 400; font-display: block; }
+@font-face { font-family: "Pub Sans"; src: url("fonts/Inter-600.woff2") format("woff2"); font-weight: 600; font-display: block; }
+@font-face { font-family: "Pub Sans"; src: url("fonts/Inter-700.woff2") format("woff2"); font-weight: 700; font-display: block; }
+
+:root {
+  /* ---- colour --------------------------------------------------------- */
+  --pub-color:  #ffffff;   /* el color de la marca: píldora del CTA */
+  --pub-fondo:  #0b0e11;   /* el fondo de la tarjeta de marca */
+  --pub-acento: #ffe600;   /* la palabra activa del karaoke (el color de la marca, o amarillo) */
+  --pub-tinta:  #101014;   /* el texto sobre la píldora del color de marca */
+  --pub-blanco: #ffffff;   /* titulares, eslogan y nombre de marca */
+  --pub-gris:   #e8e8e8;   /* el `sub` de las escenas */
+  --pub-negro:  #000000;   /* las tarjetas sin material */
+
+  /* ---- tipografía ------------------------------------------------------ */
+  --pub-fuente-display: "Pub Anton", "Arial Narrow", sans-serif;  /* titular, eslogan, karaoke */
+  --pub-fuente-compacta: "Pub Bebas", "Arial Narrow", sans-serif;  /* sticker de oferta, ghost, píldora del CTA */
+  --pub-fuente-texto:   "Pub Sans", "Inter", sans-serif;          /* `sub`, marca de agua y el sitio */
+}
+
+/* ---- el cuadro --------------------------------------------------------- */
+.pub-frame { position: relative; width: 100%; height: 100%; overflow: hidden; background: var(--pub-negro); }
+.pub-layer { position: absolute; inset: 0; }
+.pub-fill  { position: absolute; inset: 0; overflow: hidden; }
+.pub-fill img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.pub-fill video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+
+/* ---- el velo de lectura -----------------------------------------------------
+   Sobre escenas con material, un degradado oscuro suave detrás de la zona de
+   textos (titular/sub, tercio superior) y del karaoke (franja baja): es la
+   convención de todo comercial — sobre material claro (leche, cielo, blanco)
+   el texto blanco se lava sin él. Va por encima del material (z=2) y por
+   debajo de textos (z=10) y karaoke (z=85); las tarjetas y el cierre no lo
+   llevan porque ya tienen fondo propio. */
+.pub-velo {
+  position: absolute; inset: 0; pointer-events: none;
+  background:
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.66) 0%, rgba(0, 0, 0, 0.30) 20%, transparent 36%),
+    linear-gradient(to top,    rgba(0, 0, 0, 0.70) 0%, rgba(0, 0, 0, 0.32) 24%, transparent 40%);
+}
+
+/* ---- los textos de escena -------------------------------------------------
+   Las posiciones y tamaños van en línea (los calcula director.py con la misma
+   escala que escribir_textos: min(ancho/1080, alto/1920)). Titular en Anton con
+   contorno negro —el borderw del drawtext, ~5 % del cuerpo—; `sub` en Inter,
+   más fino, para que el titular mande y el subtítulo respire. */
+.pub-tit {
+  position: absolute; left: 0; right: 0; text-align: center; line-height: 1;
+  font-family: var(--pub-fuente-display); color: var(--pub-blanco);
+  -webkit-text-stroke: var(--pub-contorno, 5px) #000;
+  paint-order: stroke fill;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+.pub-sub {
+  position: absolute; left: 0; right: 0; text-align: center; line-height: 1.15;
+  font-family: var(--pub-fuente-texto); font-weight: 600; color: var(--pub-gris);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+/* ---- los subtítulos karaoke -------------------------------------------------
+   Una capa por línea (las arma director.subtitulos con los tiempos de palabra de
+   la transcripción, hasta donde empieza la tarjeta de marca): la línea en blanco
+   y la palabra que se dice en el color de la marca (`.on`, lo enciende la línea
+   de GSAP). Las medidas son las del estilo `top` de subtitulos.py (Anton, abajo
+   al 21 % de la altura en vertical, cuerpo = 7 % del ancho). */
+.pub-karaoke {
+  position: absolute; left: 0; right: 0; text-align: center;
+  font-family: var(--pub-fuente-display); color: var(--pub-blanco);
+  -webkit-text-stroke: var(--pub-contorno, 8px) #000;
+  paint-order: stroke fill;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+.pub-karaoke .w { display: inline-block; color: var(--pub-blanco); transition: transform 0.08s ease-out; }
+.pub-karaoke .w.on { color: var(--pub-acento, var(--pub-color)); transform: scale(1.14); }
+
+/* ---- la tarjeta de marca del cierre ----------------------------------------
+   Fondo del color de marca (o casi negro), logo oficial encajado sin deformar,
+   eslogan en Anton y el CTA en píldora del color de marca. Las entradas (fundido
+   y subida del logo en 0,6 s; eslogan y píldora escalonados) las pone la línea
+   GSAP del director. */
+.pub-tarjeta { background: radial-gradient(120% 90% at 50% 30%, #16161c 0%, #000 72%); }
+.pub-fondo { position: absolute; inset: 0; }
+/* El logo va en una caja (la pone el director: el ancho y alto de `render_cierre`); la imagen se
+   encoge dentro sin deformarse, como el `scale … decrease` del overlay de ffmpeg. */
+.pub-logo { position: absolute; }
+.pub-logo img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.pub-nombre {
+  position: absolute; left: 0; right: 0; text-align: center; line-height: 1;
+  font-family: var(--pub-fuente-display); color: var(--pub-blanco);
+  -webkit-text-stroke: var(--pub-contorno, 6px) #000;
+  paint-order: stroke fill;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+.pub-eslogan {
+  position: absolute; left: 0; right: 0; text-align: center; line-height: 1.1;
+  font-family: var(--pub-fuente-display); color: var(--pub-blanco);
+  -webkit-text-stroke: var(--pub-contorno, 5px) #000;
+  paint-order: stroke fill;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+/* La píldora del CTA: el div de fuera solo posiciona y centra (sin transform: GSAP anima el suyo);
+   el span de dentro es la píldora — fondo del color de marca, tinta calculada por luminancia, con el
+   brillo que la cruza una vez al entrar (`.pub-brillo`, lo anima la línea GSAP del director). */
+.pub-pill { position: absolute; left: 0; right: 0; text-align: center; }
+.pub-pill span {
+  position: relative; display: inline-block; overflow: hidden; line-height: 1;
+  font-family: var(--pub-fuente-compacta); font-weight: 400;
+  background: var(--pub-color); color: var(--pub-tinta);
+  border-radius: 999px;
+  padding: 0.6em 1.15em;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.pub-brillo {
+  position: absolute; top: -20%; bottom: -20%; left: 0; width: 45%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  transform: skewX(-18deg);
+  pointer-events: none;
+}
+
+/* ---- el golpe publicitario --------------------------------------------------
+   Las piezas que hacen que el anuncio se sienta anuncio y no presentación: la barra de
+   progreso del color de marca arriba durante todo el video, el flash del color de marca en
+   cada corte de escena, el subrayado bajo el titular, el tipo fantasma de las tarjetas, la
+   marca en marca de agua, el sticker de la oferta y el sitio bajo el CTA. Las posiciones y
+   tiempos los calcula director.py; aquí solo va la piel. */
+.pub-barra {
+  position: absolute; left: 0; right: 0; top: 0; height: 6px;
+  background: var(--pub-color); transform-origin: left center;
+}
+.pub-flash { position: absolute; inset: 0; background: var(--pub-color); opacity: 0; }
+.pub-linea {
+  position: absolute; left: 50%; height: 8px; border-radius: 4px;
+  background: var(--pub-color); transform-origin: left center;
+}
+.pub-ghost {
+  position: absolute; left: 0; right: 0; text-align: center; line-height: 1;
+  font-family: var(--pub-fuente-compacta); color: var(--pub-blanco);
+  -webkit-text-stroke: var(--pub-contorno, 4px) #000;
+  paint-order: stroke fill;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  opacity: 0.08;
+}
+.pub-marca {
+  position: absolute; left: 0; right: 0; text-align: left;
+  font-family: var(--pub-fuente-texto); font-weight: 700;
+  color: var(--pub-blanco); letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.5;
+}
+.pub-sticker {
+  position: absolute; right: 7%; top: 13%;
+  font-family: var(--pub-fuente-compacta); font-weight: 400;
+  background: var(--pub-color); color: var(--pub-tinta);
+  border-radius: 10px;
+  padding: 0.5em 0.9em;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.pub-sticker-in { display: inline-block; transform: rotate(-7deg); }
+.pub-glow {
+  position: absolute; border-radius: 50%;
+  background: radial-gradient(closest-side, var(--pub-color), transparent 72%);
+  opacity: 0;
+}
+.pub-sitio {
+  position: absolute; left: 0; right: 0; text-align: center;
+  font-family: var(--pub-fuente-texto); font-weight: 600; color: #9aa0a6;
+  letter-spacing: 0.12em;
+  text-transform: lowercase;
+}

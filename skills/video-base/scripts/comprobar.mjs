@@ -6,7 +6,9 @@ Uso:
 Mira: H.264 en yuv420p, el tamaño, los fps, el número exacto de fotogramas, el audio (AAC, 48 kHz, estéreo), la
 sonoridad y el true peak, faststart, cuadros negros y que el primer fotograma no esté vacío. Lo que no pases no se
 compara (solo se informa). Sale con 1 si algo falla.
-  --negro-ok   los tramos negros son a propósito (un corte a negro buscado).
+  --negro-ok    los tramos negros son a propósito (un corte a negro buscado).
+  --silencio-ok el video no lleva sonido a propósito (p. ej. musica:false, sfx:false y sin voz): la pista
+                muda se acepta y no se le miden LUFS ni pico.
 `
 import { openSync, readSync, closeSync } from 'node:fs'
 import { resolve } from 'node:path'
@@ -42,11 +44,16 @@ fila('duración del archivo', `${duracion.toFixed(3)} s`, null)
 if (a) {
   fila('audio', `${a.codec_name} ${a.sample_rate} Hz ${a.channels} canales`, a.codec_name === 'aac' && a.sample_rate === '48000' && a.channels === 2)
   const s = sonoridad(video)
-  const lufs = Number(o.lufs ?? -14)
-  const pico = Number(o.pico ?? -1)
-  fila('sonoridad', `${s.lufs.toFixed(1)} LUFS`, Math.abs(s.lufs - lufs) <= 1, `objetivo ${lufs}`)
-  fila('true peak', `${s.pico.toFixed(1)} dBTP`, s.pico <= pico + 0.1, `≤ ${pico}`)
-} else fila('audio', 'no tiene', false)
+  // El silencio digital mide el piso del medidor (−70 LUFS), no −inf: se reconoce por nivel, no por forma.
+  if (o['silencio-ok'] && (!Number.isFinite(s.lufs) || s.lufs <= -60)) {
+    fila('sonoridad', 'en silencio', null, 'a propósito')
+  } else {
+    const lufs = Number(o.lufs ?? -14)
+    const pico = Number(o.pico ?? -1)
+    fila('sonoridad', `${s.lufs.toFixed(1)} LUFS`, Math.abs(s.lufs - lufs) <= 1, `objetivo ${lufs}`)
+    fila('true peak', `${s.pico.toFixed(1)} dBTP`, s.pico <= pico + 0.1, `≤ ${pico}`)
+  }
+} else fila('audio', 'no tiene', o['silencio-ok'] ? null : false)
 
 // faststart: el índice (moov) va antes de los datos (mdat), para que el vídeo empiece a sonar sin bajarlo entero.
 {

@@ -13,13 +13,14 @@ hay que arreglar de una vez:
 2. Prepara el material en public/media/ (lo ya hecho no se rehace): las fotos a jpg/png de máximo 2560 px y los
    videos recortados y normalizados a H.264 yuv420p bt709 a 30 fps (así Remotion los decodifica siempre, sea cual
    sea el formato del celular).
-3. La cama de sonido en public/sonido.wav: la música del usuario (plan.musica o public/assets/music/) o una
-   sintetizada del largo del video, y la voz si plan.voz la trae.
-4. Escribe src/montaje.json con las escenas medidas en cuadros y corre terminar.py: render, masterizado a
-   −14 LUFS, out/final.mp4 y su comprobación. Después la hoja de contacto en revision/hoja.png.
+3. El sonido dentro de la composición (pistas separadas para el motor en vivo y la línea de tiempo):
+   la música en `public/sonido/` a su volumen con fundidos y el ducking bajo la voz (su envolvente se
+   mide aquí y la aplica el `volume` de Remotion, cuadro a cuadro), la voz en su `voz_desde`, y el kit
+   sfx/ del estilo en los cortes del montaje.
+4. Escribe src/montaje.json con las escenas medidas en cuadros y corre terminar.py: render con sonido,
+   masterizado a −14 LUFS, out/final.mp4 y su comprobación. Después la hoja de contacto en revision/hoja.png.
 """
 
-import hashlib
 import json
 import os
 import re
@@ -36,6 +37,7 @@ os.environ.setdefault("HERMIT_SKILLS", str(SKILL.parent))
 sys.path.insert(0, str(BASE))
 sys.path.insert(0, str(SKILL / "scripts"))
 from formato import formato, tamano  # noqa: E402
+from pistas import a_public, duracion_wav, firma, ganancia_musica  # noqa: E402
 
 MOVIMIENTOS = {"acercar", "alejar", "izquierda", "derecha", "arriba", "abajo"}
 TIPOS_FOTO = {".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tif", ".tiff", ".heic", ".heif", ".avif"}
@@ -80,8 +82,12 @@ def resumen(plan: dict) -> None:
     lineas.append(f"**{len(escenas)} escenas** · ~{total:.0f} s · formato {formato(RAIZ)}")
     if plan.get("musica"):
         lineas.append(f"**Música:** `{plan['musica']}`")
+    if plan.get("musica_volumen") is not None:
+        lineas.append(f"**Volumen de la música:** {float(plan['musica_volumen']):.2f}")
     if plan.get("voz"):
         lineas.append(f"**Voz:** `{plan['voz']}`")
+    if plan.get("voz_volumen") is not None:
+        lineas.append(f"**Volumen de la voz:** {float(plan['voz_volumen']):.2f}")
     lineas += ["", "## Escenas", ""]
     n = 0
 
@@ -212,6 +218,15 @@ def leer_plan() -> tuple[dict, list[str]]:
                 errores.append(f"plan.json: `musica` no existe: {r}")
         elif r and not resolver(str(r)).exists():
             errores.append(f"plan.json: `{clave}` no existe: {r}")
+    m = plan.get("musica")
+    if m is not None and m is not False and not isinstance(m, str):
+        errores.append("plan.json: `musica` debe ser la ruta de una canción o `false` (sin música)")
+    for clave in ("musica_volumen", "voz_volumen"):
+        v = plan.get(clave)
+        if v is not None and (isinstance(v, bool) or not isinstance(v, (int, float)) or not 0 <= v <= 1):
+            errores.append(f"plan.json: `{clave}` debe ser un número entre 0 y 1")
+    if plan.get("sfx") is not None and not isinstance(plan["sfx"], bool):
+        errores.append("plan.json: `sfx` debe ser `false` para quitar los efectos o no ponerse")
     return plan, errores
 
 
@@ -232,10 +247,6 @@ def preparar_video(p: Path, desde: float, hasta: float, salida: Path) -> None:
             "-vf", vf, "-c:v", "libx264", "-preset", "veryfast", "-crf", "18", "-pix_fmt", "yuv420p",
             "-color_range", "tv", "-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709",
             "-g", "30", "-an", "-movflags", "+faststart", str(salida)], "el video")
-
-
-def firma(*partes) -> str:
-    return hashlib.sha1("|".join(str(x) for x in partes).encode()).hexdigest()[:10]
 
 
 def preparar(plan: dict) -> dict:
@@ -299,47 +310,132 @@ def musica_del_usuario(plan: dict) -> Path | None:
     return next((c for c in candidatos if c.exists()), None)
 
 
-def sonido(plan: dict, dur: float) -> None:
-    """public/sonido.wav: la música de fondo y, si la hay, la voz encima."""
-    salida = RAIZ / "public" / "sonido.wav"
-    trabajo = RAIZ / "work" / "musica.wav"
+SFX = SKILL / "sfx"
+# El fundido entre escenas de la plantilla (Montaje.tsx): el empuje dura F cuadros (~0,33 s).
+F_ENTRE = 10
+
+
+def cues_sfx(datos: dict) -> list[tuple[float, Path, float]]:
+    """Los momentos del kit propio, en segundos del video: el whoosh cuando una escena empieza a
+    empujar a la anterior, el pop cuando cae el collage y el cierre cálido al abrir la tarjeta de
+    cierre. Los tiempos salen de montaje.json (escenas medidas en cuadros), no de suposiciones."""
+    fps = float(datos.get("fps", 30))
+    escenas = datos.get("escenas", [])
+    cues: list[tuple[float, Path, float]] = []
+    for i in range(1, len(escenas)):
+        # El whoosh arranca cuando la escena entrante asoma (~6 cuadros dentro del empuje de F).
+        t = max(0.0, (escenas[i]["desde"] - F_ENTRE + 6) / fps)
+        cues.append((t, SFX / ("deslize_1.wav" if i % 2 else "deslize_2.wav"), 0.16))
+    for e in escenas:
+        if e.get("tipo") == "collage":
+            cues.append(((e["desde"] + 6) / fps, SFX / "pop_1.wav", 0.30))
+        elif e.get("tipo") == "tarjeta" and e.get("variante") == "cierre":
+            cues.append(((e["desde"] + 4) / fps, SFX / "cierre_1.wav", 0.32))
+    return sorted(c for c in cues if c[1].exists())
+
+
+def preparar_sonido(plan: dict, datos: dict, musica: Path | None) -> dict | None:
+    """El bloque `sonido` de montaje.json y los archivos de `public/sonido/`: la música en loop con su
+    ganancia por ventanas (fundidos + ducking bajo la voz), la voz en su `voz_desde` y el kit sfx del
+    estilo en los cortes — cada uno como pista propia, para que el motor en vivo lo oiga y la línea de
+    tiempo las muestre por separado. None si el video no lleva sonido (musica:false, sfx:false, sin voz)."""
+    fps = float(datos["fps"])
+    total = datos["duracion"]
+    dur = total / fps
+    voz_rel = None
+    voz_abs: Path | None = None
+    voz_desde = float(plan.get("voz_desde", 0))
+    if plan.get("voz"):
+        voz = resolver(str(plan["voz"]))
+        if voz.exists():
+            voz_rel = a_public(voz, "voz", RAIZ)
+            voz_abs = RAIZ / "public" / voz_rel
+    sonido: dict = {}
+    if musica is not None:
+        # Con voz, el compresor lateral la hunde bajo la narración; sin ella, solo los fundidos.
+        sonido["musica"] = {
+            "src": a_public(musica, "musica", RAIZ),
+            "volumen": float(plan.get("musica_volumen", 0.35 if voz_abs else 0.85)),
+            "ganancia": ganancia_musica(voz_abs, voz_desde, dur),
+        }
+    if voz_abs and voz_rel:
+        desde_f = max(0, int(round(voz_desde * fps)))
+        n = min(total - desde_f, round(duracion_wav(voz_abs) * fps))
+        if n > 0:
+            sonido["voz"] = {"src": voz_rel, "desde": desde_f, "hasta": desde_f + n,
+                             "volumen": float(plan.get("voz_volumen", 1.0))}
+    cues = cues_sfx(datos) if plan.get("sfx") is not False else []
+    if cues:
+        sonido["sfx"] = []
+        for t, ruta, ganancia in cues:
+            rel = a_public(ruta, ruta.stem, RAIZ)
+            n = max(1, round(duracion_wav(RAIZ / "public" / rel) * fps))
+            desde = max(0, int(round(t * fps)))
+            sonido["sfx"].append({"src": rel, "desde": desde, "hasta": min(total, desde + n),
+                                  "volumen": ganancia})
+    return sonido or None
+
+
+def musica_de_fondo(plan: dict, dur: float) -> Path | None:
+    """La cama: la canción del usuario o, sin ella, una sintetizada del largo pedido
+    (musica.py de video-base, 92 BPM con batería marcada). `musica: false` en el plan es
+    «sin música» a propósito: no se sintetiza ni se busca en assets/music. None si no se pudo hacer."""
+    if plan.get("musica") is False:
+        return None
     musica = musica_del_usuario(plan)
+    if musica is not None:
+        return musica
+    trabajo = RAIZ / "work" / "musica.wav"
+    trabajo.parent.mkdir(parents=True, exist_ok=True)
+    r = subprocess.run(PY + [str(BASE / "musica.py"), f"{dur:.3f}", str(trabajo)], cwd=RAIZ,
+                       capture_output=True, text=True, encoding="utf-8", errors="replace")
+    if r.returncode or not trabajo.exists():
+        print("  ⚠ no se pudo sintetizar la música; el video sale sin cama", flush=True)
+        return None
+    return trabajo
+
+
+def batidos_de(musica: Path | None, dur: float) -> list[float]:
+    """Los golpes de la música en segundos (batidos.py), para que los cortes caigan en ellos.
+    Sin música o sin ritmo claro: lista vacía y el montaje queda como siempre."""
     if musica is None:
-        # Sin canción del usuario: una sintetizada del largo exacto del video (musica.py de video-base).
-        trabajo.parent.mkdir(parents=True, exist_ok=True)
-        r = subprocess.run(PY + [str(BASE / "musica.py"), f"{dur:.3f}", str(trabajo)], cwd=RAIZ,
-                           capture_output=True, text=True, encoding="utf-8", errors="replace")
-        if r.returncode or not trabajo.exists():
-            print("  ⚠ no se pudo sintetizar la música; el video sale sin cama", flush=True)
-            musica = None
-        else:
-            musica = trabajo
-    voz = resolver(str(plan["voz"])) if plan.get("voz") else None
-    voz = voz if voz and voz.exists() else None
-    d = f"{dur:.3f}"
-    if musica and voz:
-        ms = int(float(plan.get("voz_desde", 0)) * 1000)
-        correr(["ffmpeg", "-nostdin", "-v", "error", "-y", "-stream_loop", "-1", "-i", str(musica), "-i", str(voz),
-                "-filter_complex",
-                f"[0:a]volume=0.22,atrim=0:{d}[m];[1:a]adelay={ms}|{ms},apad,atrim=0:{d}[v];"
-                f"[m][v]amix=inputs=2:duration=first:dropout_transition=2[a]",
-                "-map", "[a]", "-t", d, "-ar", "48000", "-ac", "2", str(salida)], "la mezcla de música y voz")
-    elif musica:
-        correr(["ffmpeg", "-nostdin", "-v", "error", "-y", "-stream_loop", "-1", "-i", str(musica),
-                "-af", f"volume=0.85,afade=t=in:st=0:d=0.6,afade=t=out:st={max(0, dur - 1.6):.3f}:d=1.6,atrim=0:{d},asetpts=PTS-STARTPTS",
-                "-t", d, "-ar", "48000", "-ac", "2", str(salida)], "la música")
-    elif voz:
-        ms = int(float(plan.get("voz_desde", 0)) * 1000)
-        correr(["ffmpeg", "-nostdin", "-v", "error", "-y", "-i", str(voz),
-                "-af", f"adelay={ms}|{ms},apad,atrim=0:{d},asetpts=PTS-STARTPTS",
-                "-t", d, "-ar", "48000", "-ac", "2", str(salida)], "la voz")
-    else:
-        correr(["ffmpeg", "-nostdin", "-v", "error", "-y", "-f", "lavfi", "-t", d,
-                "-i", "anullsrc=r=48000:cl=stereo", str(salida)], "el audio en silencio")
+        return []
+    salida = RAIZ / "work" / "batidos.json"
+    salida.parent.mkdir(parents=True, exist_ok=True)
+    r = subprocess.run(PY + [str(SKILL / "scripts" / "batidos.py"), str(musica), f"{dur:.2f}", str(salida)],
+                       cwd=RAIZ, capture_output=True, text=True, encoding="utf-8", errors="replace")
+    if r.returncode or not salida.exists():
+        return []
+    try:
+        return [float(t) for t in json.loads(salida.read_text(encoding="utf-8")).get("batidos", [])]
+    except (json.JSONDecodeError, ValueError):
+        return []
 
 
-def montaje(plan: dict, preparado: dict) -> dict:
-    """src/montaje.json: las escenas del plan medidas en cuadros, en el formato del video."""
+# Lo que cada tipo de escena puede durar en cuadros (los mismos límites que valida leer_plan),
+# para que el ajuste al ritmo nunca estire ni achique una escena fuera de lo permitido.
+LIMITES = {"tarjeta": (30, 240), "foto": (24, 450), "collage": (45, 360)}
+
+
+def ajustar_al_batido(n: int, cursor: int, fps: int, tipo: str, n_max: int,
+                      batidos: list[float]) -> int:
+    """Si el final de la escena puede caer sobre un golpe a ≤0,30 s sin salirse de sus límites,
+    lo hace; si no, queda como estaba. El inicio ya venía del golpe anterior (o del 0)."""
+    if not batidos:
+        return n
+    fin = (cursor + n) / fps
+    golpe = min(batidos, key=lambda b: abs(b - fin))
+    if abs(golpe - fin) > 0.30:
+        return n
+    mn, mx = LIMITES.get(tipo, (24, n_max))
+    mx = min(mx, n_max)
+    nuevo = round(golpe * fps) - cursor
+    return nuevo if mn <= nuevo <= mx else n
+
+
+def montaje(plan: dict, preparado: dict, batidos: list[float] | None = None) -> dict:
+    """src/montaje.json: las escenas del plan medidas en cuadros, en el formato del video.
+    Con `batidos` (segundos de la música), cada corte se acerca al golpe más cercano."""
     ancho, alto = tamano(RAIZ)
     fps = 30
     # El acento del video (marcador de títulos, filetes y barra de avance): plan.json puede pedirlo, si no, menta.
@@ -347,50 +443,50 @@ def montaje(plan: dict, preparado: dict) -> dict:
     if not (isinstance(acento, str) and re.fullmatch(r"#[0-9a-fA-F]{6}", acento)):
         acento = "#8ef0c8"
     salida = {"ancho": ancho, "alto": alto, "fps": fps, "duracion": 0, "acento": acento, "escenas": []}
-    cursor = 0
+    batidos = batidos or []
+    partes: list[tuple[dict, int, str, int]] = []  # (escena sin tiempos, n cuadros, tipo, tope propio)
 
-    def segundos(t: dict) -> int:
-        nonlocal cursor
+    def tarjeta(t: dict) -> None:
         n = max(1, round(float(t.get("segundos", 2.2)) * fps))
         e = {"tipo": "tarjeta", "variante": t.get("variante", "intro"), "titulo": t["titulo"],
-             "subtitulo": t.get("subtitulo", ""), "desde": cursor, "hasta": cursor + n}
+             "subtitulo": t.get("subtitulo", "")}
         if t.get("kicker"):
             e["kicker"] = t["kicker"]
-        cursor += n
-        salida["escenas"].append(e)
+        partes.append((e, n, "tarjeta", 240))
 
     if plan.get("intro"):
         plan["intro"]["variante"] = "intro"
-        segundos(plan["intro"])
+        tarjeta(plan["intro"])
     movs = ["acercar", "alejar", "izquierda", "derecha", "arriba", "abajo"]
     for i, e in enumerate(preparado.get("escenas", [])):
+        mov = e.get("mov") or movs[i % len(movs)]
         if e.get("tipo") == "collage":
             n = max(1, round(float(e["segundos"]) * fps))
-            salida["escenas"].append({"tipo": "collage", "fotos": [{"src": f["src"], "pie": f.get("pie", "")} for f in e["fotos"]],
-                                     "titulo": e.get("titulo", ""), "subtitulo": e.get("subtitulo", ""),
-                                     "desde": cursor, "hasta": cursor + n})
-            cursor += n
+            partes.append(({"tipo": "collage", "fotos": [{"src": f["src"], "pie": f.get("pie", "")} for f in e["fotos"]],
+                            "titulo": e.get("titulo", ""), "subtitulo": e.get("subtitulo", "")}, n, "collage", 360))
         elif e.get("tipo") == "foto":
             n = max(1, round(float(e["segundos"]) * fps))
-            salida["escenas"].append({"tipo": "plano", "src": e["src"], "video": False,
-                                     "mov": e.get("mov") or movs[i % len(movs)],
-                                     "titulo": e.get("titulo", ""), "subtitulo": e.get("subtitulo", ""),
-                                     "desde": cursor, "hasta": cursor + n})
-            cursor += n
+            partes.append(({"tipo": "plano", "src": e["src"], "video": False, "mov": mov,
+                            "titulo": e.get("titulo", ""), "subtitulo": e.get("subtitulo", "")}, n, "foto", 450))
         elif e.get("tipo") == "video":
             # La duración real del tramo preparado manda (redondeos de fps), no la pedida.
             real = duracion_video(RAIZ / "public" / e["src"])
             n = max(1, round((real or (float(e["hasta"]) - float(e["desde"]))) * fps))
-            salida["escenas"].append({"tipo": "plano", "src": e["src"], "video": True,
-                                     "mov": e.get("mov") or movs[i % len(movs)],
-                                     "titulo": e.get("titulo", ""), "subtitulo": e.get("subtitulo", ""),
-                                     "desde": cursor, "hasta": cursor + n})
-            cursor += n
+            partes.append(({"tipo": "plano", "src": e["src"], "video": True, "mov": mov,
+                            "titulo": e.get("titulo", ""), "subtitulo": e.get("subtitulo", "")}, n, "video", n))
     if plan.get("cierre"):
         plan["cierre"]["variante"] = "cierre"
-        segundos(plan["cierre"])
+        tarjeta(plan["cierre"])
+
+    cursor = 0
+    for j, (e, n, tipo, tope) in enumerate(partes):
+        # El final del video no es un corte: la última escena conserva su duración.
+        if j < len(partes) - 1:
+            n = ajustar_al_batido(n, cursor, fps, tipo, tope, batidos)
+        e["desde"], e["hasta"] = cursor, cursor + n
+        cursor += n
+        salida["escenas"].append(e)
     salida["duracion"] = cursor
-    (RAIZ / "src" / "montaje.json").write_text(json.dumps(salida, ensure_ascii=False), encoding="utf-8")
     return salida
 
 
@@ -418,9 +514,18 @@ def main() -> None:
         return
     print(" Preparando…", flush=True)
     preparado = preparar(plan)
-    datos = montaje(plan, preparado)
+    # La cama se resuelve una vez: de ella salen los golpes para cortar a ritmo y el audio final.
+    # El largo estimado del plan basta para sintetizarla; el -stream_loop de la mezcla la repite si falta.
+    musica = musica_de_fondo(plan, total)
+    datos = montaje(plan, preparado, batidos_de(musica, total + 1))
+    # El sonido va dentro de la composición (pistas de música, voz y efectos): el motor en vivo lo oye
+    # y la línea de tiempo lo muestra. Se prepara antes de escribir montaje.json para que la primera
+    # versión en vivo ya salga con sonido.
+    sonido_datos = preparar_sonido(plan, datos, musica)
+    if sonido_datos:
+        datos["sonido"] = sonido_datos
+    (RAIZ / "src" / "montaje.json").write_text(json.dumps(datos, ensure_ascii=False), encoding="utf-8")
     dur = datos["duracion"] / datos["fps"]
-    sonido(plan, dur)
     print(f"  render ({datos['duracion']} cuadros)…", flush=True)
     correr(PY + [str(SKILL / "scripts" / "terminar.py"), ".", "--sin-portada"], "el render")
     # La portada de un render anterior no se pega a este video: sale de este video, y la etapa Portada queda

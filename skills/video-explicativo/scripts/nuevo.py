@@ -65,7 +65,8 @@ def main() -> None:
         del args[i:i + 2]
         if not marca:
             sys.exit(__doc__)
-    if len(args) != 1 or formato not in ("vertical", "horizontal"):
+    # Un nombre que empieza con «-» es una opción mal puesta («--help»), no una carpeta: sin esto creaba el proyecto «--help».
+    if len(args) != 1 or args[0].startswith("-") or formato not in ("vertical", "horizontal"):
         sys.exit(__doc__)
     # La carpeta viene absoluta en la línea `Carpeta:` de Hermit: el proyecto no depende de dónde esté parado el agente.
     pedido = Path(args[0])

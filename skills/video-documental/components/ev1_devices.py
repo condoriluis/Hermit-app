@@ -96,15 +96,19 @@ class Comp:
     def cue(self, t, sound, gain):
         self.cues.append((round(t, 3), sound, gain))
 
-    def write(self, path='src/edicion.json', tokens='public/assets/ev1/tokens.css', audio=None, title='Editor V1'):
+    def write(self, path='src/edicion.json', tokens='public/assets/ev1/tokens.css', audio=None, title='Editor V1',
+              sonido=None):
         """La edición para Remotion (`src/Edicion.tsx`). `audio`: el sonido entero (voz, cama y efectos), relativo a
-        public/; lleva su hora para que el monitor de Hermit vuelva a pedirlo cuando cambia."""
+        public/; lleva su hora para que el monitor de Hermit vuelva a pedirlo cuando cambia. `sonido`: las pistas
+        por separado para el monitor en vivo y la línea de tiempo (la base y cada efecto en su golpe)."""
         archivo = os.path.join('public', audio) if audio else None
         audio = f'{audio}?v={int(os.path.getmtime(archivo))}' if archivo and os.path.exists(archivo) else None
         doc = {'titulo': title, 'fps': FPS, 'ancho': W, 'alto': H, 'duracion': round(self.dur * FPS),
                'css': open(tokens, encoding='utf-8').read() + '\n' + '\n'.join(self.css),
                'clips': self.els, 'videos': self.vids, 'pre': '\n'.join(self.pre), 'js': '\n'.join(self.js),
                'escenas': sorted(self.escenas, key=lambda e: e['f0']), 'audio': audio}
+        if sonido:
+            doc['sonido'] = sonido
         # Temporal y reemplazo: el motor en vivo relee el archivo en cuanto cambia y no debe verlo a medias.
         with open(path + '.tmp', 'w', encoding='utf-8', newline='\n') as f:
             json.dump(doc, f, ensure_ascii=False)

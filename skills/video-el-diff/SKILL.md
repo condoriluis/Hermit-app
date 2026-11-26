@@ -179,7 +179,8 @@ Qué enseñar por cada cosa que se menciona y las recetas de lo raro (un post de
 2. **Los datos.** Lee los dos o tres textos que sostienen el ángulo (no todos) y escribe `fuentes/datos.json`,
    `[{"dato": …, "claves": …}]`: cada dato que dirá el guion, con sus cifras en dígitos y, en `claves`, las palabras
    con que lo dice la fuente en su idioma. `python <skill>/scripts/citas.py` busca la cita literal de cada uno en todo
-   lo leído (un segundo) y la deja en `fuentes/fichas/citas.json`, con su página. Si una cita no dice el dato, cámbiala
+   lo leído (un segundo) y la deja en `fuentes/fichas/citas.json`, con su página (y `citas.md`, el mismo contenido en
+   lectura para el estudio). Si una cita no dice el dato, cámbiala
    por otra de su lista o corrige el dato: gana la fuente. Una ronda más de búsqueda solo para lo que salió SIN CITA.
 3. **El guion lo escribe el subagente `guionista`** (Opus: Agent con `subagent_type: "guionista"`, sin `model` ni
    `effort`), si tu lista de agentes lo trae; si no, lo escribes tú con [`ESTILO.md`](ESTILO.md). Pásale en unas doce
@@ -211,6 +212,11 @@ Qué enseñar por cada cosa que se menciona y las recetas de lo raro (un post de
    pide un cambio: `hacer.py --otra-vez`.
 
 Si algo que el episodio necesita de verdad no cabe en `momentos.json`, díselo al usuario: falta en el director.
+
+El episodio entregado queda limpio: los scripts de un solo uso van a `$TEMP` o se borran al usarlos — nada de `.py`,
+`.ps1`, `.log` ni temporales sueltos en la raíz. `hacer.py` ya recoge lo que sus pasos generan al terminar (`*.huella`
+de deduplicación, `voz.log`, el `portada.jpg` crudo cuando ya está `portada.png`); `voz16k.wav`, las copias de
+`fuentes/paginas/` y el `master-*.m4a` de `out/` se quedan a propósito. Lo que quede fuera de eso es tuyo y se limpia.
 
 ## Formato, lotes y shorts
 

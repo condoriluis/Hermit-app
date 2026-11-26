@@ -2,9 +2,12 @@
  * El montaje de «Video con tu material». No se edita a mano: `hacer.py` escribe `montaje.json` con las escenas ya
  * medidas en cuadros (cada foto o video del usuario, sus títulos y el orden). Aquí cada escena se dibuja en su tramo,
  * con fundido con la vecina, paneo lento en las fotos, tarjetas de apertura y cierre, y títulos que entran palabra a
- * palabra en Archivo Black. El video no lleva audio: la música y la voz las mezcla `hacer.py` aparte (sonido.wav).
+ * palabra en Archivo Black. El sonido va dentro de la composición como pistas propias — la música en
+ * loop con sus fundidos y el ducking bajo la voz (ventana a ventana, la calcula `hacer.py`), la voz en
+ * su `voz_desde` y los efectos del kit en los cortes — así el motor en vivo lo oye y la línea de tiempo
+ * las muestra por separado. `terminar.py` solo masteriza el audio del render.
  */
-import { AbsoluteFill, Img, OffthreadVideo, Sequence, Easing, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig, continueRender, delayRender } from "remotion";
+import { AbsoluteFill, Audio, Img, OffthreadVideo, Sequence, Easing, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig, continueRender, delayRender } from "remotion";
 import { useEffect, useState, type CSSProperties, type FC, type ReactNode } from "react";
 import datos from "./montaje.json";
 
@@ -15,8 +18,22 @@ type Escena =
   | { tipo: "tarjeta"; variante: "intro" | "cierre"; titulo: string; subtitulo?: string; kicker?: string; desde: number; hasta: number };
 
 const D = datos as { ancho: number; alto: number; fps: number; duracion: number; acento: string; escenas: Escena[] };
+type Sonido = {
+  musica?: { src: string; volumen: number; ganancia: number[] };
+  voz?: { src: string; desde: number; hasta: number; volumen: number };
+  sfx?: { src: string; desde: number; hasta: number; volumen: number }[];
+};
+const S = (datos as { sonido?: Sonido }).sonido;
 const { W, H, FPS } = { W: D.ancho, H: D.alto, FPS: D.fps };
 const VERTICAL = H > W;
+/** La ganancia de la música en el cuadro `f`: `hacer.py` la mide por ventanas de 50 ms (fundidos y
+ *  ducking bajo la voz). Con `loopVolumeCurveBehavior="extend"` el frame que recibe el callback es el
+ *  del video, no el de la vuelta de la canción. */
+const gananciaMusica = (f: number) => {
+  const g = S?.musica?.ganancia;
+  if (!g?.length) return 1;
+  return g[Math.min(g.length - 1, Math.max(0, Math.floor((f / FPS) * 20)))];
+};
 /** El fundido entre escenas, en cuadros (~0,33 s): la que sale se apaga en su último tramo y la que entra se
  *  enciende en el primero, con las dos a la vez. */
 const F = 10;
@@ -206,6 +223,24 @@ export const Montaje: FC = () => {
           </Sequence>
         );
       })}
+      {/* El sonido: cada fuente en su pista. Las secuencias van con showInTimeline=false para que no
+          se lean como escenas en la línea de tiempo; los audios sí salen en sus carriles. */}
+      {S?.musica && (
+        <Sequence from={0} durationInFrames={D.duracion} name="Música" showInTimeline={false}>
+          <Audio src={staticFile(S.musica.src)} name="Música" loop loopVolumeCurveBehavior="extend"
+            volume={(f) => S.musica!.volumen * gananciaMusica(f)} />
+        </Sequence>
+      )}
+      {S?.voz && (
+        <Sequence from={S.voz.desde} durationInFrames={Math.max(1, S.voz.hasta - S.voz.desde)} name="Voz" showInTimeline={false}>
+          <Audio src={staticFile(S.voz.src)} name="Voz" volume={S.voz.volumen} />
+        </Sequence>
+      )}
+      {S?.sfx?.map((s, i) => (
+        <Sequence key={`sfx-${i}`} from={s.desde} durationInFrames={Math.max(1, s.hasta - s.desde)} showInTimeline={false}>
+          <Audio src={staticFile(s.src)} volume={s.volumen} />
+        </Sequence>
+      ))}
       {/* La barra de avance, fina, arriba: se lee el ritmo sin tapar nada. */}
       <AbsoluteFill style={{ top: 0, height: 4, background: "rgba(255,255,255,.14)" }}>
         <div style={{ height: "100%", width: `${(f / durationInFrames) * 100}%`, background: D.acento }} />

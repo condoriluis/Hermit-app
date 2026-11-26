@@ -1,0 +1,73 @@
+/* ==========================================================================
+   POLITICA — tokens y piezas del formato «Política sin filtro»
+   La paleta del análisis incisivo: el amarillo fluorescente de las cifras y el
+   dinero, el rojo alarma de las palabras de conflicto, el blanco puro con
+   contorno negro profundo y el negro del titular de apertura. Las fuentes
+   viven en fonts/ junto a este archivo; nuevo.py las copia a
+   public/assets/politica/ y Politica.tsx reescribe las url() al servirlas.
+   Las medidas de texto las calcula director.py en píxeles del cuadro
+   (1080×1920 o 1920×1080), igual que hacía hacer.py con su ASS.
+   ========================================================================== */
+
+@font-face { font-family: "Pol Archivo"; src: url("fonts/ArchivoBlack-Regular.ttf") format("truetype"); font-weight: 400; font-display: block; }
+
+:root {
+  /* ---- colour --------------------------------------------------------- */
+  --pol-amarillo: #ffff00;   /* cifras, dinero, fechas: el golpe de datos */
+  --pol-rojo:     #ff3333;   /* palabras de alarma: escándalo, crisis, fraude… */
+  --pol-blanco:   #ffffff;   /* la base de los subtítulos */
+  --pol-negro:    #000000;   /* contorno profundo y tarjetas */
+
+  /* ---- tipografía ------------------------------------------------------ */
+  --pol-fuente: "Pol Archivo", "Arial Black", sans-serif;  /* Archivo Black: la del mitin y del titular */
+}
+
+/* ---- el cuadro --------------------------------------------------------- */
+.pol-frame { position: relative; width: 100%; height: 100%; overflow: hidden; background: var(--pol-negro); }
+.pol-layer { position: absolute; inset: 0; }
+.pol-fill  { position: absolute; inset: 0; overflow: hidden; }
+.pol-fill img { position: absolute; left: -1%; top: -1%; width: 102%; height: 102%; object-fit: cover; }
+
+/* ---- la imagen de la escena ------------------------------------------------
+   Cada `imagen` de montaje.json llena el cuadro con su paneo Ken Burns: el
+   zoom entra o sale según la escena (lo que el zoompan hacía a z 1.0↔1.15), y
+   el fundido de entrada y salida de 0,18 s es la transición editorial del
+   estilo — la imagen se revela y se apaga, nunca un corte seco. La imagen se
+   muestra limpia y a pantalla completa: el estilo no estampa nada sobre ella. */
+.pol-img { position: absolute; inset: 0; }
+.pol-img img { width: 100%; height: 100%; object-fit: cover; transform-origin: 50% 50%; }
+
+/* ---- el titular de alerta ---------------------------------------------------
+   El `titular` de cada escena es el banner superior del formato: Archivo Black
+   en mayúsculas, blanco con contorno negro profundo, centrado arriba (el
+   alignment 8 del ASS viejo). Se enciende y se apaga con su escena. */
+.pol-titular {
+  position: absolute; left: 0; right: 0; top: 0;
+  text-align: center;
+  font-family: var(--pol-fuente); color: var(--pol-blanco);
+  -webkit-text-stroke: var(--pol-titular-contorno, 4px) #000;
+  paint-order: stroke fill;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-shadow: 0 var(--pol-titular-sombra, 3px) rgba(0, 0, 0, 0.9);
+}
+
+/* ---- los subtítulos de impacto ------------------------------------------------
+   Bloques de 3 palabras (los del ASS viejo): aparecen juntos y las palabras
+   van coloreadas por su contenido — la cifra en amarillo, la alarma en rojo,
+   el resto en blanco con contorno negro. Posición y medida las pone el
+   director en línea: abajo al 25 % de la altura en vertical (10 % en
+   horizontal), cuerpo = 6,6 % del ancho en vertical y 7,8 % del alto en
+   horizontal. */
+.pol-subs {
+  position: absolute; left: 0; right: 0; text-align: center;
+  font-family: var(--pol-fuente); color: var(--pol-blanco);
+  -webkit-text-stroke: var(--pol-contorno, 7px) #000;
+  paint-order: stroke fill;
+  letter-spacing: 0;
+  white-space: nowrap;
+  text-shadow: 0 var(--pol-sombra, 4px) rgba(0, 0, 0, 0.9);
+}
+.pol-subs .num { color: var(--pol-amarillo); }
+.pol-subs .ala { color: var(--pol-rojo); }

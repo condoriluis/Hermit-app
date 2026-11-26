@@ -63,16 +63,23 @@ def unir_tramos(segmentos: list[Path], salida: Path) -> Path:
 
 
 def render_tarjeta(salida: Path, dur: float, items_texto: list, fuente: str,
-                   ancho: int, alto: int, fps: int) -> None:
+                   ancho: int, alto: int, fps: int, animar: bool = False) -> None:
     """
     Una escena de solo texto: fondo negro liso con los `items_texto` (los mismos `(archivo, tamaño, color, y)`
     que dibuja el estilo sobre su material) centrados por el propio `x=(w-text_w)/2`. Mismo codec que los tramos
-    para que el concat `-c copy` sirva.
+    para que el concat `-c copy` sirva. Con `animar` cada texto entra con un fundido y una subida en los
+    primeros 0,4 s del tramo (la entrada cinética de la publicidad).
     """
-    vf = ",".join(
-        f"drawtext=fontfile='{fuente}':textfile='{ruta_txt}':expansion=none:fontsize={tam_px}:fontcolor={color}:"
-        f"borderw={max(2, round(tam_px * 0.05))}:bordercolor=black:x=(w-text_w)/2:y={y}"
-        for ruta_txt, tam_px, color, y in items_texto)
+    def dt(ruta_txt: str, tam_px: int, color: str, y: int) -> str:
+        f = (f"drawtext=fontfile='{fuente}':textfile='{ruta_txt}':expansion=none:fontsize={tam_px}:"
+             f"fontcolor={color}:borderw={max(2, round(tam_px * 0.05))}:bordercolor=black:"
+             f"x=(w-text_w)/2:")
+        if animar:
+            sube = round(tam_px * 0.9)
+            return (f"{f}y='{y}+{sube}*(1-min(t/0.4\\,1))':alpha='if(lt(t\\,0.4)\\,t/0.4\\,1)'")
+        return f"{f}y={y}"
+
+    vf = ",".join(dt(ruta_txt, tam_px, color, y) for ruta_txt, tam_px, color, y in items_texto)
     _ffmpeg("-f", "lavfi", "-i", f"color=c=black:s={ancho}x{alto}:r={fps}:d={dur:.3f}",
             "-vf", f"{vf},setsar=1,format=yuv420p" if vf else "setsar=1,format=yuv420p",
             "-an", "-c:v", "libx264", "-preset", "fast", "-crf", "18",

@@ -41,3 +41,6 @@ dist
 .env
 .env.*
 !.env.example
+
+# Salida de buscar.py corrida desde la raíz del repo por error (pertenece a la carpeta de un proyecto).
+/revision/

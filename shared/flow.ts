@@ -236,6 +236,18 @@ export function motivoDeDescanso(tipo: 'imagen' | 'video', sesion: boolean, sald
 }
 
 /**
+ * Lo que se le añade al «ninguna cuenta puede» cuando todas las que descansan lo hacen por la página (`navegador`): el
+ * problema no son las cuentas ni sus créditos, sino que Flow cambió su interfaz o está fallando — así se lee como un
+ * arreglo de Hermit pendiente y no como un castigo de Google. Con una sola cuenta en descanso no se afirma: puede ser
+ * su navegador.
+ */
+export function notaPagina(descansos: Pick<Descanso, 'motivo'>[]): string {
+  return descansos.length > 1 && descansos.every((d) => d.motivo === 'navegador')
+    ? ' Todas fallaron en la página de Flow, no en sus cuentas: lo más probable es que Flow haya cambiado su interfaz o esté fallando. No gastó nada y se reintenta solo; si sigue así, hay que ajustar Hermit a la página nueva.'
+    : ''
+}
+
+/**
  * Si Flow rechazó un pedido por lo que se le pidió (derechos, política de contenido) y no por una frenada de Google: no
  * gastó créditos. Eso no es cosa de la cuenta —cae igual en todas— así que no se pasa a otra: se cambia el pedido y, si
  * vuelve a caer, se intenta una versión libre de derechos, y solo a la tercera la escena queda fuera (ver

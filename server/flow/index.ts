@@ -5,7 +5,7 @@ import { dirname, isAbsolute, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { McpStdioServerConfig } from '@anthropic-ai/claude-agent-sdk'
 import type { Browser } from 'playwright-core'
-import { A_LA_VEZ, AVISO_FRENADA, CALMA, type Descanso, descansoNuevo, elegirCuenta, esFalloDeNavegador, esFalloTecnico, esOmni, esPasaTope, esRechazoDeContenido, espacioEntrePedidos, FORMATOS_IMAGEN, FORMATOS_VIDEO, type Motivo, MODELOS_IMAGEN, MODELOS_VIDEO, motivoDeDescanso, OPCIONES_CLIPS, PAUSA_CUENTA, PERMISO_CREDITOS, PERMISO_MS, puede, RECHAZOS_PARA_BLOQUEAR, RECUERDA_RECHAZO, RESOLUCIONES_OMNI, type Saldo, saldoVigente as vigente, tipoDeArchivo, TOPE_CREDITOS, VIDEO_MAS_BARATO } from '../../shared/flow.ts'
+import { A_LA_VEZ, AVISO_FRENADA, CALMA, type Descanso, descansoNuevo, elegirCuenta, esFalloDeNavegador, esFalloTecnico, esOmni, esPasaTope, esRechazoDeContenido, espacioEntrePedidos, FORMATOS_IMAGEN, FORMATOS_VIDEO, type Motivo, MODELOS_IMAGEN, MODELOS_VIDEO, motivoDeDescanso, notaPagina, OPCIONES_CLIPS, PAUSA_CUENTA, PERMISO_CREDITOS, PERMISO_MS, puede, RECHAZOS_PARA_BLOQUEAR, RECUERDA_RECHAZO, RESOLUCIONES_OMNI, type Saldo, saldoVigente as vigente, tipoDeArchivo, TOPE_CREDITOS, VIDEO_MAS_BARATO } from '../../shared/flow.ts'
 import type { EstadoFlow, GastoFlow, SaldoFlow, TrabajoFlow } from '../../shared/types.ts'
 import { VENTA } from '../../shared/venta.ts'
 import { guardar } from '../disco.ts'
@@ -244,9 +244,11 @@ export function flow(app: string, google: Google) {
   /** Por qué ninguna cuenta puede con `t` ahora, dicho para el agente. */
   function porQueNinguna(t: Trabajo): string {
     const ahora = Date.now()
-    const cuales = descansando(t, ahora).map((c) => `${c.correo} (${POR_QUE[c.descansa!.motivo]})`).join(', ')
+    const reposo = descansando(t, ahora)
+    const cuales = reposo.map((c) => `${c.correo} (${POR_QUE[c.descansa!.motivo]})`).join(', ')
     const antes = t.ultimo ? `${t.ultimo} ` : ''
-    return `${antes}Ninguna cuenta de Google puede generarlo ahora${cuales ? `: ${cuales}` : ''}. No se gastó nada.`
+    const nota = notaPagina(reposo.map((c) => c.descansa!))
+    return `${antes}Ninguna cuenta de Google puede generarlo ahora${cuales ? `: ${cuales}` : ''}.${nota} No se gastó nada.`
   }
 
   async function generar(t: Trabajo, c: CuentaFlow) {

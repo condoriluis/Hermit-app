@@ -279,6 +279,10 @@ const fotos = (page: Page) => page.locator('.base-prompt-box .prompt-top-row img
  * Sube una imagen en el panel que abre `hueco` (el + de las referencias o un hueco de fotograma) y la elige. Va con un
  * nombre propio, para reconocerla en la lista, y al subir Flow puede pedir aceptar «Derechos para usar esta imagen»: eso
  * lo declaró el usuario en Hermit (`server/flow/index.ts`), y por eso aquí se acepta. `false` si no subió.
+ *
+ * Flow ya no tiene panel de subida propio: el + abre los recursos del proyecto, la imagen sube ahí (su opción sale con
+ * un `mat-spinner` mientras procesa) y hay que elegirla en la lista para que entre al compositor. Elegirla antes de que
+ * termine no hace nada.
  */
 async function subir(page: Page, hueco: Locator, ruta: string): Promise<boolean> {
   await hueco.click({ timeout: 10_000 })
@@ -288,11 +292,13 @@ async function subir(page: Page, hueco: Locator, ruta: string): Promise<boolean>
   const nombre = `hermit-${randomBytes(4).toString('hex')}${ext}`
   await selector.setFiles({ name: nombre, mimeType: ext === '.png' ? 'image/png' : ext === '.webp' ? 'image/webp' : 'image/jpeg', buffer: readFileSync(ruta) })
   await page.locator('mat-dialog-container button').last().click({ timeout: 3000 }).catch(() => {})
-  // Elegirla mientras sube la deja marcada sin entrar al compositor: se espera a que su miniatura venga ya de Flow.
   const item = panel.locator('button[role=option]').filter({ hasText: nombre }).first()
-  const subida = await item.locator('img[src^="https://"]').waitFor({ timeout: 60_000 }).then(() => true, () => false)
-  if (subida) await item.click({ timeout: 10_000 })
-  return subida
+  const enLaLista = await item.waitFor({ timeout: 60_000 }).then(() => true, () => false)
+  if (!enLaLista) return false
+  const lista = await item.locator('mat-spinner').waitFor({ state: 'detached', timeout: 60_000 }).then(() => true, () => false)
+  if (!lista) return false
+  await item.click({ timeout: 10_000 })
+  return true
 }
 
 /** Pone las referencias en el compositor («Ingredientes»), tras quitar las que hubiera. */

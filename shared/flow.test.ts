@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { A_LA_VEZ, creditosDe, descansoNuevo, elegirCuenta, esFalloDeNavegador, esRechazoDeContenido, espacioEntrePedidos, gastoDeRechazo, IMAGEN_CHATGPT, imagenPosible, lineaClips, lineaImagenes, motivoDeDescanso, RECHAZOS_PARA_BLOQUEAR, RECUERDA_RECHAZO, saldoDe, saldoVigente, tipoDeArchivo, type UsoCuenta } from './flow.ts'
+import { A_LA_VEZ, creditosDe, descansoNuevo, elegirCuenta, esFalloDeNavegador, esRechazoDeContenido, espacioEntrePedidos, gastoDeRechazo, IMAGEN_CHATGPT, imagenPosible, lineaClips, lineaImagenes, motivoDeDescanso, notaPagina, RECHAZOS_PARA_BLOQUEAR, RECUERDA_RECHAZO, saldoDe, saldoVigente, tipoDeArchivo, type UsoCuenta } from './flow.ts'
 
 test('cada pedido va a la cuenta libre que lleva más sin generar', () => {
   const cuentas: UsoCuenta[] = [
@@ -224,4 +224,18 @@ test('AVISO_FRENADA detecta actividad inusual, uso inusual y rate limits de Goog
   assert.ok(AVISO_FRENADA.test('Requesting generations too quickly'))
   assert.ok(AVISO_FRENADA.test('Rate limit exceeded'))
   assert.ok(!AVISO_FRENADA.test('El video se generó correctamente'))
+})
+
+test('la nota de página solo sale cuando todas las cuentas descansan por el navegador', () => {
+  const nav = { motivo: 'navegador' as const }
+  const frenada = { motivo: 'frenada' as const }
+  const creditos = { motivo: 'creditos' as const }
+  // Varias cuentas y todas por la página: se dice que el problema es Flow, no las cuentas.
+  assert.match(notaPagina([nav, nav, nav]), /Flow haya cambiado su interfaz/)
+  // Una sola cuenta: puede ser su navegador, no se afirma.
+  assert.equal(notaPagina([nav]), '')
+  // Si alguna descansó por otra causa (frenada, créditos), la lista ya lo explica.
+  assert.equal(notaPagina([nav, frenada]), '')
+  assert.equal(notaPagina([nav, creditos]), '')
+  assert.equal(notaPagina([]), '')
 })

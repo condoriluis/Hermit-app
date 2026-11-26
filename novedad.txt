@@ -1,1 +1,1 @@
-Hermit 0.6.5: cada estilo de video estrena plantilla propia y el sonido llega por pistas
+Hermit 0.6.6: Flow vuelve a subir referencias y fotogramas, el monitor ya no se traba con mucho sonido

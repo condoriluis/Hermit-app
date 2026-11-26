@@ -5,5 +5,6 @@
   { "nombre": "Medidores", "para": "Una cantidad que sube y baja." },
   { "nombre": "Flujos", "para": "Algo que pasa de un lado a otro." },
   { "nombre": "Escenarios", "para": "Dónde pasa la historia; se queda de fondo." },
-  { "nombre": "Señales", "para": "Para agrupar, marcar o señalar." }
+  { "nombre": "Señales", "para": "Para agrupar, marcar o señalar." },
+  { "nombre": "naturaleza", "para": "Seres y cosas vivas de la naturaleza: plantas, animales, el clima." }
 ]

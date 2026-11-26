@@ -15,6 +15,12 @@ import { flushSync } from 'react-dom'
 import { createRoot } from 'react-dom/client'
 import 'hermit:raiz'
 
+// Las pistas del sonido del proyecto son un `<Audio>` cada una (voz, música y cada efecto en su golpe): un anuncio o un
+// top junta varios a la vez y el tope de 5 etiquetas del Player mataba el monitor («Tried to simultaneously mount 6
+// <Html5Audio /> tags»). El video final no pasa por aquí —su mezcla la hace ffmpeg—: esto es solo para que el monitor
+// en vivo oiga y muestre todas las pistas. 50 cubre cualquier edición real; cada etiqueta es un <audio> quieto.
+const MAX_AUDIOS = 50
+
 const avisar = (m) => parent.postMessage(m, '*')
 // Los errores sueltos ya los avisa la página (server/motor.ts), desde antes de que cargue el proyecto; aquí, los de React.
 const fallo = (e) => avisar({ vivo: 'error', mensaje: String(e?.message ?? e ?? 'Error').slice(0, 400) })
@@ -402,6 +408,7 @@ function Sonda({ c, listo }) {
       compositionHeight={c.alto}
       style={{ width: '100%', height: '100%' }}
       initiallyMuted
+      numberOfSharedAudioTags={MAX_AUDIOS}
       clickToPlay={false}
       spaceKeyToPlayOrPause={false}
       acknowledgeRemotionLicense
@@ -495,6 +502,7 @@ function Motor({ c }) {
       spaceKeyToPlayOrPause={false}
       doubleClickToFullscreen={false}
       moveToBeginningWhenEnded={false}
+      numberOfSharedAudioTags={MAX_AUDIOS}
       acknowledgeRemotionLicense
       errorFallback={({ error }) => <Fallo error={error} />}
     />

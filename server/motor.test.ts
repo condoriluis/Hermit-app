@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { EventEmitter } from 'node:events'
-import { mkdirSync, mkdtempSync, rmSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import type { ServerResponse } from 'node:http'
 import { registerHooks } from 'node:module'
 import { tmpdir } from 'node:os'
@@ -191,6 +191,19 @@ test('el motor visible conserva su compilador; el que se dejó libera recursos y
   motorDe(dir, () => {})
   await avanzar()
   assert.ok(motorDe(dir, () => {})!.v > antes.v)
+})
+
+test('todo Player de la página admite las pistas de audio que junta un video', () => {
+  // Las pistas del sonido son un `<Audio>` cada una y un golpe puede juntar voz, música y varios efectos: con el tope
+  // de 5 del Player el monitor moría («Tried to simultaneously mount 6 <Html5Audio /> tags»).
+  const pagina = readFileSync(new URL('./motor-pagina.jsx', import.meta.url), 'utf8')
+  const players = pagina.match(/<Player\b/g) ?? []
+  assert.ok(players.length >= 2, 'el motor y el sondeo llevan cada uno su Player')
+  assert.equal(
+    (pagina.match(/numberOfSharedAudioTags=\{MAX_AUDIOS\}/g) ?? []).length,
+    players.length,
+    'cada Player sube el tope de etiquetas de audio'
+  )
 })
 
 test('cerrar un motor mientras compila no lo vuelve a publicar al terminar', async (t) => {

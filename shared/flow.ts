@@ -224,14 +224,15 @@ export const esFalloDeNavegador = (mensaje: string) => FALLO_NAVEGADOR.test(mens
  * recarga del día):
  * - `sesion` si la página acabó en la de entrar con Google, que se ve en su dirección;
  * - `creditos` si su saldo ya se leyó y no le llega para el video más barato;
- * - y `frenada` en todo lo demás, que descansa 30 min: volver a probar cuesta unos 45 s y no gasta nada, y al reintentar
- *   se vuelve a leer su saldo, así que si de verdad no le queda entra sola por `creditos`.
+ * - y `navegador` en todo lo demás: un fallo antes de enviar el pedido (la página no cargó, una referencia no se subió,
+ *   el proyecto no abrió) no es evidencia de que Google frene la cuenta —eso solo lo ponen el aviso de Flow o el pedido
+ *   que llegó y no arrancó, `NoArranco`, y lo decide quien llama—, así que se reintenta en unos minutos sin calma global.
  * Un `piso` es una estimación («al menos esto»), no una lectura: no alcanza para decir que no le quedan.
  */
 export function motivoDeDescanso(tipo: 'imagen' | 'video', sesion: boolean, saldo: { creditos: number; piso: boolean } | null): Motivo {
   if (sesion) return 'sesion'
   if (tipo === 'video' && saldo && !saldo.piso && saldo.creditos < VIDEO_MAS_BARATO) return 'creditos'
-  return 'frenada'
+  return 'navegador'
 }
 
 /**

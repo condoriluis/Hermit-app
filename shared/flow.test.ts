@@ -43,19 +43,19 @@ test('sin créditos una cuenta descansa de videos pero sigue con imágenes, y vu
   assert.equal(elegirCuenta(frenada, 'imagen', 1000), 'ninguna')
 })
 
-test('el motivo del descanso sale del saldo medido y de la sesión, nunca de las palabras del aviso', () => {
-  // Sin sesión y sin saldo leído: se reintenta a los 30 min, no se espera la recarga del día.
-  assert.equal(motivoDeDescanso('video', false, null), 'frenada')
-  assert.equal(motivoDeDescanso('imagen', false, null), 'frenada')
+test('el motivo del descanso sale del saldo medido y de la sesión; lo demás es un fallo de la página', () => {
+  // Sin sesión y sin saldo leído: la página falló antes de enviar el pedido — minutos, no una frenada de Google.
+  assert.equal(motivoDeDescanso('video', false, null), 'navegador')
+  assert.equal(motivoDeDescanso('imagen', false, null), 'navegador')
   // Con el saldo ya leído, si no le llega para el video más barato sí descansa por créditos (las imágenes siguen).
   assert.equal(motivoDeDescanso('video', false, { creditos: 0, piso: false }), 'creditos')
   assert.equal(motivoDeDescanso('video', false, { creditos: 5, piso: false }), 'creditos')
-  assert.equal(motivoDeDescanso('video', false, { creditos: 6, piso: false }), 'frenada')
-  assert.equal(motivoDeDescanso('video', false, { creditos: 40, piso: false }), 'frenada')
+  assert.equal(motivoDeDescanso('video', false, { creditos: 6, piso: false }), 'navegador')
+  assert.equal(motivoDeDescanso('video', false, { creditos: 40, piso: false }), 'navegador')
   // Un `piso` es una estimación («al menos esto»), no una lectura: no manda a esperar la recarga.
-  assert.equal(motivoDeDescanso('video', false, { creditos: 0, piso: true }), 'frenada')
+  assert.equal(motivoDeDescanso('video', false, { creditos: 0, piso: true }), 'navegador')
   // Las imágenes no gastan: con el saldo bajo tampoco es motivo de créditos.
-  assert.equal(motivoDeDescanso('imagen', false, { creditos: 0, piso: false }), 'frenada')
+  assert.equal(motivoDeDescanso('imagen', false, { creditos: 0, piso: false }), 'navegador')
   // Si Flow acabó en la de entrar, se perdió la sesión: ese es el motivo, por encima de cualquier otro.
   assert.equal(motivoDeDescanso('video', true, { creditos: 0, piso: false }), 'sesion')
   assert.equal(motivoDeDescanso('imagen', true, null), 'sesion')

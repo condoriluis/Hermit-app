@@ -36,6 +36,12 @@ export class SinEmpezar extends Error {
 export class FalloNavegador extends SinEmpezar {}
 
 /**
+ * Flow recibió el pedido y no arrancó (ni tarjeta ni aviso en `APARECE` segundos): el único «no empezó» que sí puede ser
+ * un freno de Google. Todo lo que falla antes de enviarlo es del navegador o de la página, no de la cuenta.
+ */
+export class NoArranco extends SinEmpezar {}
+
+/**
  * Flow empezó el pedido y lo rechazó en su tarjeta (por ejemplo, «Notamos actividad inusual»). `aviso` es lo que dice la
  * tarjeta; `gasto`, lo que bajó el saldo de la cuenta (0 si nada), o `null` si no se supo; `saldo`, el de después.
  */
@@ -325,7 +331,7 @@ async function esperar(page: Page, tarjeta: Locator, tipo: PedidoFlow['tipo'], a
       throw new Rechazado(`Flow rechazó el pedido${aviso}`, aviso, 0)
     }
     if (Date.now() > salio) {
-      throw new SinEmpezar(`Flow no empezó a generar${aviso}.`)
+      throw new NoArranco(`Flow no empezó a generar${aviso}.`)
     }
     await page.waitForTimeout(1000)
   }

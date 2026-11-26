@@ -11,7 +11,7 @@ import { VENTA } from '../../shared/venta.ts'
 import { guardar } from '../disco.ts'
 import { cuerpo, json } from '../http.ts'
 import { type CuentaFlow, cuentasFlow, nombreNavegador } from './cuentas.ts'
-import { FalloNavegador, generarEnFlow, leerSaldo, paginaFlow, ponerAportar, Rechazado, saldoEnFlow, SinEmpezar, URL_FLOW } from './pagina.ts'
+import { FalloNavegador, generarEnFlow, leerSaldo, NoArranco, paginaFlow, ponerAportar, Rechazado, saldoEnFlow, SinEmpezar, URL_FLOW } from './pagina.ts'
 
 /**
  * Las imágenes (Nano Banana) y los videos (Veo) de Google Flow, en las cuentas de Google del usuario, como los generaría
@@ -326,7 +326,9 @@ export function flow(app: string, google: Google) {
       } else if (e instanceof SinEmpezar && !esPasaTope(mensaje(e))) {
         // No gastó: la cuenta descansa y el pedido vuelve al frente de la fila, para otra. Si el pedido pasa de su
         // tope de créditos no es de la cuenta: todas fallarían igual, así que no se descansa ninguna.
-        const motivo = frenada ? 'frenada' : motivoDeDescanso(t.tipo, !!e.sesion, saldoVigente(c.correo, Date.now()))
+        // `frenada` solo con evidencia: el aviso de Flow o el pedido que llegó y no arrancó (`NoArranco`). Lo demás que
+        // no empezó (la página, la subida de una referencia, el proyecto) es un fallo del navegador, no de la cuenta.
+        const motivo = frenada || e instanceof NoArranco ? 'frenada' : motivoDeDescanso(t.tipo, !!e.sesion, saldoVigente(c.correo, Date.now()))
         descansar(c.correo, motivo, mensaje(e))
       }
       // Si no empezó, si falló el navegador antes de generar, o si fue frenada sin gasto confirmado de créditos: se

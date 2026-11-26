@@ -21,7 +21,13 @@ const puente: PuenteHermit = {
       const oir = (_e: IpcRendererEvent, max: boolean) => cb(max)
       ipcRenderer.on('ventana:estado', oir)
       return () => void ipcRenderer.off('ventana:estado', oir)
-    }
+    },
+    oirCierre: (cb) => {
+      const oir = () => cb()
+      ipcRenderer.on('ventana:preguntar', oir)
+      return () => void ipcRenderer.off('ventana:preguntar', oir)
+    },
+    responderCierre: (si, sinAviso) => ipcRenderer.send('ventana:responder', si, sinAviso)
   },
   // El navegador integrado (navegador.ts).
   navegador: {

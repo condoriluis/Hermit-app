@@ -1424,6 +1424,10 @@ export interface PuenteVentana {
   estado(): Promise<boolean>
   /** Avisa cuando cambia (maximizar, restaurar, doble clic en el borde…). Devuelve la función para dejar de oír. */
   oirEstado(cb: (maximizada: boolean) => void): () => void
+  /** El proceso principal pregunta si se cierra (la X del header o la del sistema): la interfaz muestra su diálogo. Devuelve la función para dejar de oír. No está en una ventana de antes. */
+  oirCierre?(cb: () => void): () => void
+  /** La respuesta del diálogo de cierre: `si` cierra del todo; `sinAviso` guarda «No volver a mostrar». No está en una ventana de antes. */
+  responderCierre?(si: boolean, sinAviso?: boolean): void
 }
 
 /** Lo que la ventana de Hermit (electron/preload.ts) le da a la interfaz como `window.hermit`. En un navegador no está. */

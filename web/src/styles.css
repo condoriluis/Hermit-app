@@ -79,7 +79,7 @@ input, textarea, select { font: inherit; color: inherit; }
    sobran skills, hacen scroll ellas solas y el compositor sigue a la vista. */
 /* El aire de los lados lo ponen .new-top y .new-bottom, no esta caja: así la barra de scroll de .new-top
    queda pegada al borde derecho, como en las galerías. */
-.new-session { height: 100%; display: flex; flex-direction: column; padding: 24px 0 20px; }
+.new-session { height: 100%; display: flex; flex-direction: column; padding: 24px 0 6px; }
 /* La zona de arriba scrollea la página entera —cabecera «Nuevo chat», pestañas y cards, o la página del
    estilo— como las galerías: un solo scroll, y el compositor abajo no se mueve. overflow-x:hidden recibe
    el margen negativo de .cards (sangrado de 6px), que si no saldría como barra horizontal. */
@@ -92,7 +92,7 @@ input, textarea, select { font: inherit; color: inherit; }
    Tope del 55%: en pantallas bajas el estante de estilos siempre conserva su mitad. */
 /* El bloque de abajo (estilo elegido + composer) va sin marco: flota sobre el fondo de la página,
    sin bordes ni esquinas. El composer de adentro no cambia. */
-.new-bottom { flex: 0 1 auto; min-height: 0; max-height: 55%; width: 100%; max-width: 868px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; padding: 4px 24px 20px; }
+.new-bottom { flex: 0 1 auto; min-height: 0; max-height: 55%; width: 100%; max-width: 868px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; padding: 4px 24px 4px; }
 /* En ventanas bajas encoge y hace scroll interno: el compositor queda siempre a la vista. */
 .new-antes { flex: 0 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
 /* Si ni así alcanza (pantalla muy baja), la tarjeta del compositor también encoge y scrollea por dentro:
@@ -104,14 +104,22 @@ input, textarea, select { font: inherit; color: inherit; }
 /* Pantalla baja (una laptop pequeña): menos aire alrededor y la cabecera sin su frase, para que el estante
    y el compositor quepan. */
 @media (max-height: 760px) {
-  .new-session { padding: 14px 0 10px; }
+  .new-session { padding: 14px 0 6px; }
   .new-top { padding: 0 24px; }
-  .new-bottom { padding: 4px 16px 14px; }
+  .new-bottom { padding: 4px 16px 4px; }
   .new-session-head h1 { font-size: 20px; }
+}
+/* Solo en alturas de celular la frase de ayuda se va: en una laptop sí se lee. */
+@media (max-height: 640px) {
   .new-session-head p { display: none; }
 }
 .new-head { text-align: center; }
 .new-head-titulo { display: flex; align-items: center; justify-content: center; gap: 10px; }
+/* La ficha del estilo se pliega: el título es el botón que la abre o cierra (queda una sola línea arriba del
+   compositor). Sin fondo ni borde, como el resto de la cabecera. */
+.new-antes-cabeza { display: flex; align-items: center; justify-content: center; width: 100%; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: center; cursor: pointer; }
+.new-antes-cabeza:hover h1 { color: var(--accent-hover); }
+.new-antes-flecha { color: var(--accent); font-size: 17px; line-height: 1; }
 .new-head .card-icon.big { font-size: 24px; }
 .new-head h1 { margin: 0; font-size: 19px; font-weight: 650; letter-spacing: -0.01em; }
 .new-head p { margin: 0; font-size: 12.5px; color: var(--muted); }
@@ -531,6 +539,8 @@ span.sub-avatar > .logo.chico svg { width: 13px; height: 13px; }
 .modal-body { color: var(--muted); font-size: 13.5px; }
 .modal-body code { font-family: var(--mono); font-size: 12.5px; color: var(--accent); }
 .modal-actions { display: flex; justify-content: flex-end; align-items: center; gap: 16px; margin-top: 20px; }
+.modal-check { display: flex; align-items: center; gap: 8px; margin-top: 14px; color: var(--muted); font-size: 13px; cursor: pointer; }
+.modal-check input { accent-color: var(--accent); }
 .primary.danger { background: var(--bad); color: var(--on-solid); }
 .primary.danger:hover:not(:disabled) { background: var(--bad); filter: brightness(1.1); }
 

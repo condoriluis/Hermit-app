@@ -28,7 +28,7 @@ export function Cabecera({
   plegar(p: boolean): void
   onNuevo(): void
   enOpciones: boolean
-  onOpciones(): void
+  onOpciones(seccion?: string): void
   /** Los avisos de la comunidad sin leer: van de cuenta en el botón. */
   avisosComunidad?: number
   busca: string
@@ -80,7 +80,7 @@ export function Cabecera({
       <div className="topbar-der">
         <AvisoAgentes />
         <ActualizarHermit />
-        <CreditosFlow />
+        <CreditosFlow onOpciones={onOpciones} />
         <button
           className="topbar-btn"
           title={avisosComunidad ? `Comunidad · ${avisosComunidad} ${avisosComunidad === 1 ? 'aviso' : 'avisos'} sin leer` : 'Comunidad'}
@@ -90,7 +90,7 @@ export function Cabecera({
           <Icono de="personas" />
           {avisosComunidad > 0 && <span className="topbar-cuenta">{avisosComunidad > 99 ? '99+' : avisosComunidad}</span>}
         </button>
-        <button className={`topbar-btn${enOpciones ? ' on' : ''}`} title="Opciones" aria-label="Opciones" aria-current={enOpciones || undefined} onClick={onOpciones}>
+        <button className={`topbar-btn${enOpciones ? ' on' : ''}`} title="Opciones" aria-label="Opciones" aria-current={enOpciones || undefined} onClick={() => onOpciones()}>
           <Icono de="ajustes" />
         </button>
         {!ES_MAC && <VentanaControles />}
@@ -137,8 +137,8 @@ function rindeVideo(creditos: number): { largo: string; corto: string } {
   }
 }
 
-/** Los créditos de Google Flow que quedan, con su punto de color. Antes iba en la píldora de Opciones del pie. */
-function CreditosFlow() {
+/** Los créditos de Google Flow que quedan, con su punto de color; al pulsarla abre Opciones en Google Flow. */
+function CreditosFlow({ onOpciones }: { onOpciones(seccion?: string): void }) {
   const { estado: flow } = useFlow()
   const nCuentas = flow?.cuentas?.length ?? 0
   if (!nCuentas) return null
@@ -146,12 +146,16 @@ function CreditosFlow() {
   const punto = quedan > 20 ? 'ok' : quedan > 0 ? 'aviso' : 'vacio'
   const rinde = rindeVideo(quedan)
   return (
-    <span
+    <button
+      type="button"
       className="creditos-pill"
+      title="Google Flow — abrir opciones"
+      aria-label={`Google Flow: ${quedan} créditos en ${nCuentas} ${nCuentas === 1 ? 'cuenta' : 'cuentas'}. Abrir opciones`}
+      onClick={() => onOpciones('flow')}
       data-tooltip={`${quedan} créditos en ${nCuentas} ${nCuentas === 1 ? 'cuenta' : 'cuentas'} de Google Flow · Rinde aprox. ${rinde.largo} con Veo Lite. Las imágenes con Nano Banana son gratis.`}
     >
       <span className={`flow-dot ${punto}`} />
       {quedan} créditos
-    </span>
+    </button>
   )
 }

@@ -31,24 +31,23 @@ export { Requisitos } from './OpcionesRequisitos'
  * puesta (a veces se abre para cambiarla); a la derecha su estado, verde si está bien, menta si te toca hacer algo, y
  * lo que se puede hacer con ella, en un botón o en un desplegable.
  */
-export function Opciones({ creador, onDone }: { creador: boolean; onDone(): void }) {
+export function Opciones({ creador, onDone, seccion: inicial }: { creador: boolean; onDone(): void; seccion?: string }) {
   const [iniciando, setIniciando] = useState(false)
   // A la derecha, como en los hilos, el navegador de las redes mientras inicias sesión en él: se abre solo al conectar
   // TikTok, y el globo del título lo enseña o lo esconde.
   return (
     <ConNavegadorRedes puede={iniciando}>
-      <Ajustes creador={creador} onDone={onDone} iniciando={iniciando} onIniciando={setIniciando} />
+      <Ajustes creador={creador} seccion={inicial} onDone={onDone} iniciando={iniciando} onIniciando={setIniciando} />
     </ConNavegadorRedes>
   )
 }
 
 type Seccion = 'redes' | 'agentes' | 'voz' | 'flow' | 'articulos' | 'llaves' | 'radar' | 'avisos' | 'equipo' | 'herramientas' | 'apoyo' | 'ayuda'
 
-function Ajustes({ creador, onDone, iniciando, onIniciando }: { creador: boolean; onDone(): void; iniciando: boolean; onIniciando(si: boolean): void }) {
+function Ajustes({ creador, onDone, iniciando, onIniciando, seccion: inicial }: { creador: boolean; onDone(): void; iniciando: boolean; onIniciando(si: boolean): void; seccion?: string }) {
   const req = useRequisitos(true)
   // Uno para Voz y Google Flow: la cuenta de la voz también genera en Flow, y quitarla en uno la quita en el otro.
   const voz = useVoz()
-  const [seccion, setSeccion] = useState<Seccion>('redes')
   const secciones: { id: Seccion; nombre: string; icono: NombreIcono }[] = [
     { id: 'redes', nombre: 'Redes', icono: 'compartir' },
     { id: 'agentes', nombre: 'Agentes', icono: 'usuario' },
@@ -63,6 +62,8 @@ function Ajustes({ creador, onDone, iniciando, onIniciando }: { creador: boolean
     ...(VENTA ? [{ id: 'apoyo' as const, nombre: 'Apoyo', icono: 'estrella' as const }] : []),
     { id: 'ayuda', nombre: 'Ayuda', icono: 'pregunta' }
   ]
+  // La sección inicial puede venir del enlace (`#/opciones/flow`); si no existe para este usuario, cae en Redes.
+  const [seccion, setSeccion] = useState<Seccion>(secciones.some((s) => s.id === inicial) ? (inicial as Seccion) : 'redes')
   return (
     <div className="opciones">
       {/* La página scrollea a todo lo ancho (la barra en el borde); el contenido va centrado con tope. */}

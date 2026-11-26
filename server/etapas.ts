@@ -1050,7 +1050,9 @@ export async function etapasApi(
   if (!file.startsWith(resolve(folder) + sep)) return json(res, 403, { error: 'Fuera de la carpeta' })
   if (m[2] === 'onda') return servirOnda(res, file)
   if (url.searchParams.has('mini') && IMAGE_TYPES[extname(file).toLowerCase()]) {
-    const mini = await miniatura(file).catch((e) => {
+    // Los `_` son temporales de descarga en curso (el nombre final llega al terminar): su miniatura fallaría
+    // con datos a medias; se sirve la imagen tal cual y cuando ya está completa se miniaturiza sola.
+    const mini = basename(file).startsWith('_') ? file : await miniatura(file).catch((e) => {
       if (existsSync(file)) console.error(`La miniatura de ${file} falló: ${e instanceof Error ? e.message : e}`)
       return file
     })

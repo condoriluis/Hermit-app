@@ -8,7 +8,7 @@ export type View =
   | { kind: 'new'; cardId?: string }
   | { kind: 'draft'; id: string }
   | { kind: 'session'; id: string }
-  | { kind: 'opciones' }
+  | { kind: 'opciones'; seccion?: string }
   | { kind: 'ideas'; canalId?: string }
   | { kind: 'clips' } // clips de videos ajenos o propios
   | { kind: 'galeria'; tipo: TipoPieza; estilo?: string }
@@ -47,7 +47,7 @@ export function readHash(): View {
   const [, kind, id] = location.hash.split('/')
   if (kind === 's' && id) return { kind: 'session', id }
   if (kind === 'd' && id) return { kind: 'draft', id }
-  if (kind === 'opciones') return { kind: 'opciones' }
+  if (kind === 'opciones') return { kind: 'opciones', seccion: id || undefined }
   if (kind === 'ideas') return { kind: 'ideas', canalId: id || undefined }
   if (kind === 'clips') return { kind: 'clips' }
   if (kind === 'mis-videos') return { kind: 'galeria', tipo: 'video', estilo: id || undefined }
@@ -66,7 +66,7 @@ export function go(view: View) {
       : view.kind === 'draft'
         ? `/d/${view.id}`
         : view.kind === 'opciones'
-          ? '/opciones'
+          ? `/opciones${view.seccion ? `/${view.seccion}` : ''}`
           : view.kind === 'ideas'
             ? `/ideas${view.canalId ? `/${view.canalId}` : ''}`
             : view.kind === 'clips'

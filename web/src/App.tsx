@@ -28,6 +28,7 @@ import { PedirMejora } from './PedirMejora' // comunidad
 import { Icono } from './Iconos'
 import { Bienvenida } from './Bienvenida'
 import { Novedades } from './Novedades'
+import { CerrarHermit } from './CerrarHermit'
 import { avisarTanda, AvisoRedes, ConNavegadorRedes } from './Redes' // redes
 import { AvisoFlow } from './Flow' // Google Flow
 import { TooltipGlobal } from './Tooltip'
@@ -411,7 +412,7 @@ export function App() {
         plegar={plegar}
         onNuevo={newChat}
         enOpciones={view.kind === 'opciones'}
-        onOpciones={() => go({ kind: 'opciones' })}
+        onOpciones={(seccion?: string) => go({ kind: 'opciones', seccion })}
         avisosComunidad={avisosComunidad}
         busca={busca}
         setBusca={setBusca}
@@ -579,7 +580,7 @@ export function App() {
         <AvisoVideos />
         <AvisoFlow />
         {view.kind === 'opciones' && (
-          <Opciones creador={creador} onDone={() => go({ kind: 'new' })} />
+          <Opciones creador={creador} seccion={view.seccion} onDone={() => go({ kind: 'new' })} />
         )}
         {(!VENTA || creador) && view.kind === 'ideas' && (
           <Ideas
@@ -667,6 +668,7 @@ export function App() {
         alComunidad={() => go({ kind: 'comunidad' })}
       />
       <Novedades />
+      <CerrarHermit />
     </div>
     </>
   )

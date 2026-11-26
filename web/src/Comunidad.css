@@ -143,7 +143,7 @@
 /* La comunidad, como un membrete: filete de acento arriba, el logo con el nombre y tu perfil a la derecha,
    y abajo los números en línea con las caras. Ocupa la mitad que la tarjeta de antes. */
 .com-comunidad { position: relative; overflow: hidden; border-radius: 16px; border: 1px solid var(--line); background: linear-gradient(180deg, var(--panel-2), var(--panel)); }
-.com-comunidad::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--accent), transparent 75%); }
+.com-comunidad::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--accent), var(--accent-soft)); }
 .com-comunidad-cabeza { display: flex; align-items: center; gap: 12px; padding: 14px 16px 10px; }
 .com-comunidad-cabeza > img { width: 38px; height: 38px; flex: none; filter: drop-shadow(0 4px 14px var(--accent-soft)); }
 .com-comunidad-id { flex: 1; min-width: 0; }

@@ -240,7 +240,7 @@ function abrir() {
     // Solo si el servidor es de esta ventana: si no (el repo, o Hermit ya abierta de otra forma), cerrarla no detiene nada.
     if (servidor && !cerrando && !existsSync(SIN_AVISO)) {
       e.preventDefault()
-      void avisarAlCerrar(v)
+      preguntarCierre(v)
     } else guardarLugar(v)
   })
   v.on('closed', () => (ventana = undefined))
@@ -253,6 +253,52 @@ function abrir() {
 }
 
 let avisando = false
+/** Las ventanas con el diálogo de cierre preguntado a la interfaz (su modal), y el reloj por si no contesta. */
+const preguntando = new Set<BrowserWindow>()
+const relojCierre = new Map<BrowserWindow, NodeJS.Timeout>()
+
+/**
+ * El cierre se pregunta primero a la interfaz, que muestra su diálogo (`ventana:preguntar` → `ventana:responder`). Si en
+ * 4 s no contesta —página colgada o ventana de antes de que existiera el diálogo—, queda el de siempre (`avisarAlCerrar`).
+ */
+function preguntarCierre(v: BrowserWindow) {
+  if (preguntando.has(v)) return
+  preguntando.add(v)
+  relojCierre.set(
+    v,
+    setTimeout(() => {
+      if (!preguntando.delete(v)) return
+      void avisarAlCerrar(v)
+    }, 4000)
+  )
+  try {
+    v.webContents.send('ventana:preguntar')
+  } catch {
+    if (!preguntando.delete(v)) return
+    const t = relojCierre.get(v)
+    if (t) clearTimeout(t)
+    relojCierre.delete(v)
+    void avisarAlCerrar(v)
+  }
+}
+
+ipcMain.on('ventana:responder', (e, si: boolean, sinAviso?: boolean) => {
+  const v = BrowserWindow.fromWebContents(e.sender)
+  if (!v || !preguntando.delete(v)) return
+  const t = relojCierre.get(v)
+  if (t) clearTimeout(t)
+  relojCierre.delete(v)
+  if (!si) return
+  if (sinAviso) {
+    try {
+      guardar(SIN_AVISO, '{}')
+    } catch {
+      // Se vuelve a avisar la próxima vez.
+    }
+  }
+  cerrando = true
+  v.close()
+})
 
 /** Qué pasa al cerrar la ventana, hasta que marques «No volver a mostrar». */
 async function avisarAlCerrar(v: BrowserWindow) {

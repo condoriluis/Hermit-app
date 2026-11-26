@@ -191,6 +191,9 @@ export function NewSession(props: {
   // (`skills/video-base/DURACION.md`), y el montaje recorta a lo exacto.
   const [duraciones, setDuraciones] = useStored<Record<string, string>>('duracion', {})
   const duracion = duraciones[card.id] ?? ''
+  // La ficha del estilo (nombre, descripción, avisos) se pliega a una línea: en una laptop ocupaba media
+  // pantalla. En ventanas bajas arranca plegada; al elegir un estilo del estante se abre sola. Se recuerda.
+  const [detalle, setDetalle] = useStored<boolean>('estilo-detalle', !matchMedia('(max-height: 860px)').matches)
   // La voz: mandarla tú o que el agente la genere en AI Studio, Fish Audio o ElevenLabs (`Voz.tsx`). La card recuerda
   // la última; sin la cuenta o la llave de esa voz, la mandas tú.
   const voz = useVoz()
@@ -218,7 +221,7 @@ export function NewSession(props: {
   const alCartel = useRef<AccionesCartel>(null as never)
   alCartel.current = {
     // Sin videos terminados (sin previa) solo se elige: su galería saldría vacía.
-    elegir: (c) => (props.onPick(c), setEnEstilo(esDeVideo(c) && !!previas[c.id])),
+    elegir: (c) => (props.onPick(c), setDetalle(true), setEnEstilo(esDeVideo(c) && !!previas[c.id])),
     duplicar: (c) => void duplicar(c),
     borrar: setBorrando
   }
@@ -418,21 +421,30 @@ export function NewSession(props: {
         {/* En ventanas bajas (una laptop pequeña) esto hace scroll interno: el compositor nunca se va con él. */}
         <div className="new-antes">
           <div className="new-head">
-            <div className="new-head-titulo">
-              <span className="card-icon big"><Icon icon={card.icon ?? '✦'} /></span>
-              <h1>{card.title}</h1>
-            </div>
-            <p>{card.description}</p>
-            {card.clips && <p className="small warn">Se hace con clips de Google Flow: gasta créditos de tus cuentas.</p>}
-            <TusCambios card={card} clave={hilos.map((s) => s.id + s.updatedAt).join()} />
+            <button type="button" className="new-antes-cabeza" onClick={() => setDetalle(!detalle)} aria-expanded={detalle} title={detalle ? 'Ocultar la ficha del estilo' : 'Ver la ficha del estilo'}>
+              <span className="new-head-titulo">
+                <span className="card-icon big"><Icon icon={card.icon ?? '✦'} /></span>
+                <h1>{card.title}</h1>
+                <span className="new-antes-flecha">{detalle ? '▾' : '▴'}</span>
+              </span>
+            </button>
+            {detalle && (
+              <>
+                <p>{card.description}</p>
+                {card.clips && <p className="small warn">Se hace con clips de Google Flow: gasta créditos de tus cuentas.</p>}
+                <TusCambios card={card} clave={hilos.map((s) => s.id + s.updatedAt).join()} />
+                {/* Hasta saber qué cuentas hay no sale: el aviso de Claude no se asoma a quien solo tiene ChatGPT u OpenCode. */}
+                {sinClaude !== undefined && <CuentaClaude model={choice?.model} onFalta={setSinCuenta} />}
+                {/* Las herramientas de video (FFmpeg, Python, yt-dlp) solo hacen falta en los estilos de video, y de los paquetes, los de su skill. */}
+                {esDeVideo(card) && <Requisitos skill={card.skill} />}
+              </>
+            )}
           </div>
-          {/* Hasta saber qué cuentas hay no sale: el aviso de Claude no se asoma a quien solo tiene ChatGPT u OpenCode. */}
-          {sinClaude !== undefined && <CuentaClaude model={choice?.model} onFalta={setSinCuenta} />}
-          {/* Las herramientas de video (FFmpeg, Python, yt-dlp) solo hacen falta en los estilos de video, y de los paquetes, los de su skill. */}
-          {esDeVideo(card) && <Requisitos skill={card.skill} />}
         </div>
-        {composer}
-        <TarjetasEnlaces enlaces={enlaces} />
+        {/* Plegada la ficha, el compositor y las tarjetas de enlaces también se guardan: queda solo el
+            estante de estilos y la barra del estilo para reabrirlos. */}
+        {detalle && composer}
+        {detalle && <TarjetasEnlaces enlaces={enlaces} />}
       </div>
       {borrando && (
         <Confirm

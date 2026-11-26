@@ -1,1 +1,1 @@
-Hermit 0.6.4: video con tu material y tu música de fondo, con una cara nueva
+Hermit 0.6.5: cada estilo de video estrena plantilla propia y el sonido llega por pistas

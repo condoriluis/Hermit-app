@@ -1,7 +1,7 @@
 import { Fragment, type CSSProperties, type RefObject, useEffect, useMemo, useRef, useState } from 'react'
 import Hls from 'hls.js'
 import { NAVEGADOR_CLIPS, type VivoClip, type VivoEstado, type VivoSegmento } from '../../shared/types'
-import { api } from './api'
+import { api, ErrorApi } from './api'
 import { Icono } from './Iconos'
 import { Logo } from './Logos'
 import { ACENTOS_CLIP } from '../../shared/clips'
@@ -447,6 +447,13 @@ export function ClipsEnVivo({ onVolver }: { onVolver(): void }) {
       setTexto([])
       setUrl('')
     } catch (e) {
+      // El live pide sesión (Facebook): se fue a Opciones → Redes, donde está el navegador para entrar;
+      // la señal la retoma la fila de Facebook al montar. En Edge la ventana ya se abrió sola.
+      const datos = e instanceof ErrorApi ? e.datos : undefined
+      if (datos?.navegador === 'redes' && datos.enLaApp) {
+        sessionStorage.setItem('hermit-fb-login', '1')
+        location.hash = '/opciones/redes'
+      }
       setError(e instanceof Error ? e.message : String(e))
     } finally {
       setConectando(false)

@@ -82,7 +82,7 @@
    pedírsela al agente. En pantallas angostas se apilan. */
 .pieza-velo { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 28px; background: var(--scrim); backdrop-filter: blur(6px); animation: piezas-aparece 0.18s ease-out; }
 @keyframes piezas-aparece { from { opacity: 0; } }
-.pieza-dialogo { position: relative; width: min(960px, 100%); max-height: 100%; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); overflow: hidden; border-radius: 14px; border: 1px solid var(--line); background: var(--panel); box-shadow: 0 30px 80px var(--shadow-fuerte); }
+.pieza-dialogo { position: relative; width: min(960px, 100%); max-height: 100%; min-height: 0; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); overflow: hidden; border-radius: 14px; border: 1px solid var(--line); background: var(--panel); box-shadow: 0 30px 80px var(--shadow-fuerte); }
 .pieza-dialogo:focus { outline: none; }
 .pieza-dialogo-img { position: relative; display: grid; place-items: center; min-height: 380px; padding: 22px; background: var(--bg); border-right: 1px solid var(--line); }
 .pieza-dialogo-img img { max-width: 100%; max-height: calc(100vh - 180px); object-fit: contain; border-radius: 10px; border: 1px solid var(--line); }
@@ -94,14 +94,14 @@
 .pieza-cerrar { position: absolute; top: 12px; right: 12px; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 10px; border: 1px solid var(--line); background: var(--scrim-control); color: var(--text); transition: border-color 0.15s, color 0.15s; }
 .pieza-cerrar:hover { border-color: var(--accent); color: var(--accent); }
 .pieza-cerrar .ico { width: 15px; height: 15px; }
-.pieza-dialogo-texto { padding: 26px 28px 22px; display: flex; flex-direction: column; gap: 14px; min-width: 0; overflow-y: auto; }
+.pieza-dialogo-texto { padding: 26px 28px 22px; display: flex; flex-direction: column; gap: 14px; min-width: 0; min-height: 0; overflow-y: auto; }
 .pieza-dialogo-texto h2 { margin: 0; padding-right: 40px; font-size: 19px; font-weight: 700; letter-spacing: -0.01em; }
 .pieza-datos { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px 16px; margin: 0; font-size: 12.5px; }
 .pieza-datos dt { color: var(--muted); white-space: nowrap; }
 .pieza-datos dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
 .pieza-datos code { font-family: var(--mono); font-size: 11px; }
 .pieza-prompt-caixa { position: relative; display: inline-block; max-width: 100%; vertical-align: top; }
-.pieza-prompt { display: block; margin: 0; padding: 32px 88px 10px 10px; border: 1px solid var(--accent-border); border-radius: 10px; background: var(--panel-2); font-family: var(--mono); font-size: 11.5px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+.pieza-prompt { display: block; margin: 0; padding: 32px 88px 10px 10px; max-height: 220px; overflow-y: auto; border: 1px solid var(--accent-border); border-radius: 10px; background: var(--panel-2); font-family: var(--mono); font-size: 11.5px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
 .pieza-prompt-copiar { position: absolute; top: 8px; right: 8px; z-index: 1; display: inline-flex; align-items: center; gap: 6px; padding: 4px 11px 4px 9px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--muted); font-size: 11.5px; font-weight: 600; transition: border-color 0.15s, color 0.15s, background 0.15s; }
 .pieza-prompt-copiar .ico { width: 12px; height: 12px; }
 .pieza-prompt-copiar:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }

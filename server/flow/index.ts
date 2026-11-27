@@ -5,7 +5,7 @@ import { dirname, isAbsolute, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { McpStdioServerConfig } from '@anthropic-ai/claude-agent-sdk'
 import type { Browser } from 'playwright-core'
-import { A_LA_VEZ, AVISO_FRENADA, CALMA, type Descanso, descansoNuevo, elegirCuenta, esFalloDeNavegador, esFalloTecnico, esOmni, esPasaTope, esRechazoDeContenido, espacioEntrePedidos, FORMATOS_IMAGEN, FORMATOS_VIDEO, type Motivo, MODELOS_IMAGEN, MODELOS_VIDEO, motivoDeDescanso, notaPagina, OPCIONES_CLIPS, PAUSA_CUENTA, PERMISO_CREDITOS, PERMISO_MS, puede, RECHAZOS_PARA_BLOQUEAR, RECUERDA_RECHAZO, RESOLUCIONES_OMNI, type Saldo, saldoVigente as vigente, tipoDeArchivo, TOPE_CREDITOS, VIDEO_MAS_BARATO } from '../../shared/flow.ts'
+import { A_LA_VEZ, AVISO_FRENADA, CALMA, type Descanso, descansoNuevo, elegirCuenta, esFalloDeNavegador, esFalloTecnico, esOmni, esPasaTope, esRechazoDeContenido, espacioEntrePedidos, esperaDeLectura, type FalloLectura, FORMATOS_IMAGEN, FORMATOS_VIDEO, type Motivo, MODELOS_IMAGEN, MODELOS_VIDEO, motivoDeDescanso, notaPagina, OPCIONES_CLIPS, PAUSA_CUENTA, PERMISO_CREDITOS, PERMISO_MS, puede, RECHAZOS_PARA_BLOQUEAR, RECUERDA_RECHAZO, RESOLUCIONES_OMNI, type Saldo, saldoVigente as vigente, tipoDeArchivo, TOPE_CREDITOS, VIDEO_MAS_BARATO } from '../../shared/flow.ts'
 import type { EstadoFlow, GastoFlow, SaldoFlow, TrabajoFlow } from '../../shared/types.ts'
 import { VENTA } from '../../shared/venta.ts'
 import { guardar } from '../disco.ts'
@@ -80,6 +80,8 @@ interface Ajustes {
   /** Por escena (su `escena`, o su `salida` si no la mandan), los rechazos de Flow por su contenido: cuándo y cuántos. */
   rechazos?: Record<string, { veces: number; ultimo: number }>
   prioritaria?: string
+  /** Por cuenta, por qué falló la última lectura de su saldo y cuándo se reintenta (`leerSaldos`). */
+  erroresLeer?: Record<string, { motivo: FalloLectura; veces: number; ultimo: number; proximo: number; dicho?: string }>
 }
 /** Lo que Flow toma de la voz (`voz()`): su cuenta de Google y su Edge. */
 export interface Google {
@@ -384,9 +386,32 @@ export function flow(app: string, google: Google) {
       const v = saldoVigente(c.correo, ahora)
       return !v || v.piso
     })
+  /**
+   * Apunta por qué falló la lectura del saldo de una cuenta y hasta cuándo no reintentarlo (`esperaDeLectura`):
+   * reintentarla en cada apertura de Opciones solo martilla Flow sin arreglar nada. Lo que leyó bien la olvida.
+   */
+  function fallarLectura(correo: string, motivo: FalloLectura, dicho?: string) {
+    const antes = ajustes.erroresLeer?.[correo]
+    const veces = (antes?.veces ?? 0) + 1
+    const ahora = Date.now()
+    ajustes.erroresLeer = { ...ajustes.erroresLeer, [correo]: { motivo, veces, ultimo: ahora, proximo: ahora + esperaDeLectura(veces), ...(dicho ? { dicho: dicho.slice(0, 300) } : {}) } }
+    guardarAjustes()
+  }
+
+  const olvidarFallo = (correo: string) => {
+    if (!ajustes.erroresLeer?.[correo]) return
+    const { [correo]: _, ...resto } = ajustes.erroresLeer
+    ajustes.erroresLeer = resto
+  }
+
+  /** Las cuentas que toca leer ahora (`faltan`: solo las que hay que leer): sin las que esperan su reintento. */
+  const porLeerAhora = (faltan: boolean, ahora: number) =>
+    (faltan ? porLeer(ahora) : cuentas()).filter((c) => (ajustes.erroresLeer?.[c.correo]?.proximo ?? 0) <= ahora)
+
   /** Lee lo que le queda a cada cuenta (`faltan`: solo a las que hay que leer, `porLeer`), `A_LA_VEZ` a la vez. No gasta. */
   async function leerSaldos(faltan: boolean) {
-    const pendientes = faltan ? porLeer(Date.now()) : cuentas()
+    // La que falló espera su turno (`proximo`): abrir Opciones mil veces no la vuelve a intentar antes de tiempo.
+    const pendientes = porLeerAhora(faltan, Date.now())
     if (leyendo || !pendientes.length) return
     leyendo = true
     const una = async (c: CuentaFlow) => {
@@ -399,9 +424,22 @@ export function flow(app: string, google: Google) {
             await page.close().catch(() => {})
           }
         })
-        apuntarSaldo(c.correo, s)
+        if (s) {
+          olvidarFallo(c.correo)
+          apuntarSaldo(c.correo, s)
+        } else {
+          // La página cargó pero no enseñó el saldo: Flow cambió su interfaz, el menú no llegó o la cuenta no entró.
+          fallarLectura(c.correo, 'flow')
+        }
       } catch (e) {
-        if (e instanceof SinEmpezar && e.sesion) descansar(c.correo, 'sesion', mensaje(e))
+        const dicho = mensaje(e)
+        if (e instanceof SinEmpezar && e.sesion) {
+          descansar(c.correo, 'sesion', dicho)
+          fallarLectura(c.correo, 'sesion', dicho)
+        } else {
+          // Toda excepción es de la página o del navegador antes de leer el saldo: no de la cuenta.
+          fallarLectura(c.correo, 'navegador', dicho)
+        }
       }
     }
     try {
@@ -546,6 +584,7 @@ export function flow(app: string, google: Google) {
         const d = ajustes.descansos?.[c.correo]
         const saldo = ajustes.saldos?.[c.correo]
         const queda = saldoVigente(c.correo, ahora)
+        const fallo = ajustes.erroresLeer?.[c.correo]
         return {
           correo: c.correo,
           deLaVoz: c.deLaVoz,
@@ -553,6 +592,7 @@ export function flow(app: string, google: Google) {
           ...(d && d.hasta > ahora ? { descansa: d } : {}),
           ...(saldo ? { saldo } : {}),
           ...(queda ? { queda } : {}),
+          ...(fallo ? { errorLeer: fallo } : {}),
           hoy: deHoy[c.correo] ?? NADA
         }
       }),
@@ -617,7 +657,7 @@ export function flow(app: string, google: Google) {
     }
     if (path === '/api/flow/saldos' && metodo === 'POST') {
       const { faltan } = await cuerpo<{ faltan?: boolean }>(req)
-      const habia = faltan ? porLeer(Date.now()).length : cuentas().length
+      const habia = porLeerAhora(faltan === true, Date.now()).length
       void leerSaldos(faltan === true)
       return json(res, 200, { ...estado(), leyendo: leyendo || habia > 0 })
     }
@@ -626,8 +666,10 @@ export function flow(app: string, google: Google) {
         // Volver a conectarla la deja lista aunque descansara, y se vuelve a leer lo que le queda.
         const { [correo]: _d, ...descansos } = ajustes.descansos ?? {}
         const { [correo]: _s, ...saldos } = ajustes.saldos ?? {}
+        const { [correo]: _f, ...errores } = ajustes.erroresLeer ?? {}
         ajustes.descansos = descansos
         ajustes.saldos = saldos
+        ajustes.erroresLeer = errores
         guardarAjustes()
         void leerSaldos(true)
       })
@@ -638,6 +680,8 @@ export function flow(app: string, google: Google) {
       if (!correo) return json(res, 400, { error: 'Falta el correo.' })
       if (ocupadas.has(correo)) return json(res, 409, { error: `${correo} está generando: quítala cuando acabe.` })
       await otras.quitar(correo)
+      olvidarFallo(correo)
+      guardarAjustes()
       return json(res, 200, estado())
     }
     if (path === '/api/flow/generar' && metodo === 'POST') {

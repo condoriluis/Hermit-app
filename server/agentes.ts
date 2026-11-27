@@ -199,12 +199,15 @@ const AGENTES: Record<Programa, Agente> = {
     nombre: 'Devin',
     version: '3000.12.43',
     // Como Antigravity: el manifiesto de static.devin.ai da el paquete del sistema con su sha256.
+    // `current` da siempre la última versión publicada: los manifiestos por versión
+    // (/cli/<versión>/manifest.json) los quitan del CDN y devuelven 403.
     async instalar(dir) {
       const triple = DEVIN_PLATAFORMA[plataforma]
       if (!triple) throw new Error(`Devin no trae un programa para esta computadora (${plataforma}).`)
-      const res = await fetch(`https://static.devin.ai/cli/${AGENTES.devin.version}/manifest.json`)
+      const res = await fetch('https://static.devin.ai/cli/current/manifest.json')
       if (!res.ok) throw new Error(`Devin respondió ${res.status} al pedir su manifiesto.`)
-      const info = (await res.json())?.platforms?.[triple]
+      const manifiesto = await res.json()
+      const info = manifiesto?.platforms?.[triple]
       if (!info?.url || !info?.sha256) throw new Error(`El manifiesto de Devin no trae paquete para ${triple}.`)
       const paquete = await fetch(info.url)
       if (!paquete.ok) throw new Error(`Devin respondió ${paquete.status} al pedir su programa.`)
@@ -222,6 +225,9 @@ const AGENTES: Record<Programa, Agente> = {
         const bin = join(dir, 'bin', 'devin')
         if (existsSync(bin)) chmodSync(bin, 0o755)
       }
+      // La carpeta conserva el nombre de la versión que fija Hermit, pero el
+      // binario es el del manifiesto `current`: se anota la real para mostrarla.
+      if (manifiesto?.version) writeFileSync(join(dir, MOSTRAR), manifiesto.version)
     },
     exe: (r) => join(r, 'bin', WINDOWS ? 'devin.exe' : 'devin'),
     pesa: '70 MB'

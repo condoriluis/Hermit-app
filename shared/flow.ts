@@ -101,19 +101,27 @@ const HOLGURA = 5 * 60_000
 /**
  * El saldo, del texto del menú de la cuenta (visto el 3 de noviembre de 2026): «20 créditos de Google Flow» y «Los
  * créditos se actualizan todos los días a la(s) 12:02 p.m.», o en el español de España «50 puntos de Google Flow» y «…a
- * diario a las 17:11». La hora es la del equipo, como la de Edge: `renueva` es la próxima vez que llega. Una cuenta que
- * aún no gastó dice la hora de ahora (se leyó dos veces, y la hora cambió con el reloj): entonces no hay `renueva`.
- * `null` si no dice cuántos quedan.
+ * diario a las 17:11». En inglés, «50 Google Flow credits» y «Credits refresh daily at 12:54 PM». No se buscan las
+ * palabras del idioma: el saldo es el primer renglón que empieza con un número y nombra los créditos (`crédit`,
+ * `credit`, `punt`, `point`, en cualquier conjugación), y la hora es la primera que aparece en los renglones
+ * siguientes — el formato `HH:MM` (o `HH h MM`) no cambia con el idioma. `renueva` es la próxima vez que llega. Una
+ * cuenta que aún no gastó dice la hora de ahora (se leyó dos veces, y la hora cambió con el reloj): entonces no hay
+ * `renueva`. `null` si no dice cuántos quedan.
  */
 export function saldoDe(texto: string, ahora: number): Saldo | null {
   const renglones = texto.split('\n')
-  const i = renglones.findIndex((r) => /^\s*\d[\d.,]*\s+(cr[eé]ditos?|puntos?|credits?|points?)\b/i.test(r))
+  // Entre el número y la palabra de créditos puede haber hasta tres palabras (el nombre del producto), pero ninguna
+  // puede empezar con dígito: así «12 videos · 50 credits» no se confunde con el saldo.
+  const i = renglones.findIndex((r) => /^\s*\d[\d.,]*\s+(?:[^\d\s]\S*\s+){0,3}?(cr[eé]di|punt|point)/i.test(r))
   if (i < 0) return null
   const creditos = Number(renglones[i].match(/\d[\d.,]*/)![0].replace(/[.,]/g, ''))
-  const diario = renglones.slice(i + 1, i + 3).find((r) => /d[ií]a|diari|daily|day/i.test(r))
-  const h = diario?.match(/(\d{1,2}):(\d{2})\s*(?:([ap])\.?\s*m\.?)?/i)
+  const h = renglones
+    .slice(i + 1, i + 4)
+    .map((r) => /(\d{1,2})\s*[:h]\s*(\d{2})\s*([ap])\.?\s*m\.?/i.exec(r) ?? /(\d{1,2})\s*[:h]\s*(\d{2})/.exec(r))
+    .find((m): m is RegExpExecArray => !!m)
   if (!h) return { creditos }
-  const hora = h[3] ? (Number(h[1]) % 12) + (h[3].toLowerCase() === 'p' ? 12 : 0) : Number(h[1])
+  const ampm = h[3]?.toLowerCase()
+  const hora = ampm ? (Number(h[1]) % 12) + (ampm === 'p' ? 12 : 0) : Number(h[1])
   const d = new Date(ahora)
   d.setHours(hora, Number(h[2]), 0, 0)
   if (d.getTime() <= ahora) d.setDate(d.getDate() + 1)
@@ -143,6 +151,26 @@ export function gastoDeRechazo(antes: Saldo | null, despues: Saldo | null): numb
   if (!antes || !despues || despues.creditos > antes.creditos) return null
   return antes.creditos - despues.creditos
 }
+
+/**
+ * Por qué no se pudo leer el saldo de una cuenta (`CuentaEnFlow.errorLeer`). No es un `Motivo` de descanso: la cuenta
+ * puede estar bien y Flow no haber enseñado sus créditos, así que `flow` cubre página cambiada, menú que no cargó
+ * o respuesta vacía; `navegador`, un fallo de Playwright antes de llegar a la página; `sesion`, la página de entrar
+ * con Google.
+ */
+export type FalloLectura = 'sesion' | 'navegador' | 'flow'
+
+/** Lo que se le dice al usuario de cada fallo de lectura. */
+export const FALLO_LECTURA: Record<FalloLectura, string> = {
+  sesion: 'sin sesión de Google',
+  navegador: 'falló el navegador',
+  flow: 'Flow no mostró los créditos'
+}
+
+/** Lo que se espera tras cada lectura fallida: el doble cada vez seguida, hasta `LECTURA_ESPERA_MAX`. */
+export const LECTURA_ESPERA = 2 * 60_000
+export const LECTURA_ESPERA_MAX = 30 * 60_000
+export const esperaDeLectura = (veces: number) => Math.min(LECTURA_ESPERA_MAX, LECTURA_ESPERA * 2 ** Math.max(0, veces - 1))
 
 /**
  * Cuántas cuentas de Google puede tener Flow en Hermit, y cuántas generan a la vez (cada una abre su Edge). Eran tres, y el

@@ -1,6 +1,6 @@
 /** El error de `api`, con el estado HTTP: 401 en la comunidad es que falta la cuenta gratis (`Licencia.tsx`). */
 export class ErrorApi extends Error {
-  constructor(mensaje: string, readonly status: number) {
+  constructor(mensaje: string, readonly status: number, readonly datos?: Record<string, unknown>) {
     super(mensaje)
   }
 }
@@ -38,6 +38,6 @@ export async function api<T = any>(path: string, body?: unknown): Promise<T> {
     if (await preguntar(data.error)) return api<T>(path, { ...(body as object), masDeDos: true })
     throw new ErrorApi('', res.status)
   }
-  if (!res.ok) throw new ErrorApi(data.error ?? res.statusText, res.status)
+  if (!res.ok) throw new ErrorApi(data.error ?? res.statusText, res.status, data)
   return data
 }

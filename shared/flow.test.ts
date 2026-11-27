@@ -103,6 +103,11 @@ test('lo que le queda a una cuenta se lee de su menú, con la hora en que se ren
   const espana = saldoDe('movie_filter_auto\n50 puntos de Google Flow\nLos puntos se actualizan a diario a las 17:11\nActualizar', ahora)
   assert.deepEqual(espana, { creditos: 50, renueva: new Date(2026, 10, 3, 17, 11).getTime() })
   assert.equal(saldoDe('1,000 credits\nYour credits refresh daily at 12:30 AM', ahora)?.renueva, new Date(2026, 10, 4, 0, 30).getTime())
+  // En inglés, Flow escribe el producto entre el número y «credits» («50 Google Flow credits»).
+  assert.deepEqual(saldoDe('movie_filter_auto\n50 Google Flow credits\nCredits refresh daily at 12:54 PM\nActualizar', ahora), { creditos: 50, renueva: new Date(2026, 10, 4, 12, 54).getTime() })
+  // En portugués y francés, las mismas estructuras con sus palabras.
+  assert.deepEqual(saldoDe('movie_filter_auto\n50 créditos do Google Flow\nOs créditos são atualizados diariamente às 18:30', ahora), { creditos: 50, renueva: new Date(2026, 10, 3, 18, 30).getTime() })
+  assert.deepEqual(saldoDe('movie_filter_auto\n50 crédits Google Flow\nLes crédits sont renouvelés à 20 h 15', ahora), { creditos: 50, renueva: new Date(2026, 10, 3, 20, 15).getTime() })
   assert.deepEqual(saldoDe('1.000 créditos de Google Flow\nSe renuevan el 5 de diciembre', ahora), { creditos: 1000 })
   // Sin gastar aún, Flow dice la hora de ahora: no es cuándo se renuevan.
   assert.deepEqual(saldoDe('50 puntos de Google Flow\nLos puntos se actualizan a diario a las 15:00', ahora), { creditos: 50 })
@@ -206,6 +211,20 @@ test('lo que gastó un rechazo se mide con el saldo de antes y el de después', 
   // Subió: se renovó en medio, no se sabe.
   assert.equal(gastoDeRechazo({ creditos: 30 }, { creditos: 50 }), null)
   assert.equal(gastoDeRechazo(null, { creditos: 24 }), null)
+})
+
+test('la espera tras una lectura fallida crece al doble y topa', async () => {
+  const { esperaDeLectura, LECTURA_ESPERA, LECTURA_ESPERA_MAX } = await import('./flow.ts')
+  assert.equal(esperaDeLectura(1), LECTURA_ESPERA)
+  assert.equal(esperaDeLectura(2), LECTURA_ESPERA * 2)
+  assert.equal(esperaDeLectura(3), LECTURA_ESPERA * 4)
+  assert.equal(esperaDeLectura(50), LECTURA_ESPERA_MAX)
+  assert.equal(esperaDeLectura(0), LECTURA_ESPERA)
+})
+
+test('cada fallo de lectura tiene su texto para el usuario', async () => {
+  const { FALLO_LECTURA } = await import('./flow.ts')
+  assert.deepEqual(Object.keys(FALLO_LECTURA).sort(), ['flow', 'navegador', 'sesion'])
 })
 
 test('la línea Clips dice el modelo, la resolución y lo que cuesta; sin elección no sale', () => {

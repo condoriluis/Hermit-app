@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { COSTO_VIDEO, IMAGEN_CHATGPT, MODELOS_IMAGEN, OPCIONES_CLIPS, PERMISO_CREDITOS } from '../../shared/flow'
+import { COSTO_VIDEO, FALLO_LECTURA, IMAGEN_CHATGPT, MODELOS_IMAGEN, OPCIONES_CLIPS, PERMISO_CREDITOS } from '../../shared/flow'
 import type { CuentaClaude, CuentaEnFlow, EstadoFlow, GastoFlow } from '../../shared/types'
 import { api } from './api'
 import { encendido, notificar, sonar } from './avisos'
@@ -118,7 +118,10 @@ const videos = (g: GastoFlow) => `${g.videos} ${g.videos === 1 ? 'video' : 'vide
  */
 function cuantoLeQueda(c: CuentaEnFlow): string {
   const q = c.queda
-  if (!q) return 'créditos sin leer'
+  if (!q) {
+    const f = c.errorLeer
+    return f ? `sin leer · ${FALLO_LECTURA[f.motivo]}${f.proximo > Date.now() ? ` · reintenta ${hora(f.proximo)}` : ''}` : 'créditos sin leer'
+  }
   if (q.piso) return `mínimo ${q.creditos} créditos`
   const renueva = c.saldo?.renueva
   return `${q.creditos} créditos${renueva && renueva > Date.now() ? ` · se renuevan a las ${hora(renueva)}` : ''}`
@@ -279,7 +282,7 @@ export function FlowOpciones({ voz }: { voz: UsoVoz }) {
           <strong>Google Flow</strong>
           <span>
             {n
-              ? `Veo y Nano Banana con ${n === 1 ? 'una cuenta' : `${n} cuentas`} · ${e?.porLeer ? `al menos ${e?.quedan ?? 0}` : `quedan ${e?.quedan ?? 0}`} créditos${e?.enFila ? ` · generando ${e.enFila}` : ''}`
+              ? `Veo y Nano Banana con ${n === 1 ? 'una cuenta' : `${n} cuentas`} · ${e?.porLeer ? (e?.quedan ? `al menos ${e.quedan}` : 'créditos por leer') : `quedan ${e?.quedan ?? 0}`} créditos${e?.enFila ? ` · generando ${e.enFila}` : ''}`
               : 'Conecta arriba la cuenta de la voz o agrega aquí una cuenta de Google.'}
           </span>
         </div>

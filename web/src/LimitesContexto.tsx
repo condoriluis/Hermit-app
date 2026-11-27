@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { NOMBRE_AGENTE, type Proveedor } from '../../shared/providers'
+import { FALLO_LECTURA } from '../../shared/flow'
 import type { CuentaEnFlow, EstadoFlow, GastoFlow, LimitesClaude } from '../../shared/types'
 import { api } from './api'
 
@@ -94,7 +95,9 @@ function CuentaFlow({ c }: { c: CuentaEnFlow }) {
     ? 'Generando'
     : c.descansa
       ? `${MOTIVO[c.descansa.motivo]} · vuelve a probar a las ${horaFlow(c.descansa.hasta)}`
-      : q?.piso
+      : !q && c.errorLeer
+        ? `Sin leer: ${FALLO_LECTURA[c.errorLeer.motivo]}${c.errorLeer.proximo > Date.now() ? ` · reintenta ${horaFlow(c.errorLeer.proximo)}` : ''}`
+        : q?.piso
         ? `↻ Se renovaron a las ${horaFlow(s!.renueva!)}: por leer`
         : s?.renueva
           ? `↻ Se renuevan a las ${horaFlow(s.renueva)}`
@@ -147,9 +150,11 @@ export function FlowEnUso({ delChat }: { delChat?: GastoFlow }) {
           </button>
         )}
       </span>
-      <span className="context-figure">Quedan {e.quedan} créditos</span>
+      <span className="context-figure">
+        {e.porLeer && !e.quedan ? 'Créditos por leer' : `${e.porLeer ? 'Al menos ' : 'Quedan '}${e.quedan} créditos`}
+      </span>
       <span className="context-limit-note">
-        {clips ? `Alcanzan para ${clips} ${clips === 1 ? 'clip' : 'clips'} en Lite` : 'No alcanzan para un clip en Lite'} · {e.cuentas.length === 1 ? '1 cuenta' : `${e.cuentas.length} cuentas`}
+        {clips ? `${e.porLeer ? 'Al menos' : 'Alcanzan para'} ${clips} ${clips === 1 ? 'clip' : 'clips'} en Lite` : e.porLeer ? 'Créditos por leer' : 'No alcanzan para un clip en Lite'} · {e.cuentas.length === 1 ? '1 cuenta' : `${e.cuentas.length} cuentas`}
         {sinLeer ? ` · ${sinLeer} sin leer` : ''}
         {delChat?.videos ? (
           <>

@@ -1582,7 +1582,9 @@ export interface EstadoFlow {
  * dijo Flow en el último intento (`dicho`), para poder enseñar el motivo en vez de afirmarlo a ciegas.
  * `saldo`: lo que le quedaba al leerlo, sin él si aún no se leyó. `hoy`: sus videos de hoy. `queda`: lo que se le cuenta
  * ahora (`saldoVigente`, `server/flow/index.ts`); con `piso`, su número ya venció y ese es el mínimo probado hasta que
- * llegue su relectura. Es lo que suma `EstadoFlow.quedan`.
+ * llegue su relectura. Es lo que suma `EstadoFlow.quedan`. `errorLeer`: por qué falló la última lectura de su saldo,
+ * si la hubo: el motivo (`FalloLectura` de `shared/flow.ts`), cuántas seguidas, lo que dijo el error (`dicho`), cuándo
+ * fue (`ultimo`) y cuándo se reintenta (`proximo`).
  */
 export interface CuentaEnFlow {
   correo: string
@@ -1592,6 +1594,7 @@ export interface CuentaEnFlow {
   saldo?: SaldoFlow
   queda?: { creditos: number; piso: boolean }
   hoy: GastoFlow
+  errorLeer?: { motivo: 'sesion' | 'navegador' | 'flow'; veces: number; ultimo: number; proximo: number; dicho?: string }
 }
 
 /**

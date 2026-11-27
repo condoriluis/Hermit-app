@@ -6,7 +6,7 @@ import { join } from 'node:path'
 import type { Browser } from 'playwright-core'
 import { WebSocket } from 'ws'
 import { MAX_CUENTAS } from '../../shared/flow.ts'
-import { chromiumParaGoogle, lanzarChromium, nombreDe, paginaNueva, SIN_CHROMIUM, SIN_VENTANA } from '../chromium.ts'
+import { chromiumParaGoogle, lanzarChromium, matarNavegador, nombreDe, paginaNueva, SIN_CHROMIUM, SIN_VENTANA } from '../chromium.ts'
 import { guardar } from '../disco.ts'
 import { conectarCDP } from '../playwright.ts'
 import { URL_FLOW } from './pagina.ts'
@@ -95,13 +95,21 @@ function edgeDe(perfil: string) {
     const ws = new WebSocket(webSocketDebuggerUrl)
     try {
       return await new Promise<T>((ok, mal) => {
+        // Sin respuesta en 10 s el comando se da por fallido: un Edge colgado no puede dejarnos esperando siempre.
+        const limite = setTimeout(() => {
+          ws.close()
+          mal(new Error('Edge no respondió al comando.'))
+        }, 10_000)
         ws.once('open', () => ws.send(JSON.stringify({ id: 1, method: metodo })))
         ws.on('message', (d) => {
           const m = JSON.parse(String(d)) as { id?: number; result?: T; error?: { message: string } }
-          if (m.id === 1) m.error ? mal(new Error(m.error.message)) : ok(m.result as T)
+          if (m.id === 1) {
+            clearTimeout(limite)
+            m.error ? mal(new Error(m.error.message)) : ok(m.result as T)
+          }
         })
-        ws.once('error', mal)
-        ws.once('close', () => mal(new Error('Edge se cerró.')))
+        ws.once('error', (e) => (clearTimeout(limite), mal(e)))
+        ws.once('close', () => (clearTimeout(limite), mal(new Error('Edge se cerró.'))))
       })
     } finally {
       ws.close()
@@ -111,6 +119,12 @@ function edgeDe(perfil: string) {
   async function cerrar() {
     await alNavegador('Browser.close').catch(() => {})
     for (let i = 0; i < 20 && (await responde()); i++) await espera(250)
+    if (await responde()) {
+      // No murió solo (colgado o lento): se mata lo del perfil, porque un Edge zombie haría que el próximo
+      // lanzamiento se lo cediera y todo fallara con «no abrió» o timeouts, para siempre.
+      matarNavegador(perfil)
+      for (let i = 0; i < 20 && (await responde()); i++) await espera(250)
+    }
   }
 
   /** Lo abre, si no lo estaba. Con `ventana`, en `url` y como un Edge cualquiera; si no, sin ventana ni sonido. */
@@ -122,22 +136,31 @@ function edgeDe(perfil: string) {
     const exe = navegador()
     if (!exe) throw new Error(SIN_CHROMIUM)
     mkdirSync(perfil, { recursive: true })
-    const extra = ventana ? [url] : [...SIN_VENTANA, 'about:blank']
-    // Un puerto libre ya elegido, nunca `0`: con `0`, Edge dice a las páginas que lo maneja un programa
-    // (`navigator.webdriver`) y Google no deja entrar («Es posible que el navegador no sea seguro»).
     const viejo = puerto()
-    const nuevo = await puertoLibre()
-    // Se escribe antes de abrir para que, si Hermit se reinicia, encuentre su Edge. Si no abre, se devuelve el anterior
-    // (nunca se deja el archivo apuntando a un puerto muerto) o se borra.
-    writeFileSync(archivoPuerto, String(nuevo))
-    // `--disable-sync` evita el diálogo «Se están sincronizando los datos» de Edge, que bloquea la ventana visible.
-    lanzarChromium(exe, [`--remote-debugging-port=${nuevo}`, `--user-data-dir=${perfil}`, '--no-first-run', '--no-default-browser-check', '--disable-sync', ...extra], ventana)
-    for (let i = 0; i < 40 && !(await responde(nuevo)); i++) await espera(500)
-    if (!(await responde(nuevo))) {
-      if (viejo && viejo !== nuevo && (await responde(viejo))) writeFileSync(archivoPuerto, String(viejo))
-      else rmSync(archivoPuerto, { force: true })
-      throw new Error(`${nombreNavegador()} no abrió.`)
+    // Un intento de abrirlo: devuelve el puerto si quedó respondiendo, o null.
+    const intentar = async () => {
+      const extra = ventana ? [url] : [...SIN_VENTANA, 'about:blank']
+      // Un puerto libre ya elegido, nunca `0`: con `0`, Edge dice a las páginas que lo maneja un programa
+      // (`navigator.webdriver`) y Google no deja entrar («Es posible que el navegador no sea seguro»).
+      const nuevo = await puertoLibre()
+      // Se escribe antes de abrir para que, si Hermit se reinicia, encuentre su Edge. Si no abre, se devuelve el anterior
+      // (nunca se deja el archivo apuntando a un puerto muerto) o se borra.
+      writeFileSync(archivoPuerto, String(nuevo))
+      // `--disable-sync` evita el diálogo «Se están sincronizando los datos» de Edge, que bloquea la ventana visible.
+      lanzarChromium(exe, [`--remote-debugging-port=${nuevo}`, `--user-data-dir=${perfil}`, '--no-first-run', '--no-default-browser-check', '--disable-sync', ...extra], ventana)
+      for (let i = 0; i < 40 && !(await responde(nuevo)); i++) await espera(500)
+      return (await responde(nuevo)) ? nuevo : null
     }
+    if (await intentar()) return
+    // Si no abrió, lo más probable es que un Edge zombie siga vivo con este perfil: el nuevo se lo cede y se va.
+    // Se mata lo que use el perfil y se reintenta una vez; si aún así no abre, se devuelve el puerto anterior.
+    await new Promise((r) => setTimeout(r, 500))
+    matarNavegador(perfil)
+    await espera(1000)
+    if (await intentar()) return
+    if (viejo && viejo !== puerto() && (await responde(viejo))) writeFileSync(archivoPuerto, String(viejo))
+    else rmSync(archivoPuerto, { force: true })
+    throw new Error(`${nombreNavegador()} no abrió.`)
   }
 
   let turno: Promise<unknown> = Promise.resolve()

@@ -161,6 +161,8 @@ export async function ponerAportar(page: Page, quiere: boolean) {
  */
 export async function leerSaldo(page: Page): Promise<Saldo | null> {
   try {
+    // Un banner o diálogo (p. ej. el anuncio de un modelo nuevo) puede tapar el botón de la cuenta.
+    await despejar(page)
     await page.locator('.header-user-button').first().click({ timeout: 15_000 })
     const suyo = page.locator('mat-icon:text-is("movie_filter_auto")').first()
     if (!(await suyo.waitFor({ timeout: 10_000 }).then(() => true, () => false))) {

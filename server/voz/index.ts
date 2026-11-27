@@ -11,7 +11,7 @@ import { conectarCDP } from '../playwright.ts'
 import { type EstadoVoz, NAVEGADOR_VOZ, type ProveedorVoz, type TrabajoVoz, type VozApi, type VozStudio } from '../../shared/types.ts'
 import { VENTA } from '../../shared/venta.ts'
 import { juntarVoces, MOTORES, motorDe, segundosWav, textoParaVoz, vocesDeLista, vocesDelPanel } from '../../shared/voz.ts'
-import { chromiumParaGoogle, lanzarChromium, nombreDe, paginaNueva, SIN_CHROMIUM, SIN_VENTANA } from '../chromium.ts'
+import { chromiumParaGoogle, lanzarChromium, matarNavegador, nombreDe, paginaNueva, SIN_CHROMIUM, SIN_VENTANA } from '../chromium.ts'
 import { guardar } from '../disco.ts'
 import { bytes, cuerpo } from '../http.ts'
 import { integrado } from '../navegador-agente.ts'
@@ -154,8 +154,17 @@ export function voz(app: string) {
     mkdirSync(perfil(), { recursive: true })
     const extra = ventana ? [url] : [...SIN_VENTANA, 'about:blank']
     // `--disable-sync` evita el diálogo «Se están sincronizando los datos» de Edge, que bloquea la ventana visible.
-    lanzarChromium(edge, [`--remote-debugging-port=${PUERTO}`, `--user-data-dir=${perfil()}`, '--no-first-run', '--no-default-browser-check', '--disable-sync', ...extra], ventana)
-    for (let i = 0; i < 40 && !(await responde()); i++) await espera(500)
+    const abrir = async () => {
+      lanzarChromium(edge, [`--remote-debugging-port=${PUERTO}`, `--user-data-dir=${perfil()}`, '--no-first-run', '--no-default-browser-check', '--disable-sync', ...extra], ventana)
+      for (let i = 0; i < 40 && !(await responde()); i++) await espera(500)
+      return responde()
+    }
+    if (!(await abrir())) {
+      // Si no abrió, un Edge zombie puede seguir vivo con este perfil (o con el puerto): se mata y se reintenta una vez.
+      matarNavegador(perfil())
+      await espera(1000)
+      if (!(await abrir())) throw new Error(`${nombreEdge()} no abrió.`)
+    }
   }
 
   /** El Edge sin ventana, con Playwright, para trabajar en él. */
@@ -167,6 +176,12 @@ export function voz(app: string) {
   async function cerrarEdge() {
     await alNavegador('Browser.close').catch(() => {})
     for (let i = 0; i < 20 && (await responde()); i++) await espera(250)
+    if (await responde()) {
+      // No murió solo (colgado o lento): se mata lo del perfil, porque un Edge zombie haría que el próximo
+      // lanzamiento se lo cediera y todo fallara con timeouts, para siempre.
+      matarNavegador(perfil())
+      for (let i = 0; i < 20 && (await responde()); i++) await espera(250)
+    }
   }
 
   /** Un comando a Edge por CDP, sin Playwright ni tocar sus pestañas. */
@@ -175,13 +190,21 @@ export function voz(app: string) {
     const ws = new WebSocket(webSocketDebuggerUrl)
     try {
       return await new Promise<T>((ok, mal) => {
+        // Sin respuesta en 10 s el comando se da por fallido: un Edge colgado no puede dejarnos esperando siempre.
+        const limite = setTimeout(() => {
+          ws.close()
+          mal(new Error('Edge no respondió al comando.'))
+        }, 10_000)
         ws.once('open', () => ws.send(JSON.stringify({ id: 1, method: metodo })))
         ws.on('message', (d) => {
           const m = JSON.parse(String(d)) as { id?: number; result?: T; error?: { message: string } }
-          if (m.id === 1) m.error ? mal(new Error(m.error.message)) : ok(m.result as T)
+          if (m.id === 1) {
+            clearTimeout(limite)
+            m.error ? mal(new Error(m.error.message)) : ok(m.result as T)
+          }
         })
-        ws.once('error', mal)
-        ws.once('close', () => mal(new Error('Edge se cerró.')))
+        ws.once('error', (e) => (clearTimeout(limite), mal(e)))
+        ws.once('close', () => (clearTimeout(limite), mal(new Error('Edge se cerró.'))))
       })
     } finally {
       ws.close()

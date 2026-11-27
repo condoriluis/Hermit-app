@@ -198,3 +198,27 @@ export async function paginaNueva(b: Browser, vista?: { ancho: number; alto: num
 /** El comando con que `lanzarChromium` lo abre. */
 export const comoLanzar = (exe: string, args: string[], ventana: boolean, so = process.platform) =>
   ventana && so === 'darwin' ? ['open', '-n', '-a', exe.replace(/\/Contents\/MacOS\/[^/]+$/, ''), '--args', ...args] : [exe, ...args]
+
+/**
+ * Mata los procesos del navegador que usan este perfil (`--user-data-dir=`). Hace falta cuando uno quedó zombie —
+ * el CDP murió pero el proceso sigue vivo—: un segundo Chromium con el mismo perfil se lo cede al que ya corre y se
+ * va, y quien lo lanzó creería que el navegador no abre nunca. Windows busca la ruta en la línea de comandos de cada
+ * proceso; en Mac y Linux, `pkill -f`.
+ */
+export function matarNavegador(perfil: string) {
+  const marca = `--user-data-dir=${perfil}`
+  try {
+    if (process.platform === 'win32') {
+      const p = perfil.replace(/'/g, "''")
+      execFileSync(
+        'powershell',
+        ['-NoProfile', '-Command', `Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -and $_.CommandLine.Contains('${p}') } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }`],
+        { windowsHide: true, timeout: 15_000, stdio: 'ignore' }
+      )
+    } else {
+      execFileSync('pkill', ['-f', marca.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')], { timeout: 5000, stdio: 'ignore' })
+    }
+  } catch {
+    // Sin procesos que matar, o pkill/Powershell sin permiso: no es motivo para fallar.
+  }
+}

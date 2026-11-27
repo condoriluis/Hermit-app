@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { candidatosMuxados, elegirStreams, explicarFalloLive, esLiveTikTok, esReintentableLive, limpiarTituloLive, limpiarUrlLive, pasoPersona, planVentana, sacarRoomId, slugEnVivo, ventanaEncuadre } from './en-vivo.ts'
+import { candidatosMuxados, elegirStreams, explicarFalloLive, esLiveFacebook, esLiveTikTok, esReintentableLive, limpiarTituloLive, limpiarUrlLive, pasoPersona, planVentana, sacarRoomId, slugEnVivo, ventanaEncuadre } from './en-vivo.ts'
 
 /** Un formato de yt-dlp como llega en `-j`, con lo que mira elegirStreams. */
 const fmt = (o: Record<string, unknown>) => ({
@@ -205,6 +205,17 @@ test('esLiveTikTok: solo las URL de live con canal, no la share ni los videos', 
   assert.equal(esLiveTikTok('https://m.tiktok.com/share/live/7710068128935398150'), false) // ya trae el roomId
   assert.equal(esLiveTikTok('https://www.tiktok.com/@jhenny_calle/video/123'), false)
   assert.equal(esLiveTikTok('https://www.youtube.com/watch?v=abc'), false)
+})
+
+test('esLiveFacebook: dominios de Meta y su acortador, no otras plataformas ni suplantaciones', () => {
+  assert.equal(esLiveFacebook('https://www.facebook.com/watch/live/?ref=watch_permalink'), true)
+  assert.equal(esLiveFacebook('https://m.facebook.com/page/videos/123'), true)
+  assert.equal(esLiveFacebook('https://fb.watch/abc123/'), true)
+  assert.equal(esLiveFacebook('https://web.facebook.com/story.php?id=1'), true)
+  assert.equal(esLiveFacebook('https://www.tiktok.com/@x/live'), false)
+  assert.equal(esLiveFacebook('https://youtube.com/watch?v=1'), false)
+  assert.equal(esLiveFacebook('https://notfacebook.com/watch'), false) // dominio ajeno que lo contiene
+  assert.equal(esLiveFacebook('no-es-url'), false)
 })
 
 test('sacarRoomId: del JSON embebido o de la URL del reproductor', () => {

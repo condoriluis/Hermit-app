@@ -7,12 +7,13 @@ import { join } from 'node:path'
 import type { ServerPush, VivoClip, VivoEstado, VivoSegmento } from '../shared/types.ts'
 import { cuerpo, json } from './http.ts'
 import { chromiumDelSistema, navegadorBajado } from './chromium.ts'
-import type { Browser } from 'playwright-core'
+import type { Browser, Page } from 'playwright-core'
 import { BANDERAS, rutaPythonHermit } from './requisitos.ts'
 import { carpetaSkill } from './skills.ts'
 import { carpetaTrabajo } from './trabajo.ts'
 import { guardar } from './disco.ts'
 import { matarArbol } from './rpc-lineas.ts'
+import { abierto as navegadorAbierto, deLaApp, navegador as navegadorDeRedes, pestana, sinAviso } from './redes/navegador.ts'
 
 /**
  * El live de la página Clips: pegas la URL de una emisión en directo y Hermit la graba en un buffer circular de
@@ -302,6 +303,20 @@ export function esReintentableLive(error: string | undefined): boolean {
 /** La URL de un live de TikTok con nombre de canal: la que yt-dlp tiene que scrapear, y donde su WAF estorba. */
 export function esLiveTikTok(url: string): boolean {
   return /^https?:\/\/(?:www\.|m\.)?tiktok\.com\/@[\w.-]+\/live(?:[/?#]|$)/i.test(url)
+}
+
+/**
+ * La URL de un live de Facebook (o su acortador fb.watch). Meta no deja leer nada —ni el directo ni su
+ * página— sin sesión, y las cookies del navegador del usuario no se pueden sacar (el cifrado app-bound de
+ * Chromium moderno se las lleva): la sesión vive en el navegador de las redes, de donde sí se exportan.
+ */
+export function esLiveFacebook(url: string): boolean {
+  try {
+    const h = new URL(url).hostname.toLowerCase()
+    return h === 'fb.watch' || h === 'facebook.com' || h.endsWith('.facebook.com')
+  } catch {
+    return false
+  }
 }
 
 /** El `roomId` en el HTML de la página del live de TikTok (su JSON embebido o la URL del reproductor). */
@@ -1167,7 +1182,73 @@ export function enVivo(app: string, broadcast: (msg: ServerPush) => void) {
     broadcast({ type: 'envivo', vivo: null })
   }
 
-  async function conectar(url: string): Promise<VivoEstado | { error: string }> {
+  /**
+   * ¿Hay sesión de Facebook en el navegador de las redes? (`c_user` es la marca de entrar.) Sin el
+   * navegador abierto no se abre uno solo por mirar: las cookies viven en su perfil y hay que leerlas
+   * con él andando.
+   */
+  async function sesionFacebook(): Promise<boolean> {
+    try {
+      if (!(await navegadorAbierto())) return false
+      const ctx = await navegadorDeRedes(app)
+      const cs = await ctx.cookies()
+      return cs.some((c) => c.name === 'c_user' && c.domain.replace(/^\./, '').endsWith('facebook.com'))
+    } catch {
+      return false
+    }
+  }
+
+  /**
+   * Las cookies de facebook.com del navegador de las redes (donde vive la sesión del usuario, igual que
+   * las de TikTok o Instagram) en formato Netscape, para el `--cookies` de yt-dlp. Devuelve la ruta del
+   * archivo temporal —quien lo pide lo borra— o null si no hay sesión.
+   */
+  async function cookiesFacebookArchivo(): Promise<string | null> {
+    try {
+      if (!(await sesionFacebook())) return null
+      const ctx = await navegadorDeRedes(app)
+      const cs = (await ctx.cookies()).filter((c) => c.domain.replace(/^\./, '').endsWith('facebook.com'))
+      const lineas = [
+        '# Netscape HTTP Cookie File',
+        ...cs.map((c) =>
+          [c.domain, c.domain.startsWith('.') ? 'TRUE' : 'FALSE', c.path || '/', c.secure ? 'TRUE' : 'FALSE', c.expires > 0 ? String(Math.floor(c.expires)) : '0', c.name, c.value].join('\t')
+        )
+      ]
+      const archivo = join(tmpdir(), `hermit-facebook-${randomUUID()}.txt`)
+      writeFileSync(archivo, lineas.join('\n') + '\n', { mode: 0o600 })
+      return archivo
+    } catch {
+      return null
+    }
+  }
+
+  /**
+   * Facebook pide sesión para todo: se abre su página en el navegador de las redes para que el usuario
+   * entre una vez (la sesión queda en el perfil, como la de TikTok). En la app es su pestaña `redes`;
+   * sin la ventana, el Edge del perfil de redes. Devuelve si el navegador es el de la app.
+   */
+  async function mostrarLoginFacebook(): Promise<boolean> {
+    try {
+      const ctx = await navegadorDeRedes(app, 'https://www.facebook.com/')
+      const entrar = async (p: Page) => {
+        if (!p.url().includes('facebook.com')) await sinAviso(p).then(() => p.goto('https://www.facebook.com/', { waitUntil: 'commit' })).catch(() => {})
+      }
+      if (deLaApp()) {
+        await entrar(await pestana(ctx))
+      } else if (!ctx.pages().some((p) => p.url().includes('facebook.com'))) {
+        // Recién abierto ya viene en Facebook; si no, en blanco se reutiliza y si todas tienen algo
+        // (una sesión de otra red en curso), pestaña nueva.
+        const pagina = ctx.pages().find((p) => p.url() === 'about:blank') ?? (await ctx.newPage())
+        await entrar(pagina)
+      }
+      return deLaApp()
+    } catch {
+      // Sin navegador no hay dónde mostrar el login: el error de abajo lo dice igual.
+      return false
+    }
+  }
+
+  async function conectar(url: string): Promise<VivoEstado | { error: string; navegador?: 'redes'; enLaApp?: boolean }> {
     if (vivo && (vivo.estado === 'conectando' || vivo.estado === 'en-vivo')) {
       return { error: 'Ya hay un live abierto: ciérralo antes de conectar otro.' }
     }
@@ -1177,13 +1258,22 @@ export function enVivo(app: string, broadcast: (msg: ServerPush) => void) {
     // YouTube (pide login desde octubre de 2026); los fallos definitivos no gastan reintentos.
     // La URL va limpia: los parámetros de share de TikTok hacen fallar su extractor aunque el live emita.
     const limpia = limpiarUrlLive(url)
+    // Facebook no suelta nada —ni la página ni el stream— sin sesión, y las cookies del navegador del
+    // usuario no se pueden sacar (el cifrado app-bound de Chromium moderno): la sesión vive en el
+    // navegador de las redes, de donde sí se exportan a un Netscape para `--cookies`. Sin sesión se
+    // intenta igual (hay lives públicos) y, si falla pidiendo entrar, se abre su login una vez.
+    const esFb = esLiveFacebook(limpia)
+    const cookiesFb = esFb ? await cookiesFacebookArchivo() : null
+    const intentos: string[][] = esFb
+      ? [...(cookiesFb ? [['--cookies', cookiesFb]] : []), [], []]
+      : [[], ['--extractor-args', 'youtube:player_client=web_embedded'], []]
     let r: { info?: any; error?: string } = {}
-    for (let intento = 0; intento < 3; intento++) {
-      const args = intento === 1 ? ['--extractor-args', 'youtube:player_client=web_embedded'] : []
-      r = await ytdlpInfo(limpia, args)
+    for (let intento = 0; intento < intentos.length; intento++) {
+      r = await ytdlpInfo(limpia, intentos[intento])
       if (r.info || !esReintentableLive(r.error)) break
-      if (intento < 2) await new Promise((res) => setTimeout(res, 2500))
+      if (intento < intentos.length - 1) await new Promise((res) => setTimeout(res, 2500))
     }
+    if (cookiesFb) rmSync(cookiesFb, { force: true })
     let info = r.info
     // TikTok responde a veces su página de verificación (WAF) en vez del directo aunque emita, y yt-dlp
     // la toma por «not currently live». Plan B: leer el roomId con un Chromium real y entrar por la URL
@@ -1198,7 +1288,16 @@ export function enVivo(app: string, broadcast: (msg: ServerPush) => void) {
         }
       }
     }
-    if (!info) return { error: r.error ?? 'No pude leer ese directo: inténtalo de nuevo.' }
+    if (!info) {
+      // En Facebook el fallo casi siempre es la sesión: se abre su login en el navegador de las redes
+      // (entra una vez y queda en el perfil) y se dice claro. Los definitivos —terminó, es privado,
+      // el enlace caducó— se devuelven tal cual, sin abrir nada.
+      if (esFb && /iniciar sesión|ser miembro|cookies/i.test(String(r.error ?? ''))) {
+        const enLaApp = await mostrarLoginFacebook()
+        return { error: 'Facebook pide sesión para leer el live: te abrí su página en el navegador — inicia sesión una vez y vuelve a intentarlo.', navegador: 'redes', enLaApp }
+      }
+      return { error: r.error ?? 'No pude leer ese directo: inténtalo de nuevo.' }
+    }
     // Solo emisiones en directo: un VOD o «a punto de empezar» no tiene borde vivo que grabar.
     const estadoLive = info.live_status ?? (info.is_live ? 'is_live' : undefined)
     if (estadoLive === 'is_upcoming') return { error: 'Ese live aún no ha empezado: vuelve cuando esté emitiendo.' }
@@ -1368,6 +1467,16 @@ export function enVivo(app: string, broadcast: (msg: ServerPush) => void) {
         createReadStream(archivo).pipe(res)
         return true
       }
+      if (path === '/api/en-vivo/facebook' && req.method === 'GET') {
+        // Si el navegador de las redes ya tiene sesión de Facebook (la cookie `c_user`).
+        return json(res, 200, { sesion: await sesionFacebook() })
+      }
+      if (path === '/api/en-vivo/facebook' && req.method === 'POST') {
+        // Abre facebook.com en el navegador de las redes para entrar una vez (lo mismo que hace
+        // «Conectar» de la fila de Facebook en Opciones → Redes).
+        const enLaApp = await mostrarLoginFacebook()
+        return json(res, 200, { enLaApp })
+      }
       if (path === '/api/en-vivo' && req.method === 'GET') {
         return json(res, 200, { vivo: vivo ? { ...publico(vivo), texto: vivo.transcript.slice(-500) } : null })
       }
@@ -1379,7 +1488,7 @@ export function enVivo(app: string, broadcast: (msg: ServerPush) => void) {
         // Ojo: `publico()` siempre trae la clave `error` (a veces undefined), así que `'error' in r` no
         // distingue: el éxito se reconoce por tener `id`. Con el `in` a secas, conectar devolvía 400 `{}`
         // y la página pintaba «Bad Request» aunque el live hubiera arrancado bien.
-        return 'id' in r ? json(res, 200, r) : json(res, 400, { error: r.error })
+        return 'id' in r ? json(res, 200, r) : json(res, 400, r)
       }
       if (path === '/api/en-vivo/cara' && req.method === 'GET') {
         // La posición del reencuadre «quien habla» para la previa: la cara más grande del último

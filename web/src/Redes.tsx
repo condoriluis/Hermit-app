@@ -134,8 +134,86 @@ export function RedesOpciones({ onIniciando }: { onIniciando?(si: boolean): void
           ahora={ahora}
         />
       ))}
+      <FacebookVivo onIniciando={onIniciando} />
       {error && <p className="bad small fila-extra">{error}</p>}
     </>
+  )
+}
+
+/**
+ * Facebook para «Clips en vivo»: no publica nada, solo guarda la sesión con la que yt-dlp lee los
+ * directos de Meta (pide entrar siempre). Vive en el mismo navegador y perfil que las redes, así que
+ * se conecta igual: en el navegador de la app, o en la ventana de Edge fuera de ella.
+ */
+function FacebookVivo({ onIniciando }: { onIniciando?(si: boolean): void }) {
+  const [sesion, setSesion] = useState<boolean | null>(null)
+  // Dónde se inicia sesión: en el navegador de la app (se abre a la derecha) o en una ventana de Edge.
+  const [donde, setDonde] = useState<'app' | 'edge' | null>(null)
+  const [aviso, setAviso] = useState('')
+  const iniciando = !!donde
+
+  const leer = () => api<{ sesion: boolean }>('/api/en-vivo/facebook').then((r) => setSesion(r.sesion), () => {})
+  useEffect(() => {
+    void leer()
+    // La sesión puede llegar por fuera (el live la pidió, o entraste en otra ventana): se mira seguido
+    // mientras conectas y despacio siempre, también si la primera lectura falló.
+    const id = setInterval(() => void leer(), iniciando ? 3000 : 15000)
+    return () => clearInterval(id)
+  }, [iniciando])
+
+  // Entró: el panel se cierra y la página queda en blanco, como al conectar una red.
+  useEffect(() => {
+    if (iniciando && sesion) {
+      abrirNavegador(NAVEGADOR_REDES, false)
+      setDonde(null)
+      onIniciando?.(false)
+    }
+  }, [sesion, iniciando])
+
+  useEffect(() => onIniciando?.(iniciando && donde === 'app'), [iniciando, donde])
+
+  function conectar() {
+    setAviso('')
+    api<{ enLaApp: boolean }>('/api/en-vivo/facebook', {}).then(
+      (r) => {
+        setDonde(r.enLaApp ? 'app' : 'edge')
+        if (r.enLaApp) abrirNavegador(NAVEGADOR_REDES, true)
+      },
+      (e) => setAviso(e instanceof Error ? e.message : String(e))
+    )
+  }
+
+  // «Clips en vivo» falló pidiendo sesión: llega aquí con la señal y el login se abre solo.
+  useEffect(() => {
+    if (!sessionStorage.getItem('hermit-fb-login')) return
+    sessionStorage.removeItem('hermit-fb-login')
+    setAviso('Para leer lives de Facebook, entra una vez con tu cuenta: se queda guardada y los siguientes entran solos.')
+    conectar()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  return (
+    <div className="item red">
+      <div className="fila">
+        <Logo de="facebook" />
+        <div className="fila-nombre">
+          <strong>Facebook</strong>
+          <span>Para los lives de «Clips en vivo»: Meta pide sesión para leerlos. No publica nada.</span>
+        </div>
+        {iniciando ? (
+          <span className="estado moviendo">{donde === 'app' ? 'Inicia sesión en el navegador…' : 'Inicia sesión en la ventana de Edge…'}</span>
+        ) : sesion === null ? (
+          <span className="muted small">Mirando…</span>
+        ) : sesion ? (
+          <span className="estado">Conectada</span>
+        ) : (
+          <button className="primary" onClick={conectar}>
+            Conectar
+          </button>
+        )}
+      </div>
+      {aviso && <p className="muted small fila-extra">{aviso}</p>}
+    </div>
   )
 }
 
